@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# gv-pro — same as gv but forces gemini-2.5-pro.
+# Use when you want deeper reasoning on the multimodal input.
+#
+# Usage:
+#   gv-pro -p "tear down this layout" @~/screenshot.png
+#   gv-pro -p "deep analysis" @~/recording.mp3
+set -euo pipefail
+exec "$(dirname "$0")/gv" -m gemini-2.5-pro "$@"

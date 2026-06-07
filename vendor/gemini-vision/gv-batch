@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+# gv-batch — loop over a directory of media files
+# and call gv once per file. Globs common image, audio, video, and PDF types.
+#
+# Usage:
+#   gv-batch <directory> <prompt> [extra args to gv]
+#   gv-batch ~/Downloads/receipts/ "extract date, vendor, total"
+#   gv-batch ~/screenshots/ "describe the UI state" -m gemini-2.5-pro
+#
+# Env:
+#   GV_BATCH_SLEEP  seconds between calls (default 4, to respect per-minute quotas)
+set -euo pipefail
+
+if [ $# -lt 2 ]; then
+  cat >&2 <<USAGE
+usage: gv-batch <directory> <prompt> [extra gv args]
+
+  examples:
+    gv-batch ~/ads/ "describe this image"
+    gv-batch ~/recordings/ "transcribe verbatim" -m gemini-2.5-pro
+    gv-batch ~/clips/ "what happens in this video"
+USAGE
+  exit 64
+fi
+
+DIR="$1"
+shift
+PROMPT="$1"
+shift
+
+if [ ! -d "$DIR" ]; then
+  echo "error: not a directory: $DIR" >&2
+  exit 1
+fi
+
+DIR="$(cd "$DIR" && pwd)"
+
+shopt -s nullglob nocaseglob
+FILES=(
+  "$DIR"/*.{jpg,jpeg,png,gif,webp}
+  "$DIR"/*.{mp3,wav,ogg,flac,aac,opus,m4a}
+  "$DIR"/*.{mp4,mov,mkv,webm,avi,flv}
+  "$DIR"/*.pdf
+)
+shopt -u nocaseglob
+
+if [ ${#FILES[@]} -eq 0 ]; then
+  echo "error: no media files found in $DIR" >&2
+  echo "  looked for: jpg, png, gif, webp, mp3, wav, mp4, mov, pdf, etc." >&2
+  exit 1
+fi
+
+SLEEP_BETWEEN="${GV_BATCH_SLEEP:-4}"
+COUNT=${#FILES[@]}
+
+echo "==> processing $COUNT file(s) in $DIR (sleep ${SLEEP_BETWEEN}s between calls)"
+echo
+
+cd "$DIR"
+
+for FILE in "${FILES[@]}"; do
+  BASENAME="$(basename "$FILE")"
+  echo "── $BASENAME ──"
+  if ! gv -p "$PROMPT @$BASENAME" "$@"; then
+    echo "  [error: $BASENAME — continuing]" >&2
+  fi
+  echo
+  sleep "$SLEEP_BETWEEN"
+done
+
+echo "==> done. $COUNT file(s) processed."

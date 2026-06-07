@@ -1,0 +1,16 @@
+# Local config (never commit real values)
+config.env
+.jstack/
+
+# Runtime artifacts
+**/transcripts/
+handoffs/
+*.state.json
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# OS
+.DS_Store
