@@ -28,21 +28,23 @@ Zero third-party npm packages, zero MCP servers, zero MCP trust boundaries.
 ## The wrapper
 
 Ships with jstack at `vendor/gemini-vision/` (wherever you cloned jstack).
-Put it on PATH (e.g. `~/jstack/vendor/gemini-vision`):
+Put it on PATH:
 ```bash
 export PATH="$HOME/jstack/vendor/gemini-vision:$PATH"
 ```
 
 | Command | What it does |
 |---|---|
-| `gv` | Single multimodal call, defaults to `gemini-2.5-flash` |
-| `gv-pro` | Same, but forces `gemini-2.5-pro` (needs 2.5-pro quota on your project — see Model selection) |
+| `gv` | Single multimodal call, defaults to `gemini-2.5-pro` (Vertex/credits) |
+| `gv-pro` | Same as `gv` now (also `gemini-2.5-pro`) |
 | `gv-batch <dir> <prompt>` | Loops over media files in a dir, calls `gv` per file |
 
-`gv` reads config from the environment or `~/.jstack/config.env`:
-- `GOOGLE_CLOUD_PROJECT` — **required**, your GCP project (no default)
-- `GOOGLE_CLOUD_LOCATION` — default `us-central1`
-- `GEMINI_VISION_MODEL` — default `gemini-2.5-flash`
+`gv` reads config from the environment or `~/.jstack/config.env`, and sets
+(all overridable):
+- `GOOGLE_CLOUD_PROJECT` ← `GEMINI_VISION_PROJECT` or `GOOGLE_CLOUD_PROJECT` (**required, no default**); pinned so the shell's ambient `GOOGLE_CLOUD_PROJECT` can't bill the wrong project
+- `GOOGLE_CLOUD_LOCATION=us-central1`
+- `GEMINI_VISION_MODEL=gemini-2.5-pro` (flash may not be reachable via the CLI — see Model selection)
+- `GOOGLE_GENAI_USE_VERTEXAI=true` **+** `GEMINI_CLI_SYSTEM_SETTINGS_PATH=<dir>/gemini-vertex-settings.json` → forces Vertex auth so calls bill GCP credits, not the free Code Assist tier (the env flag alone is ignored when the global CLI has `selectedType: oauth-personal`)
 - `GEMINI_CLI_TRUST_WORKSPACE=true` (CLI >=0.45 refuses untrusted dirs headlessly)
 - `--include-directories $(pwd)`
 
@@ -102,17 +104,19 @@ gv-batch ~/Downloads/receipts/ "extract date, vendor, total"
 
 | Need | Use |
 |---|---|
-| Default (fast, cheap, multimodal) | `gv` (flash) — verified working |
-| Deeper reasoning (slower, ~4x cost) | `gv-pro` — CLI works, but no project quota (see below) |
-| Newest flagship | `GEMINI_VISION_MODEL=gemini-3.1-pro gv ...` |
-| Image generation + analysis | `GEMINI_VISION_MODEL=gemini-2.5-flash-image gv ...` |
+| Default multimodal (image/pdf/audio/video) | `gv` (gemini-2.5-pro on Vertex) — verified working, billed to GCP credits |
+| Image generation + analysis | `GEMINI_VISION_MODEL=gemini-2.5-flash-image gv ...` (untested) |
 
-**Known issue (pro quota)**: the old `gemini` CLI v0.34.0 `isCustomModel`
-startup crash is **fixed** (CLI upgraded to ≥0.45). However, `gemini-2.5-pro`
-now fails at the API layer with "You have exhausted your capacity on this
-model" — the project has no provisioned Vertex quota for 2.5-pro (persistent,
-not a transient rate limit; also fails in `global` region). Stick with
-`gemini-2.5-flash` until 2.5-pro quota is requested in the GCP console. See
+**Why pro, not flash**: on Vertex, `gemini-2.5-pro` works and bills GCP credits.
+`gemini-2.5-flash` may be **not reachable via the CLI** — gemini-cli 0.45
+hard-remaps any flash request to `gemini-3.x-flash`
+(`DEFAULT_GEMINI_FLASH_MODEL`), which a project without that grant can't reach
+→ `404 ModelNotFound`. So `gv` defaults to pro. To use cheap flash you'd call
+the google-genai SDK directly (Vertex), bypassing the CLI's remap.
+
+**Background**: the v0.34.0 `isCustomModel` startup crash is fixed by upgrading
+to ≥0.45, and the "exhausted your capacity" error is usually the **free Code
+Assist tier**, not Vertex — `gv` forces Vertex auth to avoid it. See
 `references/file-type-notes.md`.
 
 ## Output handling
@@ -130,9 +134,9 @@ The agent (Claude) parses the response and formats as needed for the user.
 
 | Error | Action |
 |---|---|
-| "exhausted your capacity" on `gemini-2.5-pro` | No project quota for 2.5-pro (persistent). Use flash, or request quota in GCP console. |
-| Transient 429 on flash | Sleep 5–10s, retry once. `gv-batch` does this. |
-| 404 / model not found | Check model name spelling. Some models aren't in all regions. |
+| "exhausted your capacity… quota will reset after Xh" | Calls hit the free Code Assist tier, not Vertex. Use `gv` (forces Vertex). Don't call `gemini` directly without `GEMINI_CLI_SYSTEM_SETTINGS_PATH`. |
+| `404 ModelNotFound … gemini-3-flash` | CLI remapped flash → gemini-3.x-flash (no access). Use `gemini-2.5-pro` (default). |
+| Transient 429 | Sleep 5–10s, retry once. `gv-batch` does this. |
 | "I cannot locate the file" | Use basename after `cd` to the file's dir. |
 | CLI prints help text | `@file` was passed as a separate arg; put it inside the `-p` string. |
 | "not running in a trusted directory" | `gv` sets `GEMINI_CLI_TRUST_WORKSPACE=true` already; if calling `gemini` directly, export it or pass `--skip-trust`. |

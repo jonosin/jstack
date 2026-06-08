@@ -95,50 +95,50 @@ cd ~/legal
 gv -p "Compare @contract-v1.pdf and @contract-v2.pdf. What changed in the indemnification clause?"
 ```
 
-## Video & audio: when to use Flash vs Pro
+## Flash vs Pro
 
-`gemini-2.5-flash` handles all modalities competently. Use Pro only when:
-- Long video (>30 min) where Flash's context summarization loses detail
-- Dense technical audio (e.g., legal deposition) where exact wording matters
-- PDF with complex tables/charts where Flash misreads
+`gv` defaults to **`gemini-2.5-pro`** because flash may not be reachable via
+the CLI (see below). Pro handles all modalities well. If your project/CLI can
+reach a flash model, override per-call with `GEMINI_VISION_MODEL`.
 
-## Model availability for the project
+## Model availability (Vertex)
 
+Probe via the wrapper (no `gcloud` required):
 ```bash
-gcloud ai models list --region="$GOOGLE_CLOUD_LOCATION" --project="$GOOGLE_CLOUD_PROJECT"
+for m in gemini-2.5-pro gemini-2.5-flash; do gv -m "$m" -p "say OK"; done
 ```
 
-Or via the Vertex AI console: GCP tab → Vertex AI → Model Garden.
+**Observed** (CLI 0.45.2, Vertex auth forced):
+- `gemini-2.5-pro` ✓ works end-to-end on Vertex, billed to GCP credits
+- `gemini-2.5-flash` ✗ — `404 ModelNotFound`. The CLI hard-remaps flash to
+  `gemini-3.x-flash` (`DEFAULT_GEMINI_FLASH_MODEL`), which a project without
+  that grant can't access; fails in us-central1, global, and us-east5.
 
-**Notes:**
-- `gemini-2.5-flash` is the verified default — works end-to-end.
-- `gemini-2.5-pro` may return "exhausted your capacity" if your project has no
-  provisioned quota; request it in the GCP console.
-- Newer flagships (`gemini-3.1-pro`) depend on your project's model access.
+## How vision bills GCP credits (the auth fix)
 
-## CLI startup bug (FIXED)
+`GOOGLE_GENAI_USE_VERTEXAI=true` alone is ignored: headless auth is
+`selectedType || getAuthTypeFromEnv()`, and the global `~/.gemini/settings.json`
+has `selectedType: oauth-personal` (free **Code Assist** / "Gemini for Google
+Cloud API"). That truthy value wins, so calls hit the free tier — which returns
+"exhausted your capacity" for non-flash models. `gv` forces Vertex per-process
+via `GEMINI_CLI_SYSTEM_SETTINGS_PATH=<dir>/gemini-vertex-settings.json`
+(`selectedType: vertex-ai`), leaving interactive `gemini` on the free tier.
+Confirmed: traffic then lands on the **Agent Platform API** (= Vertex AI) in the
+GCP console, not "Gemini for Google Cloud API".
 
-The `gemini` CLI v0.34.0 crashed at startup on non-flash models with
-`TypeError: resolved.startsWith is not a function` (`isCustomModel` loading
-built-in agents). This is **fixed** — the CLI was upgraded to 0.45.2 via
-`brew upgrade gemini-cli` (upstream issue google-gemini/gemini-cli#23934,
-confirmed resolved). Non-flash models now start cleanly.
+The v0.34.0 `isCustomModel` startup crash is also fixed (upgrade to ≥0.45,
+upstream #23934), and CLI >=0.45's "trusted directory" gate is handled via
+`GEMINI_CLI_TRUST_WORKSPACE=true`.
 
-Note CLI >=0.45 added a "trusted directory" gate; `gv` sets
-`GEMINI_CLI_TRUST_WORKSPACE=true` so headless calls work.
+## Cheap flash via the SDK (optional, if you need flash)
 
-## If 2.5-pro is critical (no quota workaround)
-
-The remaining blocker is Vertex quota, not the CLI. Either:
-
-1. Request `gemini-2.5-pro` quota for the project in the GCP console
-   (Vertex AI → Quotas), then `gv-pro` works as-is.
-2. Or call the Python SDK directly (Vertex AI + cached OAuth) once quota exists:
+Pro is the working default. If flash cost matters, bypass the CLI's remap with
+the google-genai SDK (same Vertex auth as `gv`):
    ```python
    from google import genai
    client = genai.Client(vertexai=True, project="...", location="us-central1")
    response = client.models.generate_content(
-       model="gemini-2.5-pro",
+       model="gemini-2.5-flash",   # SDK sends it literally — no CLI remap
        contents=[prompt, image],
    )
    ```

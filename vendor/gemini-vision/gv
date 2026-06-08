@@ -3,7 +3,7 @@
 # Wraps the official `gemini` CLI (google-gemini/gemini-cli) with auth,
 # project, and file-include defaults so any agent can call it cleanly.
 #
-# Auth: Vertex AI + cached OAuth, no API key.
+# Auth: Vertex AI + cached OAuth (ADC), no API key.
 # Billed to the project's billing account (consumes GCP credits).
 #
 # Usage:
@@ -15,35 +15,57 @@
 #   gv -p "compare these" @a.jpg @b.jpg
 #   echo "describe this" | gv -p -
 #
-# Config: GOOGLE_CLOUD_PROJECT et al. come from the environment or
-# ~/.jstack/config.env. Set GOOGLE_CLOUD_PROJECT to your own GCP project.
+# Config: project/location/model come from the environment or
+# ~/.jstack/config.env. Set GOOGLE_CLOUD_PROJECT (or GEMINI_VISION_PROJECT)
+# to your own GCP project.
 #
 # Env overrides:
-#   GEMINI_VISION_MODEL  model name (default: gemini-2.5-flash)
-#   GOOGLE_CLOUD_PROJECT project ID (required — your GCP project)
-#   GOOGLE_CLOUD_LOCATION region    (default: us-central1)
+#   GEMINI_VISION_MODEL    model name (default: gemini-2.5-pro)
+#   GEMINI_VISION_PROJECT  GCP project to bill (pins over ambient GOOGLE_CLOUD_PROJECT)
+#   GOOGLE_CLOUD_PROJECT   GCP project (required if GEMINI_VISION_PROJECT unset)
+#   GOOGLE_CLOUD_LOCATION  region    (default: us-central1)
 #   GEMINI_CLI_TRUST_WORKSPACE  trust cwd non-interactively (default: true)
 set -euo pipefail
 
-# Load jstack config if present (does not override values already in the env).
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Load jstack config if present (env values already exported still win below
+# via the :- fallbacks where it matters).
 if [ -f "$HOME/.jstack/config.env" ]; then
   set -a; . "$HOME/.jstack/config.env"; set +a
 fi
 
-export PATH="$HOME/.local/bin:$PATH"
+export PATH="$HOME/.local/bin:/opt/homebrew/bin:$PATH"
 export GOOGLE_GENAI_USE_VERTEXAI=true
-export GOOGLE_CLOUD_PROJECT="${GOOGLE_CLOUD_PROJECT:-}"
+
+# Pin the credits project explicitly. Prefer GEMINI_VISION_PROJECT so the
+# shell's ambient GOOGLE_CLOUD_PROJECT (often a different project for other
+# work) can't hijack billing. Falls back to GOOGLE_CLOUD_PROJECT.
+export GOOGLE_CLOUD_PROJECT="${GEMINI_VISION_PROJECT:-${GOOGLE_CLOUD_PROJECT:-}}"
 export GOOGLE_CLOUD_LOCATION="${GOOGLE_CLOUD_LOCATION:-us-central1}"
 
 if [ -z "$GOOGLE_CLOUD_PROJECT" ]; then
-  echo "error: GOOGLE_CLOUD_PROJECT is not set. Export it or add it to ~/.jstack/config.env." >&2
+  echo "error: no GCP project set. Export GOOGLE_CLOUD_PROJECT (or GEMINI_VISION_PROJECT), or add it to ~/.jstack/config.env." >&2
   exit 1
 fi
+
+# Force Vertex AI auth for THIS process only. The gemini CLI's saved
+# security.auth.selectedType (oauth-personal = free Code Assist) otherwise wins
+# in headless mode and IGNORES GOOGLE_GENAI_USE_VERTEXAI — routing to the free
+# tier instead of Vertex, which starves pro models ("exhausted your capacity").
+# A scoped system-settings file flips selectedType to vertex-ai without touching
+# the user's global ~/.gemini/settings.json (interactive `gemini` stays free).
+export GEMINI_CLI_SYSTEM_SETTINGS_PATH="${GEMINI_CLI_SYSTEM_SETTINGS_PATH:-$SCRIPT_DIR/gemini-vertex-settings.json}"
+
 # gemini-cli >=0.45 refuses to run non-interactively in an "untrusted" directory.
 # This wrapper is invoked by agents that already chose the cwd, so trust it.
 export GEMINI_CLI_TRUST_WORKSPACE="${GEMINI_CLI_TRUST_WORKSPACE:-true}"
 
-MODEL="${GEMINI_VISION_MODEL:-gemini-2.5-flash}"
+# Default to gemini-2.5-pro: gemini-cli 0.45 hard-remaps any "flash" request to
+# gemini-3.x-flash, which a project without that grant can't reach (404), so
+# 2.5-flash may not be reachable via the CLI. Override with GEMINI_VISION_MODEL
+# if your project/CLI can reach a flash model.
+MODEL="${GEMINI_VISION_MODEL:-gemini-2.5-pro}"
 
 if ! command -v gemini >/dev/null 2>&1; then
   echo "error: 'gemini' CLI not found on PATH. Install: brew install gemini-cli" >&2

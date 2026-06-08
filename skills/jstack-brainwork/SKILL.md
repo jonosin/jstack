@@ -25,8 +25,8 @@ The router in `references/decision-router.md` chooses one of:
 
 | Route | When | Local reference | Canonical references to load only after choosing |
 |---|---|---|---|
-| Ingest (single) | A specific raw path is given, or pending raw exists and the user did not ask for maintenance | `references/ingest-runbook.md` | `skills/llm-wiki/references/ingest-operation.md`, optionally `capture-operation.md` Step 2/3 |
-| Batch Ingest | User asked for `all pending` | `references/ingest-runbook.md` | `skills/llm-wiki/references/ingest-operation.md` |
+| Batch Ingest (default) | Pending raw exists and the user did not ask for maintenance — bare `/jstack-brainwork` or `all pending`. Drains **all** pending newest-first; the next fresh session resumes if budget runs out | `references/ingest-runbook.md` | `skills/llm-wiki/references/ingest-operation.md` |
+| Ingest (single) | A specific raw path is given, or the user said `just the newest`/`one` | `references/ingest-runbook.md` | `skills/llm-wiki/references/ingest-operation.md`, optionally `capture-operation.md` Step 2/3 |
 | Maintenance | User asked for `lint`, `check`, `graph`, `health`, `maintenance`, or `fix links`; or no pending raw exists | `references/maintenance-runbook.md` | `skills/llm-wiki/references/lint-operation.md`, optionally `maintenance-operation.md` |
 | Dry run | User asked for `dry run` | `references/decision-router.md` (no writes) | none |
 | No-op | Nothing to do | `references/final-report.md` | none |

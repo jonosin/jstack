@@ -13,8 +13,11 @@ The router picks **exactly one route** from the user request. Apply the rules in
 5. If request includes `all pending`, route = **Batch Ingest**.
 6. Otherwise inspect pending raw with `references/pending-raw-triage.md` (which runs
    `python3 tools/sb.py pending` — the authoritative wiki-cross-referenced detector, **not** the cache).
-7. If `pending > 0`, route = **Ingest** for the newest high-signal pending source (or **Batch Ingest**
-   if there are several and the user wants them all).
+7. If `pending > 0`, route = **Batch Ingest** — drain *all* pending newest-first. This is the default:
+   a bare `/jstack-brainwork` from any fresh session means "re-read every new raw source and ingest it,"
+   and the detector is stateless so a cold session finds exactly the un-ingested files. (Only narrow to
+   a single source when the user named one, said `just the newest`/`one`, or token budget forces it —
+   the batch runbook's "do what fits, report the rest" valve lets the next fresh session resume.)
 8. If `pending: 0`, route = **Maintenance**.
 
 ## After choosing

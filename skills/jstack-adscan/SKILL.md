@@ -48,10 +48,16 @@ Fetches and structures ads only. It does **not** grade creative (weak/okay/good)
 any dossier — that's the agent/human's judgment after opening the downloaded media.
 
 ## Project use
-Point `--out` at the consuming repo so it renders the creatives as-is:
+When working inside a project, write creatives to that project's research dir so it
+renders them as-is. Resolve the output dir in this order:
+1. `$ADSCAN_OUT` if set (export it, or put it in `~/.jstack/config.env`).
+2. Else the consuming project's `research/ads` dir.
+
+If `~/.jstack/local.md` lists per-project output paths, honor the one for the project
+you are working on.
 ```bash
 "$ADSCAN_DIR"/adscan build acme --page-name "Acme.io" --company "Acme" \
-  --out ~/projects/<your-project>/research/ads
+  --out "${ADSCAN_OUT:-$HOME/projects/<your-project>/research/ads}"
 # verify: curl -s "http://localhost:8770/api/ads?slug=acme"
 ```
 

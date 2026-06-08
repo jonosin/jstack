@@ -1,5 +1,6 @@
 # Local config (never commit real values)
 config.env
+local.md
 .jstack/
 
 # Runtime artifacts

@@ -6,33 +6,47 @@ defaults. Caller supplies the prompt and the files.
 ## Auth model
 
 - **Vertex AI** mode (`GOOGLE_GENAI_USE_VERTEXAI=true`)
-- Cached OAuth credentials (no API key, no `gcloud` install)
+- Cached OAuth (ADC, `authorized_user`) — no API key, no `gcloud` install
 - Billing charged to the project's billing account (consumes GCP credits)
+
+**Critical: forcing Vertex headlessly.** Setting `GOOGLE_GENAI_USE_VERTEXAI=true`
+is **not sufficient**. In non-interactive mode the gemini CLI resolves auth as
+`effectiveAuthType = settings.security.auth.selectedType || getAuthTypeFromEnv()`.
+A global `~/.gemini/settings.json` with `selectedType: "oauth-personal"`
+(free **Gemini Code Assist** / "Gemini for Google Cloud API") is truthy, so the
+env is ignored and calls route to the **free tier** — not Vertex. The free tier
+starves non-flash models ("You have exhausted your capacity… quota will reset
+after Xh").
+
+`gv` fixes this **per-process** by exporting
+`GEMINI_CLI_SYSTEM_SETTINGS_PATH=<dir>/gemini-vertex-settings.json`, a tiny file
+that sets `selectedType: "vertex-ai"` (system settings override user settings in
+the merge). This forces Vertex for `gv` only — interactive `gemini` stays on the
+free Code Assist tier. Don't delete `gemini-vertex-settings.json`.
 
 ## Defaults (env-overridable; config via `~/.jstack/config.env`)
 
 | Var | Default | Purpose |
 |---|---|---|
-| `GOOGLE_CLOUD_PROJECT` | *(required)* | Your GCP project ID |
+| `GEMINI_VISION_PROJECT` | *(required, no default)* | GCP project billed (credits). Set as `GOOGLE_CLOUD_PROJECT` for the CLI; pinned so the shell's ambient `GOOGLE_CLOUD_PROJECT` can't hijack billing. `GOOGLE_CLOUD_PROJECT` is used if this is unset. |
 | `GOOGLE_CLOUD_LOCATION` | `us-central1` | Vertex AI region |
-| `GEMINI_VISION_MODEL` | `gemini-2.5-flash` | Model for `gv` |
+| `GEMINI_VISION_MODEL` | `gemini-2.5-pro` | Model for `gv` (see Models — flash may not be reachable via the CLI) |
+| `GEMINI_CLI_SYSTEM_SETTINGS_PATH` | `<dir>/gemini-vertex-settings.json` | Forces `selectedType=vertex-ai` for this process only (see Auth model) |
 | `GEMINI_CLI_TRUST_WORKSPACE` | `true` | Trust cwd non-interactively (required by CLI >=0.45) |
 | `GV_BATCH_SLEEP` | `4` | Seconds between `gv-batch` calls |
 
 ## Models
 
-Any model accepted by the `gemini` CLI's `-m` flag. Canonical:
-
 | Alias | Model | Notes |
 |---|---|---|
-| `gv` (default) | `gemini-2.5-flash` | Fast, multimodal, default choice. Verified working. |
-| `gv-pro` | `gemini-2.5-pro` | Deeper reasoning. If your project has **no Vertex capacity/quota** for 2.5-pro it returns "exhausted your capacity" — request quota in the GCP console before relying on it. |
-| override | `gemini-3.1-pro` | Newest flagship, strongest reasoning |
-| override | `gemini-2.5-flash-image` | "Nano Banana", image gen + analyze |
+| `gv` (default) | `gemini-2.5-pro` | **Confirmed working on Vertex/credits.** Default because flash may be unreachable via the CLI (below). |
+| `gv-pro` | `gemini-2.5-pro` | Same as the default now. Kept for explicitness. |
+| override | `gemini-2.5-flash` | **May not be reachable via the CLI.** gemini-cli 0.45 hard-remaps any flash request to `gemini-3.x-flash` (`DEFAULT_GEMINI_FLASH_MODEL`); a project without that grant gets `404 ModelNotFound`. Re-enable once a gemini-3.x-flash is granted, or call flash via the google-genai SDK directly. |
+| override | `gemini-2.5-flash-image` | "Nano Banana", image gen + analyze (untested) |
 
-List available models for the project:
+Probe which models the project can reach (no `gcloud` required):
 ```bash
-gcloud ai models list --region="$GOOGLE_CLOUD_LOCATION" --project="$GOOGLE_CLOUD_PROJECT"
+for m in gemini-2.5-pro gemini-2.5-flash; do gv -m "$m" -p "say OK"; done
 ```
 
 ## File types supported
@@ -95,8 +109,9 @@ PDF" — video is not listed. Two paths:
 
 | Error | Cause | Fix |
 |---|---|---|
-| "exhausted your capacity" (retries then fails) | Vertex AI quota: `gemini-2.5-pro` may have **no provisioned capacity** for your project (persistent, not a rate limit) | Use `gemini-2.5-flash`, or request 2.5-pro quota in the GCP console. Transient 429 rate limits on flash do resolve with `gv-batch`'s built-in sleep. |
-| 404 / model not found | Wrong model name or wrong region | Check spelling. Some models aren't in all regions. |
+| "exhausted your capacity… quota will reset after Xh" | Calls hit the **free Code Assist tier**, not Vertex — i.e. `GEMINI_CLI_SYSTEM_SETTINGS_PATH` isn't forcing `vertex-ai` (or you ran `gemini` directly). The free tier starves non-flash models. | Use `gv` (it forces Vertex). For a raw `gemini` call, export `GEMINI_CLI_SYSTEM_SETTINGS_PATH=<dir>/gemini-vertex-settings.json` + `GOOGLE_GENAI_USE_VERTEXAI=true` + project/location. |
+| `404 ModelNotFound: publishers/google/models/gemini-3-flash` | CLI remapped a flash request to `gemini-3.x-flash`, which the project can't access | Use `gemini-2.5-pro` (the default). Flash may not be reachable via the CLI. |
+| 404 / other model not found | Wrong model name or wrong region | Check spelling; some models aren't in all regions. |
 | "I cannot locate the file" | `@/abs/path` in headless mode | `cd` to dir, use basename, or use `--include-directories` |
 | CLI prints help text | `@file` passed as a separate arg, not inside `-p` prompt | Put `@file` inside the quoted prompt string |
 | "not running in a trusted directory" | CLI >=0.45 trust gate, headless | `gv` sets `GEMINI_CLI_TRUST_WORKSPACE=true` automatically; if calling `gemini` directly, export it or pass `--skip-trust` |
@@ -119,6 +134,6 @@ upload automatically.
 ## Layering with other skills
 
 `gv` is intentionally generic and not coupled to any other skill. Other
-skills may call it from their own SKILL.md instructions (e.g., a future
-adscan skill could say "use `gv` for vision analysis"). Keep such
-couplings opt-in and minimal.
+skills may call it from their own SKILL.md instructions (e.g., an adscan
+skill could say "use `gv` for vision analysis"). Keep such couplings opt-in
+and minimal.

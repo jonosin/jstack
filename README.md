@@ -32,8 +32,9 @@ then `cp .env.example ~/.jstack/config.env` and edit it.
 
 | Skill | What it does | Extra setup |
 |-------|--------------|-------------|
-| `jstack` | Router + voice philosophy for the whole suite (`/jstack`). | — |
+| `jstack` | Packaging convention for the suite: scaffolds a new `jstack-*` skill (`/jstack`). | — |
 | `jstack-setup` | Installs the suite and writes config. | — |
+| `jstack-premortem` | Assumes a plan already failed and works backward to expose failure modes. | — |
 | `jstack-voice` | Warm, direct, concise communication voice. Toggle on/off. | — |
 | `jstack-focus` | Compresses the previous response (~40%). | — |
 | `jstack-handoff` | Compacts a session into a handoff doc for a fresh agent. | — |
@@ -83,7 +84,16 @@ jstack/
   .env.example          # all config keys
   skills/               # the jstack-* skills (copy/symlink into your harness)
   vendor/gemini-vision/ # the `gv` Gemini wrapper used by jstack-vision
+  tools/secrets-gate.sh # pre-push scan for identity/keys (run before every push)
 ```
+
+## Authoring & contributing
+
+- Scaffold a new skill with `skills/jstack/scripts/new-jstack-skill.sh <jstack-name>`. It creates the
+  canonical dir under `skills/` and symlinks it into every harness installed on your machine.
+- **Before every `git push`, run `bash tools/secrets-gate.sh`.** It scans tracked and new files for
+  personal identity, machine paths, GCP project ids, and credential patterns, and fails on a hit.
+  Keep personal values in `~/.jstack/config.env` (gitignored), never in a committed skill.
 
 ## Notes
 
