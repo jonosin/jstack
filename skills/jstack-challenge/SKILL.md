@@ -23,12 +23,34 @@ Also invoke proactively when you notice yourself agreeing with the user multiple
 
 Do NOT invoke for routine questions, drafting tasks, or decisions the user has clearly already made and is just executing.
 
-## How to spawn the subagent
+## How to spawn the advisor (auto-pick the engine)
 
-Use the `Agent` tool with:
+The advisor can run on one of two engines. Pick automatically. The engine choice never changes the role, the six-section prompt, or the surfacing protocol. Everything from "How to write the prompt" onward is identical regardless of which engine runs.
+
+**Step 1: probe for a background Codex engine.** Run this synchronously:
+
+```bash
+bash ~/.claude/skills/jstack-challenge/scripts/codex-advisor.sh probe
+```
+
+(In non-Claude installs, the helper is this skill's own `scripts/codex-advisor.sh`.) It prints `CODEX_OK` (exit 0) when the OpenAI Codex CLI is installed AND authed (`CODEX_API_KEY` or `OPENAI_API_KEY` set, or `~/.codex/auth.json` exists), or `CODEX_UNAVAILABLE` (exit 1) otherwise.
+
+**Step 2: if `CODEX_OK`, run the advisor as a background Codex agent.**
+1. Write the full six-section prompt (see below) to a temp file, e.g. `mktemp /tmp/jstack-advisor-XXXXXX.md`. Use the Write tool so escaping is not a concern.
+2. Run the helper with `run_in_background: true` so the user is not blocked:
+   ```bash
+   bash ~/.claude/skills/jstack-challenge/scripts/codex-advisor.sh run /tmp/jstack-advisor-XXXXXX.md
+   ```
+   The helper runs `codex exec -s read-only` with no web search and no write access, in an isolated empty directory, so the advisor reasons purely from the briefing and cannot research or touch files. It parses the JSONL event stream and prints only the advisor's final message to stdout.
+3. When it finishes, surface stdout using the surfacing protocol below.
+4. Fallback: if the helper exits non-zero or stdout is empty (timeout, auth error, or the marker `__CODEX_UNAVAILABLE__` on stderr), spawn the Claude advisor instead with the exact same prompt. Never drop the pressure-test because the Codex path failed.
+
+**Step 3: else (`CODEX_UNAVAILABLE`), spawn the Claude advisor.** Use the `Agent` tool with:
 - `subagent_type`: `general-purpose`
-- `model`: `sonnet` (override — Sonnet 4.6 gives the right balance of skepticism and structure for this task)
+- `model`: `sonnet` (override; Sonnet 4.6 gives the right balance of skepticism and structure for this task)
 - `run_in_background`: `true` (the user shouldn't wait staring at a loading bar; surface the result when it completes)
+
+Why auto-pick: a background Codex agent is a genuinely independent second model, which is exactly what an adversarial pressure-test wants. When Codex is absent or unauthed, the Claude advisor is the proven fallback and behaves exactly as it did before this path existed.
 
 ## How to write the prompt
 
