@@ -37,7 +37,38 @@ export PATH="$HOME/jstack/vendor/gemini-vision:$PATH"
 |---|---|
 | `gv` | Single multimodal call, defaults to `gemini-2.5-pro` (Vertex/credits) |
 | `gv-pro` | Same as `gv` now (also `gemini-2.5-pro`) |
-| `gv-batch <dir> <prompt>` | Loops over media files in a dir, calls `gv` per file |
+| `gv-batch [--json] <dir> <prompt>` | Loops over media files in a dir, calls `gv` per file |
+
+## Agent-native flags
+
+`gv` parses these itself (they are not forwarded to `gemini`):
+
+| Flag | Effect |
+|---|---|
+| `--json` | Emit a structured envelope instead of raw text: `{ok, model, project, location, prompt, files, response, error, error_class, exit_code}`. Parse `.response` for the answer; check `.ok` / `.exit_code` to branch on failure. |
+| `--dry-run` | Print the resolved `gemini` invocation (and the billing project) without calling the API. Combine with `--json` for a machine-readable preview. No credits spent. |
+| `-h`, `--help` | Print `gv` usage and exit. |
+| `--version` | Print `gv` + `gemini` versions and exit. |
+
+`gv-batch --json` aggregates per-file envelopes into one object:
+`{dir, prompt, total, ok, failed, results: [envelope...]}` (each result also carries its `file`).
+
+## Exit codes
+
+`gv` returns typed exit codes so a caller can branch without grepping stderr:
+
+| Code | Meaning |
+|---|---|
+| `0` | Success |
+| `2` | Usage error (missing `-p`, bad flag) |
+| `3` | Config error (no GCP project set) |
+| `4` | Auth / billing (Vertex not forced, free-tier "exhausted your capacity", expired OAuth) |
+| `5` | Model unreachable (`404 ModelNotFound`, flash remap) |
+| `6` | Input / file error (defensive — gemini usually reports a missing file as a 0-exit text answer, so this rarely fires) |
+| `7` | Dependency missing (`gemini` not on PATH) |
+| `10` | Unknown upstream failure |
+
+In `--json` mode the same value is also in `.exit_code`, with a human-readable class in `.error_class`.
 
 `gv` reads config from the environment or `~/.jstack/config.env`, and sets
 (all overridable):
@@ -121,25 +152,52 @@ Assist tier**, not Vertex — `gv` forces Vertex auth to avoid it. See
 
 ## Output handling
 
-`gv` returns the model's raw text response on stdout. No structured format
-imposed. If the caller wants JSON, ask for it in the prompt:
+By default `gv` returns the model's raw text response on stdout — no structured
+format imposed. Two ways to get structure:
+
+1. **Envelope (recommended for agents):** add `--json`. You get
+   `{ok, model, project, location, prompt, files, response, error, error_class, exit_code}`
+   regardless of the prompt, so you can branch on `.ok` and read `.response`
+   without parsing free text.
+   ```bash
+   gv --json -p "describe @pic.png" | jq -r '.response'
+   ```
+2. **Model-shaped JSON:** ask for it in the prompt when you want the *answer*
+   itself structured (the envelope's `.response` then holds JSON text).
+   ```bash
+   gv -p "Describe @pic.png. Return JSON: {description, objects: []}"
+   ```
+
+Combine them: `gv --json -p "... Return JSON: {...}"` gives an envelope whose
+`.response` is the model's JSON string.
+
+## Recipes
 
 ```bash
-gv -p "Describe this image. Return JSON: {description, objects: []}" @pic.png
-```
+# Preview the exact call + billing project before spending credits
+gv --dry-run -p "transcribe @meeting.mp3"
 
-The agent (Claude) parses the response and formats as needed for the user.
+# Agent-native: get the answer, fail loudly on auth/model errors
+out=$(gv --json -p "what color is @logo.png?") || echo "gv failed: $(jq -r .error_class <<<"$out")"
+jq -r '.response' <<<"$out"
+
+# Batch a folder into one JSON object you can iterate
+gv-batch --json ~/receipts/ "extract date, vendor, total as JSON" \
+  | jq '.results[] | {file, response}'
+```
 
 ## Failure handling
 
-| Error | Action |
-|---|---|
-| "exhausted your capacity… quota will reset after Xh" | Calls hit the free Code Assist tier, not Vertex. Use `gv` (forces Vertex). Don't call `gemini` directly without `GEMINI_CLI_SYSTEM_SETTINGS_PATH`. |
-| `404 ModelNotFound … gemini-3-flash` | CLI remapped flash → gemini-3.x-flash (no access). Use `gemini-2.5-pro` (default). |
-| Transient 429 | Sleep 5–10s, retry once. `gv-batch` does this. |
-| "I cannot locate the file" | Use basename after `cd` to the file's dir. |
-| CLI prints help text | `@file` was passed as a separate arg; put it inside the `-p` string. |
-| "not running in a trusted directory" | `gv` sets `GEMINI_CLI_TRUST_WORKSPACE=true` already; if calling `gemini` directly, export it or pass `--skip-trust`. |
+| Error | Exit | Action |
+|---|---|---|
+| "exhausted your capacity… quota will reset after Xh" | `4` | Calls hit the free Code Assist tier, not Vertex. Use `gv` (forces Vertex). Don't call `gemini` directly without `GEMINI_CLI_SYSTEM_SETTINGS_PATH`. |
+| `404 ModelNotFound … gemini-3-flash` | `5` | CLI remapped flash → gemini-3.x-flash (no access). Use `gemini-2.5-pro` (default). |
+| Transient 429 | `10` | Sleep 5–10s, retry once. `gv-batch` paces calls with `GV_BATCH_SLEEP`. |
+| "I cannot locate the file" | `0`* | Use basename after `cd` to the file's dir. *gemini usually answers this as a 0-exit text response, so check `.response`, not just the exit code. |
+| CLI prints help text | — | `@file` was passed as a separate arg; put it inside the `-p` string. |
+| "not running in a trusted directory" | `4` | `gv` sets `GEMINI_CLI_TRUST_WORKSPACE=true` already; if calling `gemini` directly, export it or pass `--skip-trust`. |
+| no GCP project set | `3` | Export `GEMINI_VISION_PROJECT` / `GOOGLE_CLOUD_PROJECT`, or set it in `~/.jstack/config.env`. |
+| `gemini` not on PATH | `7` | `brew install gemini-cli`. |
 
 ## What this skill does NOT do
 

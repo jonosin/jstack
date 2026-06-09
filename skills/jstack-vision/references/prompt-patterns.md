@@ -139,9 +139,17 @@ gv -p "Group these images by visual similarity. @shot1.jpg, @shot2.jpg, @shot3.j
 
 ## Structured output
 
+Two layers — don't confuse them:
+
+- **Envelope** (`gv --json`): wraps *any* call in `{ok, response, error_class, exit_code, ...}`. Use it to branch on success/failure programmatically. `.response` is the model's text.
+- **Model-shaped JSON** (prompt asks for JSON): structures the *answer* itself. With `--json` too, that JSON lands inside `.response` as a string.
+
 **JSON shape** (caller's choice — no domain vocab):
 ```bash
 gv -p "Describe @<file>. Return JSON: {description: string, objects: string[], colors: string[]}"
+
+# Envelope + model JSON, then pull the answer out:
+gv --json -p "Describe @<file>. Return JSON: {description, objects: []}" | jq -r '.response'
 ```
 
 **Grading scale** (caller defines what the scale means):

@@ -7,13 +7,29 @@
 # Billed to the project's billing account (consumes GCP credits).
 #
 # Usage:
-#   gv -p "describe this" @~/pic.jpg
-#   gv -m gemini-2.5-pro -p "..." @file.png
-#   gv -p "transcribe" @~/recording.mp3
-#   gv -p "what happens" @~/clip.mp4
-#   gv -p "summarize" @~/doc.pdf
-#   gv -p "compare these" @a.jpg @b.jpg
+#   gv -p "describe @pic.jpg"
+#   gv -m gemini-2.5-pro -p "describe @file.png"
+#   gv -p "transcribe @recording.mp3"
+#   gv -p "what happens in @clip.mp4"
+#   gv -p "summarize @doc.pdf"
+#   gv -p "compare @a.jpg and @b.jpg"
 #   echo "describe this" | gv -p -
+#
+# Agent-native flags (parsed by gv, not forwarded to gemini):
+#   --json       emit a structured JSON envelope instead of raw text
+#   --dry-run    print the resolved gemini invocation; do not call (no billing)
+#   -h, --help   print this usage and exit
+#   --version    print gv + gemini versions and exit
+#
+# Exit codes (typed, so callers can branch without grepping stderr):
+#   0   ok
+#   2   usage error (missing/invalid args or flags)
+#   3   config error (no GCP project set)
+#   4   auth / billing error (Vertex not forced, free-tier exhausted, OAuth)
+#   5   model unreachable (404 ModelNotFound / flash remap)
+#   6   input / file error ("I cannot locate the file")
+#   7   dependency missing (gemini CLI not on PATH)
+#   10  unknown upstream failure
 #
 # Config: project/location/model come from the environment or
 # ~/.jstack/config.env. Set GOOGLE_CLOUD_PROJECT (or GEMINI_VISION_PROJECT)
@@ -27,13 +43,62 @@
 #   GEMINI_CLI_TRUST_WORKSPACE  trust cwd non-interactively (default: true)
 set -euo pipefail
 
+GV_VERSION="1.1.0"
+
+# Typed exit codes (see header).
+EX_OK=0
+EX_USAGE=2
+EX_CONFIG=3
+EX_AUTH=4
+EX_MODEL=5
+EX_INPUT=6
+EX_DEP=7
+EX_UNKNOWN=10
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+usage() {
+  sed -n '2,40p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+}
 
 # Load jstack config if present (env values already exported still win below
 # via the :- fallbacks where it matters).
 if [ -f "$HOME/.jstack/config.env" ]; then
   set -a; . "$HOME/.jstack/config.env"; set +a
 fi
+
+# --- Parse gv-specific flags; collect everything else for gemini. ---
+JSON=0
+DRYRUN=0
+HAVE_PROMPT=0
+PROMPT=""
+GEMINI_ARGS=()
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --json)     JSON=1; shift ;;
+    --dry-run)  DRYRUN=1; shift ;;
+    -h|--help)  usage; exit $EX_OK ;;
+    --version)
+      echo "gv $GV_VERSION"
+      if command -v gemini >/dev/null 2>&1; then
+        echo "gemini $(gemini --version 2>/dev/null | head -1)"
+      fi
+      exit $EX_OK ;;
+    -p)
+      if [ $# -lt 2 ]; then
+        echo "gv: error: -p requires a prompt argument" >&2
+        exit $EX_USAGE
+      fi
+      PROMPT="$2"; HAVE_PROMPT=1
+      GEMINI_ARGS+=("$1" "$2"); shift 2 ;;
+    -p=*|--prompt=*)
+      PROMPT="${1#*=}"; HAVE_PROMPT=1
+      GEMINI_ARGS+=("$1"); shift ;;
+    *)
+      GEMINI_ARGS+=("$1"); shift ;;
+  esac
+done
 
 export PATH="$HOME/.local/bin:/opt/homebrew/bin:$PATH"
 export GOOGLE_GENAI_USE_VERTEXAI=true
@@ -43,11 +108,6 @@ export GOOGLE_GENAI_USE_VERTEXAI=true
 # work) can't hijack billing. Falls back to GOOGLE_CLOUD_PROJECT.
 export GOOGLE_CLOUD_PROJECT="${GEMINI_VISION_PROJECT:-${GOOGLE_CLOUD_PROJECT:-}}"
 export GOOGLE_CLOUD_LOCATION="${GOOGLE_CLOUD_LOCATION:-us-central1}"
-
-if [ -z "$GOOGLE_CLOUD_PROJECT" ]; then
-  echo "error: no GCP project set. Export GOOGLE_CLOUD_PROJECT (or GEMINI_VISION_PROJECT), or add it to ~/.jstack/config.env." >&2
-  exit 1
-fi
 
 # Force Vertex AI auth for THIS process only. The gemini CLI's saved
 # security.auth.selectedType (oauth-personal = free Code Assist) otherwise wins
@@ -67,13 +127,128 @@ export GEMINI_CLI_TRUST_WORKSPACE="${GEMINI_CLI_TRUST_WORKSPACE:-true}"
 # if your project/CLI can reach a flash model.
 MODEL="${GEMINI_VISION_MODEL:-gemini-2.5-pro}"
 
-if ! command -v gemini >/dev/null 2>&1; then
-  echo "error: 'gemini' CLI not found on PATH. Install: brew install gemini-cli" >&2
-  exit 1
+# --- Best-effort: extract @file references from the prompt for the envelope. ---
+FILES_JSON='[]'
+if [ "$JSON" = 1 ] && [ -n "$PROMPT" ] && [ "$PROMPT" != "-" ]; then
+  # Strip the leading @ and any trailing prompt punctuation (e.g. "@x.png?" -> "x.png").
+  # Best-effort metadata only; gemini parses the real @ref from the prompt itself.
+  _files_lines="$(printf '%s' "$PROMPT" | grep -oE '@[^[:space:]]+' | sed -E 's/^@//; s/[).,!?;:]+$//' || true)"
+  FILES_JSON="$(printf '%s' "$_files_lines" | jq -R -s 'split("\n") | map(select(length>0))')"
 fi
 
-exec gemini \
-  -m "$MODEL" \
-  --approval-mode default \
-  --include-directories "$(pwd)" \
-  "$@"
+# --- Build the gemini argv (default model first; a user -m later overrides). ---
+build_argv() {
+  GEMINI_ARGV=(gemini -m "$MODEL" --approval-mode default --include-directories "$(pwd)")
+  if [ ${#GEMINI_ARGS[@]} -gt 0 ]; then
+    GEMINI_ARGV+=("${GEMINI_ARGS[@]}")
+  fi
+}
+
+# --- Dry run: show what would be called, never touch the API. ---
+if [ "$DRYRUN" = 1 ]; then
+  build_argv
+  CMD_STR="$(printf '%q ' "${GEMINI_ARGV[@]}")"
+  if [ "$JSON" = 1 ]; then
+    jq -n \
+      --arg model "$MODEL" \
+      --arg project "${GOOGLE_CLOUD_PROJECT:-}" \
+      --arg location "$GOOGLE_CLOUD_LOCATION" \
+      --arg prompt "$PROMPT" \
+      --argjson files "$FILES_JSON" \
+      --arg command "${CMD_STR% }" \
+      '{ok:true, dry_run:true, model:$model, project:$project, location:$location, prompt:$prompt, files:$files, command:$command, response:null, error:null, error_class:null, exit_code:0}'
+  else
+    echo "[dry-run] would call gemini (no API call, no billing)"
+    echo "  project:  ${GOOGLE_CLOUD_PROJECT:-<unset>}"
+    echo "  location: $GOOGLE_CLOUD_LOCATION"
+    echo "  model:    $MODEL"
+    echo "  command:  ${CMD_STR% }"
+  fi
+  exit $EX_OK
+fi
+
+# --- Pre-flight: config + dependency, with typed codes. ---
+if [ -z "${GOOGLE_CLOUD_PROJECT:-}" ]; then
+  echo "gv: error: no GCP project set. Export GOOGLE_CLOUD_PROJECT (or GEMINI_VISION_PROJECT), or add it to ~/.jstack/config.env." >&2
+  exit $EX_CONFIG
+fi
+
+if ! command -v gemini >/dev/null 2>&1; then
+  echo "gv: error: 'gemini' CLI not found on PATH. Install: brew install gemini-cli" >&2
+  exit $EX_DEP
+fi
+
+if [ "$HAVE_PROMPT" = 0 ]; then
+  echo "gv: error: missing prompt. Pass -p \"<prompt with @file refs>\" (or -p - to read the prompt from stdin)." >&2
+  exit $EX_USAGE
+fi
+
+# --- Classify a gemini failure into an error class from its stderr. ---
+classify_error() {
+  # $1 = combined stderr text
+  case "$1" in
+    *"exhausted your capacity"*|*"quota will reset"*) echo "auth" ;;
+    *UNAUTHENTICATED*|*PERMISSION_DENIED*|*"Reauthenticate"*|*"credential"*|*"credentials are invalid"*) echo "auth" ;;
+    *"not running in a trusted directory"*) echo "auth" ;;
+    *ModelNotFound*|*"gemini-3-flash"*|*NOT_FOUND*|*"was not found"*) echo "model" ;;
+    *"cannot locate the file"*|*"I cannot locate"*|*"no such file"*) echo "input" ;;
+    *) echo "unknown" ;;
+  esac
+}
+
+class_to_code() {
+  case "$1" in
+    auth)    echo $EX_AUTH ;;
+    model)   echo $EX_MODEL ;;
+    input)   echo $EX_INPUT ;;
+    *)       echo $EX_UNKNOWN ;;
+  esac
+}
+
+# --- Call gemini, capturing stdout (response) and stderr (diagnostics). ---
+build_argv
+ERRFILE="$(mktemp "${TMPDIR:-/tmp}/gv-err.XXXXXX")"
+trap 'rm -f "$ERRFILE"' EXIT
+
+set +e
+RESPONSE="$("${GEMINI_ARGV[@]}" 2>"$ERRFILE")"
+RAW_CODE=$?
+set -e
+ERR="$(cat "$ERRFILE")"
+
+if [ "$RAW_CODE" -eq 0 ]; then
+  CLASS="ok"
+  GV_CODE=$EX_OK
+else
+  CLASS="$(classify_error "$ERR")"
+  GV_CODE="$(class_to_code "$CLASS")"
+fi
+
+if [ "$JSON" = 1 ]; then
+  if [ "$GV_CODE" -eq 0 ]; then OK_BOOL=true; else OK_BOOL=false; fi
+  jq -n \
+    --argjson ok "$OK_BOOL" \
+    --arg model "$MODEL" \
+    --arg project "$GOOGLE_CLOUD_PROJECT" \
+    --arg location "$GOOGLE_CLOUD_LOCATION" \
+    --arg prompt "$PROMPT" \
+    --argjson files "$FILES_JSON" \
+    --arg response "$RESPONSE" \
+    --arg error "$ERR" \
+    --arg error_class "$CLASS" \
+    --argjson exit_code "$GV_CODE" \
+    '{ok:$ok, model:$model, project:$project, location:$location, prompt:$prompt, files:$files,
+      response:(if $ok then $response else null end),
+      error:(if $ok then null else (if $error=="" then "gemini exited non-zero" else $error end) end),
+      error_class:(if $ok then null else $error_class end),
+      exit_code:$exit_code}'
+else
+  # Preserve the original UX: model text on stdout, gemini diagnostics on stderr.
+  [ -n "$RESPONSE" ] && printf '%s\n' "$RESPONSE"
+  [ -n "$ERR" ] && printf '%s\n' "$ERR" >&2
+  if [ "$GV_CODE" -ne 0 ]; then
+    echo "gv: gemini call failed (class=$CLASS, exit=$GV_CODE)" >&2
+  fi
+fi
+
+exit $GV_CODE

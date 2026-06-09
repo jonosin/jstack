@@ -6,21 +6,44 @@
 #   gv-batch <directory> <prompt> [extra args to gv]
 #   gv-batch ~/Downloads/receipts/ "extract date, vendor, total"
 #   gv-batch ~/screenshots/ "describe the UI state" -m gemini-2.5-pro
+#   gv-batch --json ~/ads/ "describe this image"      # aggregated JSON output
+#
+# Flags (parsed by gv-batch):
+#   --json   emit one JSON object: {dir, prompt, total, ok, failed, results: [envelope...]}
+#            (each result is a `gv --json` envelope). Suppresses human progress lines.
+#
+# Exit codes:
+#   0   all files processed without error
+#   2   usage error
+#   3   not a directory
+#   4   no media files found
+#   1   at least one file failed (human mode); JSON mode always exits 0 and
+#       reports per-file failures in the `failed` count + result envelopes.
 #
 # Env:
 #   GV_BATCH_SLEEP  seconds between calls (default 4, to respect per-minute quotas)
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+GV="$SCRIPT_DIR/gv"
+
+JSON=0
+if [ "${1:-}" = "--json" ]; then
+  JSON=1
+  shift
+fi
+
 if [ $# -lt 2 ]; then
   cat >&2 <<USAGE
-usage: gv-batch <directory> <prompt> [extra gv args]
+usage: gv-batch [--json] <directory> <prompt> [extra gv args]
 
   examples:
     gv-batch ~/ads/ "describe this image"
+    gv-batch --json ~/ads/ "describe this image"
     gv-batch ~/recordings/ "transcribe verbatim" -m gemini-2.5-pro
     gv-batch ~/clips/ "what happens in this video"
 USAGE
-  exit 64
+  exit 2
 fi
 
 DIR="$1"
@@ -30,7 +53,7 @@ shift
 
 if [ ! -d "$DIR" ]; then
   echo "error: not a directory: $DIR" >&2
-  exit 1
+  exit 3
 fi
 
 DIR="$(cd "$DIR" && pwd)"
@@ -47,25 +70,67 @@ shopt -u nocaseglob
 if [ ${#FILES[@]} -eq 0 ]; then
   echo "error: no media files found in $DIR" >&2
   echo "  looked for: jpg, png, gif, webp, mp3, wav, mp4, mov, pdf, etc." >&2
-  exit 1
+  exit 4
 fi
 
 SLEEP_BETWEEN="${GV_BATCH_SLEEP:-4}"
 COUNT=${#FILES[@]}
 
+cd "$DIR"
+
+# --- JSON mode: collect per-file envelopes, emit one aggregated object. ---
+if [ "$JSON" = 1 ]; then
+  RESULTS_FILE="$(mktemp "${TMPDIR:-/tmp}/gv-batch.XXXXXX")"
+  trap 'rm -f "$RESULTS_FILE"' EXIT
+  OK=0
+  FAILED=0
+  for FILE in "${FILES[@]}"; do
+    BASENAME="$(basename "$FILE")"
+    set +e
+    ENVELOPE="$("$GV" --json -p "$PROMPT @$BASENAME" "$@")"
+    RC=$?
+    set -e
+    if [ "$RC" -eq 0 ]; then
+      OK=$((OK + 1))
+    else
+      FAILED=$((FAILED + 1))
+      # gv emits a valid envelope even on failure; if it crashed before that,
+      # synthesize a minimal one so the aggregate stays valid JSON.
+      if [ -z "$ENVELOPE" ]; then
+        ENVELOPE="$(jq -n --arg f "$BASENAME" --argjson c "$RC" \
+          '{ok:false, file:$f, response:null, error:"gv crashed before emitting an envelope", error_class:"unknown", exit_code:$c}')"
+      fi
+    fi
+    # Tag the envelope with the file it came from.
+    printf '%s' "$ENVELOPE" | jq --arg f "$BASENAME" '. + {file:$f}' >> "$RESULTS_FILE"
+    sleep "$SLEEP_BETWEEN"
+  done
+  jq -s \
+    --arg dir "$DIR" \
+    --arg prompt "$PROMPT" \
+    --argjson total "$COUNT" \
+    --argjson ok "$OK" \
+    --argjson failed "$FAILED" \
+    '{dir:$dir, prompt:$prompt, total:$total, ok:$ok, failed:$failed, results:.}' \
+    "$RESULTS_FILE"
+  exit 0
+fi
+
+# --- Human mode: stream progress, continue on per-file errors. ---
 echo "==> processing $COUNT file(s) in $DIR (sleep ${SLEEP_BETWEEN}s between calls)"
 echo
 
-cd "$DIR"
-
+ANY_FAILED=0
 for FILE in "${FILES[@]}"; do
   BASENAME="$(basename "$FILE")"
   echo "── $BASENAME ──"
-  if ! gv -p "$PROMPT @$BASENAME" "$@"; then
+  if ! "$GV" -p "$PROMPT @$BASENAME" "$@"; then
     echo "  [error: $BASENAME — continuing]" >&2
+    ANY_FAILED=1
   fi
   echo
   sleep "$SLEEP_BETWEEN"
 done
 
 echo "==> done. $COUNT file(s) processed."
+[ "$ANY_FAILED" = 0 ] || exit 1

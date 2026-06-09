@@ -39,6 +39,23 @@ gv -p "summarize page 1" @~/doc.pdf
 gv-batch ~/Downloads/receipts/ "extract date, vendor, total"
 ```
 
+## Agent-native flags
+
+`gv` understands a few flags of its own (everything else is forwarded to `gemini`):
+
+```bash
+gv --json    -p "describe @pic.png"   # structured envelope: {ok, response, error_class, exit_code, ...}
+gv --dry-run -p "describe @pic.png"   # show the resolved call + billing project; no API call, no credits
+gv --version                          # gv + gemini versions
+gv --help                             # usage
+
+gv-batch --json ~/receipts/ "extract date, vendor, total"  # aggregated {total, ok, failed, results[]}
+```
+
+`gv` returns **typed exit codes** (`0` ok · `2` usage · `3` config · `4` auth/billing ·
+`5` model unreachable · `6` input · `7` missing `gemini` · `10` unknown), so callers
+can branch on failure without grepping stderr. See `AGENTS.md` for the full table.
+
 ## Files
 
 | File | Purpose |

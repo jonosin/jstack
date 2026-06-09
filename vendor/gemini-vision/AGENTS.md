@@ -3,6 +3,39 @@
 Generic Gemini multimodal wrapper. No domain vocabulary, no industry-specific
 defaults. Caller supplies the prompt and the files.
 
+## Flags (parsed by `gv`, not forwarded to `gemini`)
+
+| Flag | Effect |
+|---|---|
+| `--json` | Emit a structured envelope: `{ok, model, project, location, prompt, files, response, error, error_class, exit_code}`. On success `response` holds the text and `error*` are null; on failure `response` is null and `error_class` names the class. |
+| `--dry-run` | Print the resolved `gemini` argv + billing project; do not call. No credits. Pair with `--json` for a machine-readable preview (`dry_run: true`). |
+| `-h`, `--help` | Print usage and exit. |
+| `--version` | Print `gv` + `gemini` versions and exit. |
+
+`gv-batch [--json] <dir> <prompt>` — `--json` emits one object
+`{dir, prompt, total, ok, failed, results: [envelope...]}`; each result carries `file`.
+Human mode is unchanged (streams progress, continues on per-file errors).
+
+## Exit codes
+
+`gv` maps the failure modes below to typed codes (also surfaced as `.exit_code`
+in `--json`):
+
+| Code | Class | Trigger |
+|---|---|---|
+| `0` | — | success |
+| `2` | usage | missing `-p`, bad/incomplete flag |
+| `3` | config | no GCP project set |
+| `4` | auth | free-tier "exhausted your capacity", expired/invalid OAuth, untrusted-dir gate |
+| `5` | model | `404 ModelNotFound` / flash remap |
+| `6` | input | "cannot locate the file" (defensive; gemini usually returns this as a 0-exit text answer) |
+| `7` | dep | `gemini` not on PATH |
+| `10` | unknown | any other non-zero `gemini` exit |
+
+`gv-batch` exit codes: `0` all ok, `2` usage, `3` not a directory, `4` no media
+files, `1` at least one file failed (human mode). `--json` mode always exits `0`
+and reports per-file failure via `failed` + each result's envelope.
+
 ## Auth model
 
 - **Vertex AI** mode (`GOOGLE_GENAI_USE_VERTEXAI=true`)
