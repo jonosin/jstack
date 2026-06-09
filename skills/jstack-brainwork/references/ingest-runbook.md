@@ -11,6 +11,12 @@ For a raw source under `raw/personal/**`, use **Personal Ingest** (see `ingest-o
 
 For any other `raw/<topic>/**`, use **Standard Ingest** (see `ingest-operation.md`).
 
+**Session synthesis:** in conversation drops, `## Verbatim` is the human's ground truth and
+`## Session synthesis` is the session's agent-authored conclusions — the authoritative record of
+what was decided. Compile wiki pages from the synthesis at matching fidelity (a rich synthesis
+deserves a substantial venture-page section, not a one-liner); attribute its reasoning to the
+session date; do not re-derive generic analysis when the drop already carries the specific one.
+
 **Supersession:** honor `supersedes_hint:` in the raw frontmatter and the ingest Supersession Check —
 apply the protocol in `skills/llm-wiki/references/supersession.md` automatically (the new source is
 the authority during ingest). Source summaries are written as **hybrid cards**
