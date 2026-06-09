@@ -11,6 +11,12 @@ For a raw source under `raw/personal/**`, use **Personal Ingest** (see `ingest-o
 
 For any other `raw/<topic>/**`, use **Standard Ingest** (see `ingest-operation.md`).
 
+**Supersession:** honor `supersedes_hint:` in the raw frontmatter and the ingest Supersession Check —
+apply the protocol in `skills/llm-wiki/references/supersession.md` automatically (the new source is
+the authority during ingest). Source summaries are written as **hybrid cards**
+(`skills/llm-wiki/references/source-card-template.md`; run `python3 tools/sb.py rawmap <raw>` for the
+Raw map). Pages/sections marked superseded count as wiki changes in the final report.
+
 ## Before writing wiki pages
 
 Verify the SHA256 incremental cache:
@@ -29,9 +35,16 @@ python3 tools/sb.py index --write
 python3 tools/sb.py cache add raw/<path>.md
 python3 tools/sb.py log ingest "<summary>" --source raw/<path>.md --created "<titles>" --updated "<titles>"
 python3 tools/sb.py check
+python3 tools/sb.py cards
 ```
 
 If `check` is not clean, report and stop. Do not paper over failures.
+
+If `cards` lists **a page you just wrote or touched**, your card violates the template
+(`skills/llm-wiki/references/source-card-template.md`) — fix it before reporting: body sections are
+exactly `## Claims` / `## Raw map` / `## Load raw when` (+ optional `## See Also`); no narrative
+sections; `> SUPERSEDED` markers go on the **old** page (or stale section), never on the new page.
+Legacy pages already listed by `cards` are the pending sweep — leave them alone.
 
 ## hot.md refresh
 

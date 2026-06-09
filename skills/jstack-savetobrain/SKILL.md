@@ -40,7 +40,13 @@ Capture preserves the source as source. Brainwork is a separate invocation.
    - Conversation/text/article → `references/raw-template.md`. Set `source: conversation` for session-derived drops; otherwise set the originating URL or paste origin.
    - YouTube / video → `references/youtube-transcript-template.md`. Fetch the transcript; light cleanup only.
 6. **Write the raw file** with valid frontmatter (`title`, `source`, `author`, `published`, `collected`, `tags`) and the source content preserved verbatim where applicable. Do not editorialize.
-7. **Stop.** Do not touch `wiki/` or run any `tools/sb.py` subcommand.
+   **Conversation drops — fixed body structure, verbatim-first.** The body of a conversation-derived drop is exactly two sections and nothing else:
+   - `## Verbatim` — the user's own words, quoted exactly (blockquote). This is the ground truth.
+   - `## Session context` (optional) — only facts that actually appeared in this session (what was being discussed, links shared). Cite existing brain pages by path; never restate their content.
+
+   Do NOT add Rationale / Unit economics / Next steps / analysis sections, and do NOT include any number, comparison, or claim that is not inside the Verbatim quote — fabricated content in `raw/` poisons the immutable ground truth and every page later compiled from it. If a body sentence does not trace to this session, delete it.
+7. **Supersession hint.** If the user stated the new content *replaces* an earlier decision/plan/fact ("we pivoted", "scrap X, now Y", "this replaces the earlier plan"), add `supersedes_hint: ["<free text or wiki path>"]` to the raw frontmatter. Metadata on the new drop only — still no wiki writes. Brainwork's ingest resolves the hint and applies the supersession protocol (`skills/llm-wiki/references/supersession.md`).
+8. **Stop.** Do not touch `wiki/` or run any `tools/sb.py` subcommand.
 
 ## Final report
 
