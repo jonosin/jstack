@@ -7,9 +7,9 @@ Optionally load `skills/llm-wiki/references/capture-operation.md` for Step 2/3 p
 
 ## Routing
 
-For a raw source under `raw/personal/**`, use **Personal Ingest** (see `ingest-operation.md`).
+For a raw source under `raw/drops/**`, use **Personal Ingest** (see `ingest-operation.md`).
 
-For any other `raw/<topic>/**`, use **Standard Ingest** (see `ingest-operation.md`).
+For any other `raw/clips/**`, use **Standard Ingest** (see `ingest-operation.md`).
 
 **Session synthesis:** in conversation drops, `## Verbatim` is the human's ground truth and
 `## Session synthesis` is the session's agent-authored conclusions — the authoritative record of

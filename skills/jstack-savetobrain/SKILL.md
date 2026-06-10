@@ -4,114 +4,119 @@ description: Save the current conversation/session's durable output — from a s
 user_invocable: true
 ---
 
-# jstack-savetobrain — raw capture only
+# jstack-savetobrain — curate this session into the brain
 
-Cheap, fast, raw-only capture for the second brain. This skill **only** materializes a raw artifact under `raw/` and stops. The heavier follow-up work (ingest, index, log, lint, graph, hot.md refresh) is deferred to `jstack-brainwork`.
+## What you are writing into
 
-## Operating contract
+The second brain (`${SECOND_BRAIN_PATH}` from `~/.jstack/config.env`, default `~/second-brain`) is
+an **agent-only system of record**. No human reads it. It has two layers:
 
-Before writing anything:
+- `raw/` — the ground-truth layer. Immutable, append-only. Only things that actually happened:
+  what the user said, what a session actually concluded, what an external source actually contains.
+- `wiki/` — compiled knowledge. A *different* agent (`/jstack-brainwork`) builds it later by
+  reading `raw/`. Every future agent that plugs into this brain answers from the wiki and escalates
+  to raw for work-grade tasks.
 
-1. Read `${SECOND_BRAIN_PATH}/AGENTS.md` for the live contract (`SECOND_BRAIN_PATH` from `~/.jstack/config.env`, default `~/second-brain`).
-2. Treat `${SECOND_BRAIN_PATH}/SKILL.md` as a compatibility router only — it is a symlink to `skills/llm-wiki/SKILL.md`.
-3. Load `${SECOND_BRAIN_PATH}/skills/llm-wiki/references/capture-operation.md` and execute **only Step 1: Materialize or reuse the raw artifact**.
-4. Load `skills/llm-wiki/references/raw-template.md` for conversation/text/article raw markdown, or `skills/llm-wiki/references/youtube-transcript-template.md` for video transcripts.
+**You are the only agent that will ever see this full session.** When it ends, everything not
+written down is gone. Everything you do write becomes permanent context that every future agent
+inherits. You are the curator standing between this conversation and every agent that comes after —
+under-save and future agents lose the session's output forever; over-save noise and you bloat the
+ground-truth layer every future agent pays tokens to read.
 
-Do not load `skills/llm-wiki/references/ingest-operation.md` unless the user explicitly asks to ingest immediately in the same invocation. If they do, hand off to `jstack-brainwork` afterward rather than running it inline.
+Both failures have actually happened (2026-06-10):
+- **Under-save:** a 2-hour strategy session killed four niches with reasons and landed a full
+  business direction. The capture kept only the user's literal quotes; the synthesis — the valuable
+  output — was nearly lost.
+- **Fabrication:** a thin session got a drop padded with margins, comparables, and next-step plans
+  that were never discussed. The permanent record briefly contained things that never happened.
 
-## Hard scope — what this skill does NOT do
+## Your mandate — you decide
 
-- Does **not** update `wiki/`, `wiki/index.md`, `wiki/log.md`, or `wiki/hot.md`.
-- Does **not** run any *writing* `tools/sb.py` subcommand (`index --write`, `graph`, `lint`, `cache add`).
-  The one allowed call is the read-only `tools/sb.py pending` in the final report, purely to surface
-  the growing backlog so deferred work stays visible (see Final report).
-- Does **not** generate wiki prose, summaries, or interpretations of *external* sources (articles,
-  transcripts, pastes stay verbatim). Recording the session's own synthesis in a conversation drop
-  is NOT wiki generation — see Workflow step 6.
-- Does **not** route into Personal Ingest, Standard Ingest, or any cascade.
+You have the full session transcript in your context window. Use all of it. Then make four
+editorial calls yourself:
 
-Capture preserves what happened — the source as source, the session's output as the session's
-output. Brainwork (compiling it into wiki/) is a separate invocation.
+1. **Whether anything is worth saving.** The invocation is a request to *curate*, not an order to
+   write a file. The brain stores knowledge: decisions, durable facts, conclusions, plans,
+   relationships, preferences. It does not store execution work — code written, bugs fixed,
+   refactors, builds run, drafts produced — the repo, git history, or artifact itself is the record
+   for those. A session that was *pure execution* (however long and however successful) has nothing
+   to save: say exactly that, write no file, and let the user override you if they disagree.
+   "Nothing here is worth saving — the fix lives in the repo" is a correct, professional outcome.
+2. **Which parts of the session to save.** Be ruthlessly selective. A 2-hour session where only the
+   last three turns produced durable output gets a capture of those three turns; note that the rest
+   was dead ends in one line if it helps a future agent avoid re-walking them, otherwise drop it.
+3. **The structure.** There is no mandatory body template. Choose sections that fit *this*
+   session's content: a one-fact drop can be three lines; a strategy session may need decision
+   records, options-killed-with-reasons, open questions, and next actions. Write for machine
+   consumption by the next agent — terse, structured, zero human-facing niceties.
+4. **The depth.** Proportional to what actually happened. Rich session → rich, curated record
+   (hundreds of lines is fine and may be required). Thin session → thin drop. The two must not
+   look alike.
 
-## Workflow
+A good test: a brand-new agent reading only your file should know (a) what the user actually said
+that matters, (b) what the session concluded and *why*, (c) what was considered and rejected,
+(d) what is still open, and (e) where related artifacts/pages live — without ever seeing the
+transcript you saw.
 
-1. **Identify what this session produced that is worth keeping, and size the capture to it.** The unit ranges from a single durable fact (a shared link/article, a video URL, a pasted text block, a stated fact, a decision, a research request, a reusable idea) up to **the full intellectual output of a strategy/thinking session** (analysis, options considered and killed, decisions, open questions, next actions). Capture depth must be proportional to session richness — a thin session gets a thin drop; a session that worked out a business direction gets everything, so a brand-new session can read the drop and know exactly what was discussed and decided.
-2. **Pick the destination** by matching `capture-operation.md` Step 1's input table. Conversation-derived material with no external source goes under `raw/personal/drops/YYYY-MM-DD-<slug>.md` unless a more specific personal/project raw directory clearly already exists (e.g. `raw/personal/travel/`, `raw/personal/ventures/`).
-3. **Slugify** the title (lowercase, hyphenated). Personal facts about the human go under `raw/personal/`. Other topics go under `raw/<topic>/`.
-4. **Reuse, don't duplicate.** Before creating the file, check `raw/.ingest-cache.json` and likely existing raw paths for matching slugs or matching SHA256 of identical content. If an artifact for this content already exists, reuse it and report that — do not create a near-duplicate.
-5. **Materialize** using the right template:
-   - Conversation/text/article → `references/raw-template.md`. Set `source: conversation` for session-derived drops; otherwise set the originating URL or paste origin.
-   - YouTube / video → `references/youtube-transcript-template.md`. Fetch the transcript; light cleanup only.
-6. **Write the raw file** with valid frontmatter (`title`, `source`, `author`, `published`, `collected`, `tags`) and the source content preserved verbatim where applicable. Do not editorialize.
-   **Conversation drops — provenance-separated body, scaled to richness.** `raw/` integrity means
-   *nothing that didn't happen* — not *nothing agent-authored*. The user's words and the session's
-   synthesis are both things that happened; they must both survive, in clearly separated sections:
+## Hard rules — the freedom ends here
 
-   - `## Verbatim` — the user's own load-bearing words, quoted exactly (blockquote): decisions,
-     facts, constraints, corrections. The ground truth of what the human said. Never paraphrased.
-   - `## Session synthesis` — agent-authored record of the intellectual output this session
-     actually produced: what was analyzed, options considered and **killed (with the reasons)**,
-     what was decided and why, what remains open, agreed next actions. **Transcribe, don't create:**
-     every claim here must be a conclusion actually reached in this session's transcript. Recording
-     that output at full fidelity is *required* — a rich strategy session may need a long, detailed
-     section (hundreds of lines is fine); losing it is the failure mode this section exists to
-     prevent. Producing NEW analysis at save time (numbers, comparisons, plans that never appeared
-     in the session) is forbidden. If the session produced no synthesis beyond the user's words,
-     omit the section entirely — never pad it.
-   - `## Session context` (optional) — links shared, artifacts produced this session (by path),
-     related brain pages (cite by path; never restate their content as session output).
+1. **Nothing that didn't happen.** Every claim in the file must trace to this session's transcript
+   (or to content the user supplied). Sharpening a vague statement into a precise one ("maybe
+   60-70%, haven't done the math" → "65% margin") is fabrication. Inventing precision the
+   transcript doesn't contain — dates, plan names, tiers, figures — is fabrication. A
+   "next actions" section may contain only actions explicitly agreed in the session; if none were
+   agreed, there is no such section. Record an action as *done* only if the transcript shows it
+   done; an assistant offer the user deferred is recorded as "offered, deferred" — never as done.
+   Do not assert world-states the transcript didn't verify ("X is live", "Y is working in
+   production") — record exactly what was verified and nothing more.
+   When the session was vague, the record stays vague — mark open things as open.
+   **The drop records this session only.** Existing brain pages may be cited by path, but never
+   restate their content as session output and never merge vault knowledge into the session's
+   conclusions — connecting this session to prior brain content is brainwork's job, not yours.
+2. **Provenance stays legible.** A reader must always be able to tell the user's own words from
+   the session's agent-authored conclusions from external content. Quote load-bearing user
+   statements exactly (decisions, constraints, corrections, facts) — and never present an
+   assistant line as the user's words. If the file contains *any* agent-authored sentence
+   (framing, context, synthesis), add `synthesis_by: "<model/harness>"` to the frontmatter. How
+   you arrange the body (sections, inline quoting, labels) is your call — that provenance stays
+   unmistakable is not.
+3. **Frontmatter minimum — these exact keys:** `title`, `source: conversation` (or the external
+   origin), `collected: YYYY-MM-DD`, `tags`. Do not substitute your own schema (`date`, `slug`,
+   `type` instead of `title`/`collected` breaks downstream tooling). If the user said this
+   *replaces* an earlier decision/plan/fact ("we pivoted", "scrap X, now Y"), add
+   `supersedes_hint: ["..."]` quoting the user's own description of what is replaced ("the per-post
+   pricing idea from last week"), or a wiki/raw path you verified exists on disk — never an
+   invented or guessed date. Brainwork resolves the hint and applies the supersession protocol.
+4. **Destinations are fixed.** Conversation-derived material → `raw/drops/YYYY-MM-DD-<slug>.md`.
+   External sources the user shared (article, paste, transcript) → `raw/clips/<slug>.md`, content
+   preserved verbatim — never editorialize external content. Topic goes in `tags`, not folders.
+5. **Reuse, don't duplicate.** Check `raw/.ingest-cache.json` and the target directory first. If an
+   artifact for this content already exists, reuse or extend the record via a new dated drop —
+   `raw/` is immutable, never edit an existing raw file.
+6. **Raw only.** No `wiki/` writes, no `tools/sb.py` write subcommands, no ingest. The single
+   allowed call is read-only `python3 tools/sb.py pending` for the final report. Brainwork is a
+   separate, later invocation.
+7. **Confirmation gate** (`AGENTS.md` §2): an explicit "save this" / "/jstack-savetobrain" /
+   "capture" counts as the yes. Otherwise offer first; writing needs a yes.
 
-   When `## Session synthesis` is present, add `synthesis_by: "<model/harness>"` to the frontmatter
-   so the synthesis is always attributable — it is the session's conclusions, never the human's
-   words and never an external source.
-7. **Supersession hint.** If the user stated the new content *replaces* an earlier decision/plan/fact ("we pivoted", "scrap X, now Y", "this replaces the earlier plan"), add `supersedes_hint: ["<free text or wiki path>"]` to the raw frontmatter. Metadata on the new drop only — still no wiki writes. Brainwork's ingest resolves the hint and applies the supersession protocol (`skills/llm-wiki/references/supersession.md`).
-8. **Stop.** Do not touch `wiki/` or run any `tools/sb.py` subcommand.
+## Downstream contract — who reads your file
+
+- **`/jstack-brainwork`** (fresh agent, no session memory) compiles wiki pages from it. Make its
+  job mechanical: decisions findable, current-vs-killed unmistakable, reasoning attributed to the
+  session date.
+- **Future working agents** may read the raw directly for drafting/deciding/building. Save enough
+  that they don't need the transcript.
+- You may annotate: mark a block `<!-- background only — do not compile -->` or flag low-confidence
+  items. Brainwork honors annotations.
 
 ## Final report
 
-Capturing creates an **ingest debt**: the raw file exists but no wiki page references it yet, so it
-counts as pending until `/jstack-brainwork` processes it. Surface that debt so it never accumulates
-invisibly — run the read-only detector and report the count:
-
-```bash
-python3 tools/sb.py pending   # read-only; do not pass --json here, just read the count
-```
-
-Then keep the report to two lines:
+Run `python3 tools/sb.py pending` (read-only), then report in two lines:
 
 ```
-Saved raw source: raw/<topic>/<file>.md. Brainwork deferred.
-Pending ingest backlog: <N> source(s). Run /jstack-brainwork (or `all pending`) to process.
-```
-
-If the artifact already existed and was reused without changes, say so explicitly:
-
-```
-Reused existing raw source: raw/<topic>/<file>.md (no change). Brainwork deferred.
+Saved raw source: raw/drops/<file>.md — <one-line description of what you curated>. Brainwork deferred.
 Pending ingest backlog: <N> source(s). Run /jstack-brainwork to process.
 ```
 
-If the count is climbing (several pending), gently recommend running `/jstack-brainwork all pending`
-or letting the nightly maintenance cron drain it — captures are only worth keeping if they get ingested.
-
-## Regression case (why Session synthesis exists — do not regress to verbatim-only)
-
-2026-06-10: a long strategy session progressively killed four niches with reasons, converged on a
-service-as-software business shape, and landed a full hospitality content-operator strategy — almost
-all of it agent synthesis in response to the user's questions. Savetobrain (then verbatim-only)
-captured just the user's quotes; the entire synthesis survived only because brainwork was run
-manually while the transcript was still live (result: `wiki/personal/ventures/thai-ai-ugc-agency.md`
-§"Direction pivot (2026-06-10)"). Correct behavior for that session: a long `## Session synthesis`
-covering the niche kills + reasons, the business-shape principles, and the full service model. Test
-yourself against it: if your drop for a session like that is under a screen of text, you lost the
-session's output.
-
-The inverse failure also happened (same date): given a thin session, a capture agent *invented*
-margins, comps, and next-step plans that were never discussed. Both failures are the same bug —
-the drop not matching what actually happened. Capture everything that happened; nothing that didn't.
-
-## Guardrails
-
-- Conversation-derived material still needs explicit user confirmation per `AGENTS.md` §2, unless the user already said `save this` / `add to brain` / `capture` / `/jstack-savetobrain` / `research X`. Offering is free; writing needs a yes.
-- `raw/` is immutable. If a conversation fact must be saved and an old raw artifact is wrong, create a new raw artifact rather than editing the old one.
-- Token discipline: do not read the whole vault. Read `AGENTS.md`, the capture reference, and the chosen raw template. Spot-check `raw/.ingest-cache.json` and the target directory for duplicates.
+If you saved nothing: `Nothing worth saving from this session: <reason>. No file written.`
+If several sources are pending, recommend `/jstack-brainwork all pending`.

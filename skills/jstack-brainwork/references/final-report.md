@@ -17,7 +17,7 @@ Include in this order:
 Single ingest:
 
 ```
-Route: ingest (raw/personal/drops/2026-06-03-pricing-thoughts.md)
+Route: ingest (raw/drops/2026-06-03-pricing-thoughts.md)
 Created: wiki/personal/ventures/pricing-thoughts.md; updated: wiki/personal/me.md, wiki/index.md, wiki/log.md
 sb check: clean
 Remaining pending: 0
@@ -35,7 +35,7 @@ Dry run:
 
 ```
 Route: dry run (user asked to inspect only)
-Next action would be: ingest raw/personal/drops/2026-06-03-foo.md (Personal Ingest)
+Next action would be: ingest raw/drops/2026-06-03-foo.md (Personal Ingest)
 No writes performed.
 ```
 

@@ -30,7 +30,7 @@ Codex) gets the same answer because the logic lives in `tools/sb.py`, not in a c
 
 ## Prioritization
 
-`sb.py pending` already sorts newest-first. Prioritize newest `raw/personal/drops/` unless the user
+`sb.py pending` already sorts newest-first. Prioritize newest `raw/drops/` unless the user
 supplied a path or topic — drops are the canonical destination for `/jstack-savetobrain` captures, so
 they are the highest-signal default for `/jstack-brainwork` follow-up.
 
@@ -44,9 +44,9 @@ just the first newest pending raw. Defer per-source analysis to the ingest runbo
 
 ## Excluded zones (never pending)
 
-`raw/personal/scratch/**` is a working/holding area (e.g. session-transcript dumps), **not** an ingest
+`raw/scratch/**` is a working/holding area (e.g. session-transcript dumps), **not** an ingest
 target. `sb.py pending` excludes it automatically and reports the excluded count separately. If a
-durable fact lives in a scratch file, capture it as its own `raw/personal/drops/` artifact via
+durable fact lives in a scratch file, capture it as its own `raw/drops/` artifact via
 `/jstack-savetobrain` rather than ingesting the transcript wholesale.
 
 ## Edge cases
