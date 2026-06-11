@@ -2,6 +2,7 @@
 # new-jstack-skill.sh — create a jstack skill canonically in the jstack repo
 # (skills/<name>) and symlink it into every harness installed on this machine:
 # .agents (the hub), .claude, .codex, and the .hermes jstack/ package.
+# Every link points DIRECTLY at the repo dir — no hop through .agents.
 #
 # The canonical location is the repo this script ships in, resolved from the
 # script's own path — so it works wherever you cloned jstack.
@@ -84,18 +85,12 @@ link_into() {
   echo "linked: $link -> $target"
 }
 
-# .agents is the hub: it points straight at the repo. The other harnesses point
-# at .agents (transitive) when it exists, else straight at the repo so a machine
-# without .agents still gets working links.
-if [ -d "$AGENTS" ]; then
-  link_into "$AGENTS" "$canon"
-  link_into "$CLAUDE" "../../.agents/skills/$name"   # repo-relative, via the hub
-  link_into "$CODEX"  "$AGENTS/$name"
-  link_into "$HERMES_PKG" "$AGENTS/$name"
-else
-  link_into "$CLAUDE" "$canon"
-  link_into "$CODEX"  "$canon"
-  link_into "$HERMES_PKG" "$canon"
-fi
+# Every harness symlinks STRAIGHT at the canonical repo dir — no transitive
+# hop through .agents. The .agents entry is just one more direct link (the
+# discovery hub), not an indirection layer.
+link_into "$AGENTS" "$canon"
+link_into "$CLAUDE" "$canon"
+link_into "$CODEX"  "$canon"
+link_into "$HERMES_PKG" "$canon"
 
 echo "done: $name is canonical in the jstack repo and symlinked across harnesses."

@@ -6,11 +6,17 @@ description: Owns the packaging convention for the jstack skill family. Use when
 # Authoring jstack skills
 
 All jstack skills are **canonical in the jstack repo** (`skills/<name>/`, wherever
-you cloned jstack) and symlinked into every harness: `~/.agents/skills/` (the hub),
-`~/.claude/skills/`, `~/.codex/skills/`, and the `~/.hermes/skills/jstack/` package.
-There is no second forked copy — edit the file in the repo and every harness sees it
-through the symlink chain. The hermes copies live *inside* the `jstack/` package
-directory, never as flat `jstack-*` entries at the hermes skills root.
+you cloned jstack) and symlinked into every harness. **Every link points directly
+at the repo dir — no transitive hop through `.agents`:** `~/.agents/skills/<name>`
+(the discovery hub), `~/.claude/skills/<name>`, and `~/.codex/skills/<name>` each
+resolve straight to `<clone>/skills/<name>`. Hermes entries live inside the package
+dir `~/.hermes/skills/jstack/<name>`, also pointing straight at the repo. There is
+no second forked copy — edit the file in the repo and every harness sees it through
+its own direct symlink.
+
+Discord `/skill` discovery does not depend on this layout: it is handled by adding
+`~/jstack/skills` to Hermes `external_dirs` (see the Discord section below), which
+scans the canonical repo directly.
 
 When asked to create a new jstack skill, do not hand-create directories or symlinks. Run:
 
@@ -19,10 +25,11 @@ When asked to create a new jstack skill, do not hand-create directories or symli
 ```
 
 It creates the canonical dir + a starter `SKILL.md` in the repo's `skills/`, then
-symlinks it into `.agents`, `.claude`, `.codex`, and the hermes `jstack/` package
-(skipping any harness not installed). The script resolves the repo from its own
-location, so it works wherever you cloned jstack. It is idempotent: re-running it on
-an existing skill repairs missing symlinks without touching the canonical `SKILL.md`.
+symlinks it (direct to the repo) into `.agents`, `.claude`, `.codex`, and the
+`.hermes/skills/jstack/` package — skipping any harness not installed. The script
+resolves the repo from its own location, so it works wherever you cloned jstack. It
+is idempotent: re-running it on an existing skill repairs or retargets symlinks
+without touching the canonical `SKILL.md`.
 After running it, edit the canonical `SKILL.md` in the repo to fill in the body.
 
 ## Before pushing
@@ -32,3 +39,24 @@ repo root — it scans for personal identity, machine paths, GCP project ids, an
 patterns, and exits non-zero on a hit. Keep personal values in `~/.jstack/config.env`
 (gitignored), never in a committed skill. Skills read config at runtime via
 **env var → `~/.jstack/config.env` → default**.
+
+## Discord `/skill` autocomplete and symlinks
+
+Hermes' Discord gateway resolves skill symlinks to their real paths with
+`Path.resolve()` and drops any skill whose resolved path falls outside a configured
+scan root. Since jstack skills are canonical in `~/jstack/skills/` and only symlinked
+into harness directories, the resolved path lands outside both `~/.hermes/skills/` and
+`~/.agents/skills/`, causing the skill to be silently absent from Discord's `/skill`
+picker.
+
+The fix is to add `~/jstack/skills` as an external skills directory in Hermes config:
+
+```yaml
+skills:
+  external_dirs:
+    - ~/.agents/skills
+    - ~/jstack/skills
+```
+
+After updating config, restart the gateway or run `/restart` on Discord. Without this,
+`hermes skills list` and `skill_view` will see the skills but `/skill` on Discord won't.
