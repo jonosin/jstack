@@ -25,16 +25,29 @@ The driver owns all logic (this skill is a thin invoker — don't reimplement st
 
 ## Protocol
 
-1. Resolve the property slug. If the user doesn't name one, list candidates from
+1. Resolve the property slug. If the user doesn't name one, infer it from the conversation
+   (e.g. they were discussing Serenity Sands → `serenity-sands`); else list candidates from
    `~/ventures/stayframe/qa/queues/*/manifest.json` `property` fields; if there is exactly
    one, use it without asking.
-2. If no batch for the property is `completed: true` in `qa/verdicts/`, stop and say which
-   batches are still open — never catalog an unconfirmed batch.
-3. Run the driver. Stream its stdout to the user (it reports promote/describe/assemble
-   counts and failures).
-4. On `FAIL <id>` lines: re-run the driver once (envelope cache makes it cheap); if it
-   still fails, report the ids and stop — do not describe those images with Claude vision.
-5. Report: image count, new-describe count (Gemini spend), pruned count, catalog path.
+2. **Attachment / single-image mode.** If the user attached or pointed at specific image
+   file(s), do NOT run the full batch flow blindly — run per image:
+   ```bash
+   python3 ~/ventures/stayframe/tools/refcatalog.py <slug> --add <image-path> \
+       [--note "<their directive verbatim>"] [--context]
+   ```
+   `--add` copies it to `refs/`, registers it in `clients/<slug>/direct-adds.json`
+   (survives every rebuild), describes ONLY that image, and updates the catalog. Use
+   `--context` when they say it's intel/context rather than frame-worthy. If the
+   attachment exists only in chat, write it to a temp file first.
+3. Otherwise (batch mode): if no batch for the property is `completed: true` in
+   `qa/verdicts/`, stop and say which batches are still open — never catalog an
+   unconfirmed batch.
+4. Run the driver. Stream its stdout to the user. Describe is **incremental by design** —
+   `.gv-raw/` envelopes are the cache; only ids without an envelope hit Gemini. Never
+   delete `.gv-raw/` to "refresh"; delete a single id's envelope to force re-describe.
+5. On `FAIL <id>` lines: re-run the driver once (cache makes it cheap); if it still fails,
+   report the ids and stop — do not describe those images with Claude vision.
+6. Report: image count, new-describe count (= Gemini spend), pruned count, catalog path.
 
 ## Semantics consumers must respect (pointer, not copy)
 
