@@ -19,20 +19,77 @@ def project_hash_from_path(dir_path: str | pathlib.Path) -> str:
     return abs_path.replace("/", "-")
 
 
+CLAUDE_PROJECTS_ROOT = pathlib.Path.home() / ".claude" / "projects"
+
+
 def find_claude_project_dir(dir_path: str | None = None) -> pathlib.Path | None:
     """Find the Claude Code project directory for a given working directory."""
     if dir_path is None:
         dir_path = os.getcwd()
     hash_name = project_hash_from_path(dir_path)
-    candidate = pathlib.Path.home() / ".claude" / "projects" / hash_name
+    candidate = CLAUDE_PROJECTS_ROOT / hash_name
     if candidate.exists():
         return candidate
     # Try partial match — Claude Code sometimes uses a variant hash
-    projects_root = pathlib.Path.home() / ".claude" / "projects"
-    for child in projects_root.iterdir():
+    for child in CLAUDE_PROJECTS_ROOT.iterdir():
         if child.is_dir() and hash_name in child.name:
             return child
     return None
+
+
+def find_session_jsonl(session_id: str) -> pathlib.Path | None:
+    """Search ALL Claude project directories for a session JSONL file.
+    
+    This is a global fallback that doesn't depend on CWD or project-dir mapping.
+    """
+    if not CLAUDE_PROJECTS_ROOT.exists():
+        return None
+    for project_dir in sorted(CLAUDE_PROJECTS_ROOT.iterdir(), reverse=True):
+        if not project_dir.is_dir():
+            continue
+        candidate = project_dir / f"{session_id}.jsonl"
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def resolve_session_jsonl(
+    session_id: str,
+    claude_projects_dir: pathlib.Path | None,
+    project_dir: pathlib.Path | None = None,
+) -> pathlib.Path | None:
+    """Try multiple strategies to resolve a session JSONL path.
+    
+    Strategy order:
+    1. Explicit --claude-projects-dir (direct file or subdirectory search)
+    2. --project-dir or CWD-derived project dir via find_claude_project_dir
+    3. Global scan of all ~/.claude/projects/* directories
+    """
+    # Strategy 1: explicit --claude-projects-dir
+    if claude_projects_dir is not None:
+        direct = claude_projects_dir / f"{session_id}.jsonl"
+        if direct.exists():
+            return direct
+        # Maybe they passed the root projects/ dir — search subdirectories
+        try:
+            for child in sorted(claude_projects_dir.iterdir(), reverse=True):
+                if not child.is_dir():
+                    continue
+                candidate = child / f"{session_id}.jsonl"
+                if candidate.exists():
+                    return candidate
+        except PermissionError:
+            pass
+
+    # Strategy 2: derive from --project-dir or CWD
+    resolved_project = find_claude_project_dir(str(project_dir) if project_dir else None)
+    if resolved_project is not None:
+        candidate = resolved_project / f"{session_id}.jsonl"
+        if candidate.exists():
+            return candidate
+
+    # Strategy 3: global scan of all project directories
+    return find_session_jsonl(session_id)
 
 
 NOISE_PREFIXES = (
@@ -210,23 +267,17 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
 
-    if args.claude_projects_dir:
-        claude_project = args.claude_projects_dir
-    else:
-        claude_project = find_claude_project_dir(args.project_dir)
+    source_path = resolve_session_jsonl(
+        args.session_id, args.claude_projects_dir, args.project_dir
+    )
 
-    if claude_project is None:
+    if source_path is None:
         print(
-            "ERROR: Could not find a Claude Code project directory. "
-            "Use --claude-projects-dir to specify it explicitly.",
+            f"ERROR: Claude session JSONL not found for session {args.session_id}. "
+            "Use --claude-projects-dir to point to a specific project directory, "
+            "or --project-dir to derive the project hash from a working directory.",
             file=sys.stderr,
         )
-        return 4
-
-    source_path = claude_project / f"{args.session_id}.jsonl"
-
-    if not source_path.exists():
-        print(f"ERROR: Claude session JSONL not found: {source_path}", file=sys.stderr)
         return 2
 
     out_path = args.out

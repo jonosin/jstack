@@ -55,3 +55,23 @@ remaining manual steps the script printed (reload skills, set `GOOGLE_CLOUD_PROJ
 - Does not install the second-brain (llm-wiki) vault or the adscan repo — those are separate.
 - Does not log into codex or GCP — it only checks and reports auth status.
 - Does not modify the user's shell profile; it prints the PATH line for them to add.
+
+## Pitfalls
+
+### Discord `/skill` autocomplete silently drops symlinked jstack skills
+
+When skills are installed with `--link`, the SKILL.md files are symlinks pointing to
+`~/jstack/skills/`. Hermes' Discord gateway resolves symlinks to their real paths and
+drops any skill whose resolved path falls outside a configured scan root. After
+running `setup.sh --link` into `~/.hermes/skills/`, verify that `~/jstack/skills` is
+in `skills.external_dirs` in `~/.hermes/config.yaml`:
+
+```yaml
+skills:
+  external_dirs:
+    - ~/.agents/skills
+    - ~/jstack/skills
+```
+
+Without this, `hermes skills list` sees the skills but `/skill` on Discord won't.
+Restart the gateway (`/restart` on Discord) after adding the config.

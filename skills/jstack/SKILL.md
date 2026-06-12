@@ -5,6 +5,16 @@ description: Owns the packaging convention for the jstack skill family. Use when
 
 # Authoring jstack skills
 
+## Naming convention (decided 2026-06-12)
+
+- `jstack-<skill>` — daily productivity, venture-agnostic (`jstack-savetobrain`,
+  `jstack-vision`, `jstack-handoff`).
+- `jstack-<venture-code>-<skill>` — venture-specific (`jstack-sf-refcatalog`; `sf` =
+  StayFrame). Venture skills sort together in every picker and stay under the jstack
+  umbrella. NEVER use a colon in a skill directory name — `name:thing` is the harness's
+  plugin namespace (`superpowers:brainstorming`) and a colon in a plain skill name breaks
+  resolution and Discord's `/skill` picker.
+
 All jstack skills are **canonical in the jstack repo** (`skills/<name>/`, wherever
 you cloned jstack) and symlinked into every harness. **Every link points directly
 at the repo dir — no transitive hop through `.agents`:** `~/.agents/skills/<name>`

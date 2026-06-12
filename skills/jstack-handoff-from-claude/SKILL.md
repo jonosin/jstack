@@ -1,6 +1,6 @@
 ---
 name: jstack-handoff-from-claude
-description: Extract a clean transcript from a Claude Code session by session ID, then create a jstack handoff artifact from it. Use when the user provides a Claude session ID and wants a handoff generated from that session.
+description: Only when the user explicitly provides a Claude Code session ID to extract its transcript and turn it into a jstack handoff artifact. Intended to be run from a NON-Claude harness (OpenCode, Codex, Hermes) that needs to pull a Claude session out. Do NOT invoke this for reading, opening, or continuing an existing handoff file (e.g. "read this handoff and continue" is a normal file read, not this skill), and do NOT invoke it inside Claude Code on its own session. Requires an explicit session ID; without one, this skill does not apply.
 ---
 
 Require an explicit Claude Code session ID. If the user didn't provide one, stop and ask:
@@ -16,7 +16,12 @@ Run:
 python3 ~/.claude/skills/jstack/scripts/extract_claude_session.py <session-id>
 ```
 
-If the current directory isn't the one Claude Code ran in, pass `--project-dir <path>` or `--claude-projects-dir <full-path>`.
+The script auto-discovers the session JSONL via three strategies (in order):
+1. Explicit `--claude-projects-dir` (direct or subdirectory search)
+2. CWD or `--project-dir` hash match
+3. Global scan of all `~/.claude/projects/*` directories
+
+In most cases no extra flags are needed. If the session can't be found, pass `--project-dir <path>` (the repo path Claude Code ran in) or `--claude-projects-dir <full-path>` (the root `~/.claude/projects/` or a specific project directory).
 
 After extraction, report the transcript path and turn counts.
 

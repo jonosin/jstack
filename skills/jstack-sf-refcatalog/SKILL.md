@@ -1,6 +1,6 @@
 ---
-name: jstack-refcatalog
-description: Build or refresh a StayFrame client's reference-image catalog after Jono confirms a QA batch. Use when the user says /jstack-refcatalog, "build the catalog", "refresh the catalog", "run the catalog pass", "catalog the references", or has just finished swiping/marking a reference-images batch done and wants the approved photos promoted and described. Promotes approved photos into the client folder, describes only NEW images via jstack-vision (Gemini on Vertex — zero Claude vision tokens), and rebuilds catalog.json from current verdicts.
+name: jstack-sf-refcatalog
+description: Build or refresh a StayFrame client's reference-image catalog after Jono confirms a QA batch. Use when the user says /jstack-sf-refcatalog, "build the catalog", "refresh the catalog", "run the catalog pass", "catalog the references", or has just finished swiping/marking a reference-images batch done and wants the approved photos promoted and described. Promotes approved photos into the client folder, describes only NEW images via jstack-vision (Gemini on Vertex — zero Claude vision tokens), and rebuilds catalog.json from current verdicts.
 ---
 
 # jstack-refcatalog — confirm batch → client reference catalog

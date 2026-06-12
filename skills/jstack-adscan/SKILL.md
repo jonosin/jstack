@@ -43,6 +43,38 @@ flight dates, CTA, platforms, and the store/landing URL (which identifies the de
 Other flags: `-c US` · `-t all|political|housing|employment|credit` · `-s active|inactive|all`
 · `-n` pull size · `--cap 7` ads kept · `--gap "..."` · `--no-clean`. Full flags: `adscan build -h`.
 
+## Page-name vs query fallback
+
+`--page-name` is precise but fragile. Meta page names often have trailing spaces, Unicode
+variants, or punctuation that cause "no ads matched." When a `--page-name` build fails,
+retry with `--query` + `--match` using the advertiser name from the scan output:
+
+```bash
+# first attempt (precise)
+"$ADSCAN_DIR"/adscan build my-slug --page-name "Resort Name" --company "Resort" --out "$OUT"
+
+# fallback (query + substring match)
+"$ADSCAN_DIR"/adscan build my-slug --query "resort Krabi" --match "Resort Name" --out "$OUT"
+```
+
+Always open the scan results first to copy the exact advertiser name for `--match`.
+
+**Watch for truncated names in scan output.** The scan table column width is limited — names ending mid-word, at a punctuation mark, or with a trailing space/punctuation (e.g. `"Santhiya Phuket Natai Resort &"`, `"Baba Beach Club Natai by Sri p"`, `"The Cape Pool Villas - Koh Sam"`) are truncated. These will fail as `--page-name` values. When the scan name looks incomplete, skip `--page-name` and go straight to `--query` + `--match` with a known-unique substring from the visible portion.
+
+## Batch builds
+
+When pulling multiple advertisers, chain builds with `&&` under a single generous timeout.
+Run a `scan` first to discover exact page names, then batch the builds:
+
+```bash
+export ADSCAN_DIR=~/builds/adscan OUT=~/project/research/ads
+"$ADSCAN_DIR"/adscan build slug1 --page-name "Advertiser One" --company "One" --out "$OUT" && \
+"$ADSCAN_DIR"/adscan build slug2 --page-name "Advertiser Two" --company "Two" --out "$OUT" && \
+"$ADSCAN_DIR"/adscan build slug3 --page-name "Advertiser Three" --company "Three" --out "$OUT"
+```
+
+Failed builds exit non-zero and stop the chain. Retry failed ones individually with `--query` + `--match`. When running many builds (5+), prefer parallel `terminal()` calls with individual timeouts over a single chained command — this avoids losing all progress when one build fails.
+
 ## What it does NOT do
 Fetches and structures ads only. It does **not** grade creative (weak/okay/good) or write
 any dossier — that's the agent/human's judgment after opening the downloaded media.
