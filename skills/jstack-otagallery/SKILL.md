@@ -74,7 +74,7 @@ If the photos are for Stayframe triage, emit the file contract the QA dashboard
 (`~/builds/stayframe-qa`, localhost:7777) auto-discovers:
 
 ```
-~/ventures/stayframe/pipeline/qa/queues/<batch-id>/
+~/ventures/stayframe/qa/queues/<batch-id>/
 ├── manifest.json   {"batch_id", "title", "gate": "reference-images",
 │                    "property", "items": [{"id", "file": "media/<f>.jpg",
 │                    "source": "<OTA> gallery (<cdn-id>), pulled <date> @<size>",
