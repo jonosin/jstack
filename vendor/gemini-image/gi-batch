@@ -1,0 +1,187 @@
+#!/usr/bin/env bash
+# gi-batch — loop over a prompts file or generate N variants of one prompt.
+# Calls gi once per prompt. Respects rate limits with a configurable sleep.
+#
+# Usage:
+#   gi-batch <prompts-file> -o <output-dir> [extra gi args]
+#   gi-batch -n 10 "a pixel art cat" -o cats/        # 10 variants, one prompt
+#   gi-batch --json prompts.txt -o out/ -m pro        # JSON-aggregated output
+#
+# Each line in the prompts file is one generation. Blank lines and lines
+# starting with # are skipped.
+#
+# Flags (parsed by gi-batch):
+#   --json       emit one JSON object: {total, ok, failed, results: [envelope...]}
+#                (each result is a `gi --json` envelope). Suppresses progress lines.
+#   -n N         generate N variants of a single prompt (default: 1)
+#   -o DIR       output directory for generated images
+#
+# Exit codes:
+#   0   all prompts processed without error
+#   2   usage error
+#   3   prompts file not found / not a file
+#   1   at least one prompt failed (human mode); JSON mode always exits 0
+#       and reports per-prompt failures in `failed` + result envelopes.
+#
+# Env:
+#   GI_BATCH_SLEEP  seconds between calls (default 4, to respect rate limits)
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+GI="$SCRIPT_DIR/gi"
+
+JSON=0
+NUM_VARIANTS=0
+OUT_DIR=""
+
+# Parse gi-batch flags wherever they appear; collect remainder.
+REST=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --json) JSON=1; shift ;;
+    -n) NUM_VARIANTS="$2"; shift 2 ;;
+    -n=*) NUM_VARIANTS="${1#*=}"; shift ;;
+    -o) OUT_DIR="$2"; shift 2 ;;
+    -o=*) OUT_DIR="${1#*=}"; shift ;;
+    *) REST+=("$1"); shift ;;
+  esac
+done
+set -- "${REST[@]}"
+
+if [ $# -lt 1 ]; then
+  cat >&2 <<'USAGE'
+usage: gi-batch [--json] [ -n N] [-o DIR] <prompts-file-or-prompt> [gi flags]
+
+  examples:
+    gi-batch prompts.txt -o out/
+    gi-batch -n 5 "a pixel art cat" -o cats/
+    gi-batch --json prompts.txt -o out/ -m pro
+    gi-batch prompts.txt -o out/ --ref style.png
+
+  prompts-file: one prompt per line (blank/# lines skipped).
+  single prompt: generate N variants of the same prompt with -n.
+USAGE
+  exit 2
+fi
+
+FIRST_ARG="$1"
+shift
+
+# If FIRST_ARG looks like a file and -n wasn't given, treat it as a prompts file.
+MODE="file"
+if [ "$NUM_VARIANTS" -gt 0 ]; then
+  MODE="variant"
+elif [ -f "$FIRST_ARG" ]; then
+  MODE="file"
+else
+  # Single prompt with default -n 1
+  MODE="variant"
+  NUM_VARIANTS=1
+fi
+
+if [ -z "$OUT_DIR" ]; then
+  echo "error: -o <output-dir> is required" >&2
+  exit 2
+fi
+mkdir -p "$OUT_DIR"
+
+SLEEP_BETWEEN="${GI_BATCH_SLEEP:-4}"
+
+# --- JSON mode: collect per-prompt envelopes, emit one aggregated object. ---
+if [ "$JSON" = 1 ]; then
+  RESULTS_FILE="$(mktemp "${TMPDIR:-/tmp}/gi-batch.XXXXXX")"
+  trap 'rm -f "$RESULTS_FILE"' EXIT
+  OK=0
+  FAILED=0
+  TOTAL=0
+
+  run_one() {
+    local idx="$1"; local prompt="$2"; shift 2
+    local out_path="${OUT_DIR}/gen_${idx}.png"
+    set +e
+    ENVELOPE="$("$GI" --json -p "$prompt" -o "$out_path" "$@")"
+    RC=$?
+    set -e
+    if [ "$RC" -eq 0 ]; then
+      OK=$((OK + 1))
+    else
+      FAILED=$((FAILED + 1))
+      if [ -z "$ENVELOPE" ]; then
+        ENVELOPE="$(jq -n --arg p "$prompt" --argjson c "$RC" \
+          '{ok:false, prompt:$p, files_out:[], error:"gi crashed before emitting an envelope", error_class:"unknown", exit_code:$c}')"
+      fi
+    fi
+    TOTAL=$((TOTAL + 1))
+    printf '%s' "$ENVELOPE" | jq --arg p "$prompt" --arg idx "$idx" \
+      '. + {prompt:$p, index:$idx}' >> "$RESULTS_FILE"
+  }
+
+  if [ "$MODE" = "variant" ]; then
+    for i in $(seq 1 "$NUM_VARIANTS"); do
+      run_one "$i" "$FIRST_ARG"
+      if [ "$i" -lt "$NUM_VARIANTS" ]; then sleep "$SLEEP_BETWEEN"; fi
+    done
+  else
+    idx=0
+    while IFS= read -r line || [ -n "$line" ]; do
+      line="${line%%#*}"  # strip comments
+      line="$(echo "$line" | xargs)"  # trim
+      [ -z "$line" ] && continue
+      idx=$((idx + 1))
+      run_one "$idx" "$line"
+      sleep "$SLEEP_BETWEEN"
+    done < "$FIRST_ARG"
+  fi
+
+  jq -s \
+    --argjson total "$TOTAL" \
+    --argjson ok "$OK" \
+    --argjson failed "$FAILED" \
+    '{total:$total, ok:$ok, failed:$failed, results:.}' \
+    "$RESULTS_FILE"
+  exit 0
+fi
+
+# --- Human mode: stream progress, continue on per-prompt errors. ---
+if [ "$MODE" = "variant" ]; then
+  echo "==> generating $NUM_VARIANTS variant(s) of: ${FIRST_ARG:0:100}"
+else
+  PROMPT_COUNT=$(grep -cve '^\s*$' -e '^\s*#' "$FIRST_ARG" 2>/dev/null || echo "?")
+  echo "==> processing $PROMPT_COUNT prompt(s) from $FIRST_ARG"
+fi
+echo "    output dir: $OUT_DIR  (sleep ${SLEEP_BETWEEN}s between calls)"
+echo
+
+ANY_FAILED=0
+
+if [ "$MODE" = "variant" ]; then
+  for i in $(seq 1 "$NUM_VARIANTS"); do
+    out_path="${OUT_DIR}/gen_${i}.png"
+    echo "── variant $i/$NUM_VARIANTS ──"
+    if ! "$GI" -p "$FIRST_ARG" -o "$out_path" "$@"; then
+      echo "  [error: variant $i — continuing]" >&2
+      ANY_FAILED=1
+    fi
+    echo
+    if [ "$i" -lt "$NUM_VARIANTS" ]; then sleep "$SLEEP_BETWEEN"; fi
+  done
+else
+  idx=0
+  while IFS= read -r line || [ -n "$line" ]; do
+    line="${line%%#*}"
+    line="$(echo "$line" | xargs)"
+    [ -z "$line" ] && continue
+    idx=$((idx + 1))
+    out_path="${OUT_DIR}/gen_${idx}.png"
+    echo "── prompt $idx: ${line:0:80} ──"
+    if ! "$GI" -p "$line" -o "$out_path" "$@"; then
+      echo "  [error: prompt $idx — continuing]" >&2
+      ANY_FAILED=1
+    fi
+    echo
+    sleep "$SLEEP_BETWEEN"
+  done < "$FIRST_ARG"
+fi
+
+echo "==> done."
+[ "$ANY_FAILED" = 0 ] || exit 1

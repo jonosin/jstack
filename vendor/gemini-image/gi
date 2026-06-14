@@ -1,0 +1,424 @@
+#!/usr/bin/env python3
+"""gi — generic Gemini image generation via Vertex AI.
+
+Wraps the google-genai SDK (vertexai=True) for image generation with
+Gemini image models. General-purpose: no domain vocabulary — prompt
+and files come from the caller.
+
+Usage:
+  gi -p "a pixel art cat" -o cat.png
+  gi -p "a landscape" --ref style.png -o scene.png
+  gi -p "..." --model pro -o result.png
+  gi -p "..." --model gemini-3-pro-image -o result.png
+  gi -p "..." -o sprite.png --chroma-remove "#00FF00"
+
+Agent-native flags (parsed by gi, not forwarded):
+  --json            emit a structured JSON envelope instead of raw text
+  --dry-run         print resolved config; do not call (no billing)
+  -h, --help        print this usage and exit
+  --version         print gi version and exit
+
+Exit codes (typed, so callers can branch without grepping stderr):
+  0   ok
+  2   usage error (missing/invalid args or flags)
+  3   config error (no GCP project set)
+  4   auth / billing error
+  5   model unreachable (404 / INVALID_ARGUMENT)
+  6   input / file error
+  7   dependency missing (google-genai or Pillow not installed)
+  10  unknown upstream failure
+
+Config: project comes from GEMINI_IMGEN_PROJECT, GOOGLE_CLOUD_PROJECT,
+or ~/.jstack/config.env. All imgen env vars are prefixed GEMINI_IMGEN_*.
+
+Env overrides:
+  GEMINI_IMGEN_MODEL     model name (default: gemini-3.1-flash-image)
+  GEMINI_IMGEN_PROJECT   GCP project to bill (overrides GOOGLE_CLOUD_PROJECT)
+  GEMINI_IMGEN_LOCATION  region (default: global; image models work there)
+"""
+
+import argparse
+import json
+import os
+import sys
+from pathlib import Path
+
+VERSION = "0.1.0"
+
+# Typed exit codes
+EX_OK = 0
+EX_USAGE = 2
+EX_CONFIG = 3
+EX_AUTH = 4
+EX_MODEL = 5
+EX_INPUT = 6
+EX_DEP = 7
+EX_UNKNOWN = 10
+
+# Short aliases -> full model ID (all verified reachable on project-a4713060...)
+MODEL_ALIASES = {
+    "flash":  "gemini-3.1-flash-image",
+    "pro":    "gemini-3-pro-image",
+    "budget": "gemini-2.5-flash-image",
+}
+
+# Pricing per image (USD) at 1K resolution, verified 2026-06-12.
+COST_PER_IMAGE = {
+    "gemini-3.1-flash-image":  0.067,
+    "gemini-3-pro-image":      0.134,
+    "gemini-2.5-flash-image":  0.039,
+}
+
+DEFAULT_MODEL = "gemini-3.1-flash-image"
+
+# Model location constraints (probed)
+MODEL_LOCATION_HINTS = {
+    "gemini-2.5-flash-image": ["us-central1", "global"],
+    "gemini-3-pro-image":     ["global"],
+    "gemini-3.1-flash-image": ["global"],
+}
+
+# ── helpers ──────────────────────────────────────────────────────────
+
+def load_config():
+    """Load key=value pairs from ~/.jstack/config.env (lower-priority source)."""
+    cfg = {}
+    path = os.path.expanduser("~/.jstack/config.env")
+    if os.path.isfile(path):
+        with open(path) as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                k, _, v = line.partition("=")
+                cfg[k.strip()] = v.strip().strip('"').strip("'")
+    return cfg
+
+
+def resolve_model(name, cfg):
+    if name in MODEL_ALIASES:
+        return MODEL_ALIASES[name]
+    if name.startswith("gemini-"):
+        return name
+    return None
+
+
+def resolve_project(cfg, cli_val):
+    if cli_val:
+        return cli_val
+    return (os.environ.get("GEMINI_IMGEN_PROJECT") or
+            cfg.get("GEMINI_IMGEN_PROJECT") or
+            os.environ.get("GOOGLE_CLOUD_PROJECT") or
+            cfg.get("GOOGLE_CLOUD_PROJECT") or "")
+
+
+def resolve_location(cfg, cli_val, model):
+    if cli_val:
+        return cli_val
+    loc = (os.environ.get("GEMINI_IMGEN_LOCATION") or
+           cfg.get("GEMINI_IMGEN_LOCATION") or
+           "global")
+    return loc
+
+
+def classify_error(err_text):
+    t = err_text.lower()
+    if any(x in t for x in ("unauthori", "unauthenticated",
+                             "permission_denied", "credential", "403")):
+        return "auth"
+    if "resource_exhausted" in t or "429" in t:
+        return "rate_limit"
+    if any(x in t for x in ("not found", "not_found", "404")):
+        return "model"
+    if "invalid_argument" in t and "image" in t:
+        return "model"  # INVALID_ARGUMENT = model reachable but rejecting
+    if any(x in t for x in ("invalid_argument", "bad request", "400")):
+        return "input"
+    if "no image in response" in t:
+        return "input"
+    return "unknown"
+
+
+def error_class_to_code(err_class):
+    return {
+        "auth":       EX_AUTH,
+        "rate_limit": EX_UNKNOWN,
+        "model":      EX_MODEL,
+        "input":      EX_INPUT,
+        "unknown":    EX_UNKNOWN,
+        "usage":      EX_USAGE,
+        "config":     EX_CONFIG,
+        "dep":        EX_DEP,
+    }.get(err_class, EX_UNKNOWN)
+
+
+def emit_envelope(ok, model, project, location, prompt, refs, out_files,
+                  error=None, error_class=None, exit_code=0,
+                  cost_estimate=None):
+    envelope = {
+        "ok": ok,
+        "model": model,
+        "project": project,
+        "location": location,
+        "prompt": prompt,
+        "files_in": [str(p) for p in refs],
+        "files_out": out_files,
+        "error": error,
+        "error_class": error_class,
+        "exit_code": exit_code,
+    }
+    if cost_estimate is not None:
+        envelope["cost_estimate"] = cost_estimate
+    print(json.dumps(envelope))
+
+
+# ── generation core ──────────────────────────────────────────────────
+
+def upscale_ref(path):
+    """Load a reference image, upscale 8× if small, flatten onto white."""
+    from PIL import Image as PILImage
+    im = PILImage.open(path).convert("RGBA")
+    if im.width < 200:
+        im = im.resize((im.width * 8, im.height * 8), PILImage.NEAREST)
+    flat = PILImage.new("RGBA", im.size, (255, 255, 255, 255))
+    flat.paste(im, (0, 0), im)
+    return flat
+
+
+def chroma_remove(in_path, chroma_hex="#00FF00", tol=60):
+    """Flood-fill background from corners; replace with alpha."""
+    from PIL import Image as PILImage
+    im = PILImage.open(in_path).convert("RGBA")
+    px = im.load()
+    w, h = im.size
+    r, g, b = int(chroma_hex[1:3], 16), int(chroma_hex[3:5], 16), int(chroma_hex[5:7], 16)
+    bg = (r, g, b)
+
+    def is_bg(c):
+        return sum((c[i] - bg[i]) ** 2 for i in range(3)) < tol * tol
+
+    stack = [(0, 0), (w - 1, 0), (0, h - 1), (w - 1, h - 1)]
+    seen = set()
+    while stack:
+        x, y = stack.pop()
+        if (x, y) in seen or not (0 <= x < w and 0 <= y < h):
+            continue
+        seen.add((x, y))
+        if is_bg(im.getpixel((x, y))):
+            px[x, y] = (0, 0, 0, 0)
+            stack += [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
+    return im, in_path
+
+
+def generate(project, location, model, prompt, refs):
+    """Call Gemini image generation. Returns list of image byte chunks."""
+    from google import genai
+    from google.genai import types
+
+    client = genai.Client(vertexai=True, project=project, location=location)
+
+    contents = []
+    for ref in refs:
+        contents.append(upscale_ref(ref))
+    contents.append(prompt)
+
+    config = types.GenerateContentConfig(response_modalities=["TEXT", "IMAGE"])
+
+    resp = client.models.generate_content(
+        model=model,
+        contents=contents,
+        config=config,
+    )
+
+    images = []
+    for part in resp.candidates[0].content.parts:
+        if part.inline_data and part.inline_data.data:
+            images.append(part.inline_data.data)
+        elif part.text:
+            print(f"model text: {part.text[:200]}", file=sys.stderr)
+
+    if not images:
+        raise RuntimeError("no image in response")
+
+    return images
+
+
+def _dep_check():
+    try:
+        import google.genai  # noqa: F401
+    except ImportError:
+        print("gi: error: google-genai SDK not installed. Run: pip install google-genai", file=sys.stderr)
+        sys.exit(EX_DEP)
+    try:
+        import PIL  # noqa: F401
+    except ImportError:
+        print("gi: error: Pillow not installed. Run: pip install Pillow", file=sys.stderr)
+        sys.exit(EX_DEP)
+
+
+# ── main ─────────────────────────────────────────────────────────────
+
+def main():
+    cfg = load_config()
+
+    ap = argparse.ArgumentParser(
+        description="gi — generic Gemini image generation via Vertex AI",
+        add_help=False,
+    )
+    ap.add_argument("-p", "--prompt", required=False, help="Generation prompt")
+    ap.add_argument("-o", "--out", required=False, help="Output PNG file path")
+    ap.add_argument("--ref", action="append", default=[], type=Path,
+                    help="Reference image(s) passed before the prompt")
+    ap.add_argument("-m", "--model", default=None,
+                    help=f"Model alias (flash, pro, budget) or full ID. Default: {DEFAULT_MODEL}")
+    ap.add_argument("--project", default=None, help="GCP project (overrides config)")
+    ap.add_argument("--location", default=None, help="Vertex AI location (default: global)")
+    ap.add_argument("--chroma-remove", default=None, metavar="HEX",
+                    help="Post-process: flood-fill background from corners and replace with alpha. e.g. #00FF00")
+    ap.add_argument("--chroma-tol", type=int, default=60,
+                    help="Chroma tolerance (default: 60)")
+    ap.add_argument("--json", action="store_true", dest="json_mode")
+    ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("-h", "--help", action="store_true")
+    ap.add_argument("--version", action="store_true")
+    args = ap.parse_args()
+
+    # --help / --version are handled before requirement checks
+    if args.help:
+        print(__doc__)
+        sys.exit(EX_OK)
+    if args.version:
+        print(f"gi {VERSION}")
+        try:
+            import google.genai
+            print(f"google-genai {google.genai.__version__}")
+        except Exception:
+            pass
+        sys.exit(EX_OK)
+
+    json_mode = args.json_mode
+
+    # Resolve model
+    model_input = args.model or os.environ.get("GEMINI_IMGEN_MODEL", "") or cfg.get("GEMINI_IMGEN_MODEL", "")
+    if model_input:
+        model = resolve_model(model_input, cfg)
+        if not model:
+            msg = (f"unknown model: {model_input}. "
+                   f"Use an alias ({', '.join(MODEL_ALIASES.keys())}) or "
+                   f"a full gemini-... model ID")
+            if json_mode:
+                emit_envelope(False, model_input, "", "", "", [], [],
+                              error=msg, error_class="usage", exit_code=EX_USAGE)
+            else:
+                print(f"gi: error: {msg}", file=sys.stderr)
+            sys.exit(EX_USAGE)
+    else:
+        model = DEFAULT_MODEL
+
+    project = resolve_project(cfg, args.project)
+    location = resolve_location(cfg, args.location, model)
+    prompt = args.prompt or ""
+
+    # Dry run
+    if args.dry_run:
+        if json_mode:
+            emit_envelope(True, model, project, location, prompt,
+                          args.ref, [], exit_code=0)
+        else:
+            print("[dry-run] would call Gemini image generation (no API call, no billing)")
+            print(f"  project:  {project or '<unset>'}")
+            print(f"  location: {location}")
+            print(f"  model:    {model}")
+            print(f"  prompt:   {prompt[:120]}{'...' if len(prompt) > 120 else ''}")
+            print(f"  refs:     {[str(p) for p in args.ref]}")
+        sys.exit(EX_OK)
+
+    # Pre-flight checks
+    if not project:
+        msg = ("no GCP project set. Export GOOGLE_CLOUD_PROJECT (or "
+               "GEMINI_IMGEN_PROJECT), or add it to ~/.jstack/config.env")
+        if json_mode:
+            emit_envelope(False, model, "", location, prompt, args.ref, [],
+                          error=msg, error_class="config", exit_code=EX_CONFIG)
+        else:
+            print(f"gi: error: {msg}", file=sys.stderr)
+        sys.exit(EX_CONFIG)
+
+    if not prompt:
+        msg = "missing prompt. Pass -p \"...\""
+        if json_mode:
+            emit_envelope(False, model, project, location, "", args.ref, [],
+                          error=msg, error_class="usage", exit_code=EX_USAGE)
+        else:
+            print(f"gi: error: {msg}", file=sys.stderr)
+        sys.exit(EX_USAGE)
+
+    if not args.out:
+        msg = "missing output path. Pass -o <file.png>"
+        if json_mode:
+            emit_envelope(False, model, project, location, prompt, args.ref, [],
+                          error=msg, error_class="usage", exit_code=EX_USAGE)
+        else:
+            print(f"gi: error: {msg}", file=sys.stderr)
+        sys.exit(EX_USAGE)
+
+    _dep_check()
+
+    out_path = Path(args.out)
+
+    try:
+        images = generate(project, location, model, prompt, args.ref)
+    except RuntimeError as e:
+        err_str = str(e)
+        err_class = classify_error(err_str)
+        code = error_class_to_code(err_class)
+        if json_mode:
+            emit_envelope(False, model, project, location, prompt, args.ref, [],
+                          error=err_str, error_class=err_class, exit_code=code)
+        else:
+            print(f"gi: error: {err_str}", file=sys.stderr)
+        sys.exit(code)
+    except Exception as e:
+        err_str = str(e)
+        err_class = classify_error(err_str)
+        code = error_class_to_code(err_class)
+        if json_mode:
+            emit_envelope(False, model, project, location, prompt, args.ref, [],
+                          error=err_str, error_class=err_class, exit_code=code)
+        else:
+            print(f"gi: error: {err_str}", file=sys.stderr)
+        sys.exit(code)
+
+    # Take the LAST image (image models may emit interim images)
+    final_data = images[-1]
+    out_path.write_bytes(final_data)
+    out_files = [str(out_path)]
+
+    # Optional chroma-key post-processing
+    chroma_out = None
+    if args.chroma_remove:
+        try:
+            im, _ = chroma_remove(str(out_path), args.chroma_remove,
+                                  args.chroma_tol)
+            chroma_out = str(out_path.with_name(out_path.stem + "-alpha.png"))
+            im.save(chroma_out)
+            out_files.append(chroma_out)
+        except Exception as e:
+            print(f"gi: warning: chroma-remove failed: {e}", file=sys.stderr)
+
+    cost = COST_PER_IMAGE.get(model)
+    if json_mode:
+        emit_envelope(True, model, project, location, prompt, args.ref,
+                      out_files, cost_estimate=cost)
+    else:
+        print(f"wrote {out_path}")
+        if chroma_out:
+            print(f"wrote {chroma_out} (alpha)")
+        if cost:
+            print(f"~${cost:.3f} (1 image, {model})")
+
+    sys.exit(EX_OK)
+
+
+if __name__ == "__main__":
+    main()
