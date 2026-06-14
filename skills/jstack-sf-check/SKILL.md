@@ -46,7 +46,7 @@ checklist snapshot (e.g. `Beat 1: still ✓ · GATE A ✓ · clip pending`). Kee
 
 ### 3. Apply to the brief (auto)
 Per the contract in `~/ventures/stayframe/clients/AGENTS.md` § Reel production and the
-`jstack-sf-reel` skill (produce phase):
+`jstack-sf-new` skill (produce phase):
 - **`b<N>-ref` + `swap`** → re-pick that beat's reference from `clients/<client>/catalog.json` per
   the note (a described shot like "wider sunset" or an explicit id), edit the beat heading's
   `ref \`ID\``.
@@ -80,5 +80,5 @@ brief unless Jono asks; let him eyeball the result first.
 
 ## Notes
 - Reel-agnostic: works for any `clients/*/briefs/*-brief.md` with the runsheet structure.
-- This skill does not generate images or launch the dashboard — `jstack-sf-reel` runs the pipeline
+- This skill does not generate images or launch the dashboard — `jstack-sf-new` runs the pipeline
   (harvest → screen → catalog → creative → produce). This one is purely the read → apply → clear loop.

@@ -51,3 +51,11 @@ Per the brief's own edit spec: cut lengths, hard cuts / dissolves / fade, overla
 PIL + ffmpeg (never in-generation), music added at IG post time. Offline export for a no-server
 machine: `python3 ~/ventures/stayframe/tools/briefsheet.py <brief.md>` → standalone HTML (decisions in
 localStorage; the dashboard is the durable home).
+
+## Promote what worked (after the reel passes — do not skip)
+A reel that cleared every GATE B taught the system something — a prompt pattern, a camera method, an
+engine choice that beat its baseline. That lesson is stranded in this one brief until it's written to
+canon. Tell Jono to run **`/jstack-sf-learn`**: it diffs this brief's method against `playbook/`,
+surfaces what's new, and on confirm writes the rule into the governing playbook + appends
+`playbook/DECISIONS.md`. (Canon is the home — it does not copy the method to the brain.) Skipping this
+is how the *next* resort re-invents what this one already proved.

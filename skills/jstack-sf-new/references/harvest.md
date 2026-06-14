@@ -49,4 +49,4 @@ Ensure the dashboard is up, then stop:
 curl -s -o /dev/null http://localhost:7777/ || (cd ~/builds/stayframe-qa && node server.js &)
 ```
 Tell Jono: "`<N>` photos from `<OTA>` ready to screen at http://localhost:7777 — batch `<title>`."
-Screening is his. The pipeline resumes (Phase 3) when he re-invokes `/jstack-sf-reel <resort>`.
+Screening is his. The pipeline resumes (Phase 3) when he re-invokes `/jstack-sf-new <resort>`.

@@ -9,7 +9,7 @@ description: Owns the packaging convention for the jstack skill family. Use when
 
 - `jstack-<skill>` — daily productivity, venture-agnostic (`jstack-savetobrain`,
   `jstack-vision`, `jstack-handoff`).
-- `jstack-<venture-code>-<skill>` — venture-specific (`jstack-sf-reel`; `sf` =
+- `jstack-<venture-code>-<skill>` — venture-specific (`jstack-sf-new`; `sf` =
   StayFrame). Venture skills sort together in every picker and stay under the jstack
   umbrella. NEVER use a colon in a skill directory name — `name:thing` is the harness's
   plugin namespace (`superpowers:brainstorming`) and a colon in a plain skill name breaks
