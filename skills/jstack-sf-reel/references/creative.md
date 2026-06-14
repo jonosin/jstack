@@ -2,7 +2,8 @@
 
 Mode: **auto-mine + draft, then Jono approves** (his choice). Discover an outlier reel, deconstruct
 it, draft the brief — then surface the pick + brief for a yes before producing. Full method:
-`~/ventures/stayframe/playbook/reel-deconstruction.md` and `reel-prompt-system.md`.
+`~/ventures/stayframe/playbook/reel-deconstruction.md` and `reel-prompt-system.md`. Engine choice
+(`still_model`/`clip_model`) + the higgsfield reference map → `~/ventures/stayframe/playbook/index.md`.
 
 ## 1. Mine outlier reels
 Apify instagram-reel-scraper on the niche's competitor handles (`APIFY_TOKEN` in
