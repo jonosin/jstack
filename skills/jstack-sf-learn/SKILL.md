@@ -31,11 +31,11 @@ that modality + engine. Read what the brief actually did, then compare against t
 | Brief signal | Canon to check |
 |---|---|
 | `still_model` / `clip_model` / `clip_type` frontmatter | `playbook/index.md §2` engine matrix — is this engine+lane a row? |
-| the **still** prompt method (how the still was made/edited) | `playbook/still-prompt-system.md` (reference-over-text; NB Pro / GPT Image 2) |
-| the camera method (how the move is described in the CLIP prompts) | `playbook/reel-prompt-system.md` (camera lexicon, §single-start-frame, first→end rule) + `end-frame-method.md` |
-| prompt structure / block order / density (per engine) | `reel-prompt-system.md` (video) / `still-prompt-system.md` (image) — formats are per-engine |
+| the **still** prompt method (how the still was made/edited) | `playbook/prompts/still-prompt-system.md` (reference-over-text; NB Pro / GPT Image 2) |
+| the camera method (how the move is described in the CLIP prompts) | `playbook/prompts/reel-prompt-system.md` (camera lexicon, §single-start-frame, first→end rule) + `playbook/prompts/end-frame-method.md` |
+| prompt structure / block order / density (per engine) | `playbook/prompts/reel-prompt-system.md` (video) / `playbook/prompts/still-prompt-system.md` (image) — formats are per-engine |
 | negatives that were **added or removed** (e.g. handheld pulled out of negatives) | the engine's prompt doc — negative-prompt floor |
-| any new red-line / authenticity handling | `quality-gate.md` |
+| any new red-line / authenticity handling | `playbook/produce/quality-gate.md` |
 
 A **candidate learning** = anything the passed brief did that canon does not yet say (a new engine
 lane, a new camera method, a changed negative floor, a new prompt pattern), OR anything canon says
@@ -51,7 +51,7 @@ nothing to the playbook, and skip to step 5.
 ## 4. On confirm — write canon (operational) + log the decision
 For each confirmed learning:
 1. **Edit the governing playbook doc** so the rule is now the default the next reel inherits — a new
-   `index.md §2` matrix row, a new `reel-prompt-system.md` section, a scoped/demoted old rule, etc.
+   `index.md §2` matrix row, a new `prompts/reel-prompt-system.md` section, a scoped/demoted old rule, etc.
    Keep it terse and machine-parseable; match the doc's existing style.
 2. **Append** an entry to `SF/playbook/DECISIONS.md` (append-only; never rewrite prior entries) using
    the template below.

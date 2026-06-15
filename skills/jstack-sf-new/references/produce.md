@@ -29,7 +29,7 @@ can override any single beat):
    or overrides.
 
 Record the confirmed choice in the brief frontmatter (`still_model` / `clip_model`) so dashboard labels +
-`sf_lint` stay true. Only AFTER this gate does any generation start. Detail + lane split → `manual-webui-workflow.md`.
+`sf_lint` stay true. Only AFTER this gate does any generation start. Detail + lane split → `produce/manual-webui-workflow.md`.
 
 ## Per beat (Jono drives in the dashboard)
 Per the Render Gate choice (manual or agent-generate): review the reference image (per-reel gate —
@@ -43,7 +43,7 @@ save to `<render_subdir>/stills/beat-N-still.png` ·
 (`still_model` / `clip_model`). The matrix defaults the gate proposes (full matrix + overrides → `playbook/index.md §2`):
 - **still →** Nano Banana Pro (web relax, free; GPT Image 2 = manual alt)
 - **any beat with a real camera move (DEFAULT) →** Veo 3.1 i2v, **single start frame, no end frame** —
-  manual on gemini.google.com (Jono's Gemini sub, free). See `reel-prompt-system.md §single-start-frame`.
+  manual on gemini.google.com (Jono's Gemini sub, free). See `prompts/reel-prompt-system.md §single-start-frame`.
 - **deliberately flat micro-reframe ONLY →** Kling O3 i2v fed a **cropped** first+end pair (keyframe step below)
 - **visible-motion beat →** Kling O3 Reference-to-Video (9-field Kling director)
 - **reference reel →** Seedance 2.0 (Topview "Standard", 720p) · **1080p+audio finals →** Seedance 1.5 Pro
@@ -54,7 +54,7 @@ Most moving beats now go to single-start Veo (above) — it takes **only** the a
 pair. Build a keyframe pair ONLY for a deliberately flat micro-reframe on Kling O3 i2v. Then: do **NOT**
 generate the end frame from a prompt — image-edit models repaint/drift. Build **both** Kling keyframes by
 **cropping ONE real still** with `tools/crop_reframe.py` — full method, per-move recipe, and crop params
-in **`playbook/end-frame-method.md`**. (Kling O3 i2v *requires* a first+end pair anyway; the crop produces
+in **`playbook/prompts/end-frame-method.md`**. (Kling O3 i2v *requires* a first+end pair anyway; the crop produces
 exactly that.) Jono approves the pair at **GATE A** before the clip renders.
 
 ## Review each clip before combining (standing workflow)
