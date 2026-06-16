@@ -15,7 +15,7 @@ the dashboard (deterministic)". Prompt rules + per-engine formats: `playbook/pro
 1. **Scaffold** one page per format (all paths under `~/ventures/stayframe/`):
    ```bash
    python3 tools/new_reel.py --client <slug> --reel <reel-slug> --beats <N> --engine "<engine>" \
-     [--stills-from <reel-or-stills-dir>] [--experimental]
+     [--stills-from <reel-or-stills-dir>] [--refs <ids>] [--experimental]
    ```
    - **`--engine`** selects the clip-prompt **format** (`sf_lint` enforces it): Kling O3/V3 →
      **9-field** director; Veo 3.1 / Vidu Q3 Pro → **single-start** block; Seedance → **six-block**.
@@ -23,12 +23,19 @@ the dashboard (deterministic)". Prompt rules + per-engine formats: `playbook/pro
    - **`--stills-from <reel-or-stills-dir>`** reuses an approved stills set (e.g.
      `renders/v4-bluehour/stills`). The page's beats show those stills; its **clips** resolve from its
      own `render_subdir`. No duplication, no symlinks.
+   - **`--refs <ids>`** stamps catalog ref id(s) into the beat headings (the dashboard reference panel
+     reads them). Flat `id,id` = every beat; per-beat `N:id,id;M:id`. Use for the **same-reference /
+     new-still** case (do NOT combine with `--stills-from`).
    - **`--experimental`** marks a not-yet-canon clip engine/format (e.g. `Vidu Q3 Pro`): relaxes only
      the engine-matrix lint; the **format guard still applies**.
 
+   **Three reuse layers:** *reference photo* (`--refs`, the generation basis) → *generated still*
+   (`--stills-from`, skips GATE-A regen) → *clip* (own `render_subdir`). Same still + new clips =
+   `--stills-from`; same reference + new still = `--refs`, no `--stills-from`.
+
 2. **Fill each beat's skeleton** from `clients/<slug>/brand.md` + the approved still by **invoking the
-   craft skills** — `creative-production-skills:kling-3-prompt-director` +
-   `creative-production-skills:cinematic-motion-language` (Kling), or the single-start / six-block rules
+   craft skills** — `video-prod-skills:kling-3-prompt-director` +
+   `video-prod-skills:cinematic-motion-language` (Kling), or the single-start / six-block rules
    in `prompts/reel-prompt-system.md`. The format is already stamped; you supply real content. **Red
    line:** augment the property's REAL look only — no invented people/structures/amenities.
 
