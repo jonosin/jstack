@@ -1,6 +1,6 @@
 ---
 name: jstack-sf-new
-description: Start a NEW hotel / resort / client and drive its reel end to end — the StayFrame pipeline orchestrator, re-entrant. Use when Jono says /jstack-sf-new, "new resort/hotel/client", "make a reel for <resort>", "start the reel for <resort>", "harvest images for <resort>", "pull <resort>'s photos and build the reel", gives a Booking.com / Agoda listing link, or wants to advance a resort to its next step (harvest → screen → catalog → creative → produce). Detects which phase the resort is in from disk and runs forward to the next human gate. NOTE — iterating an in-progress reel from saved dashboard feedback is /jstack-sf-check; promoting what worked into canon after a reel passes is /jstack-sf-learn.
+description: Start a NEW hotel / resort / client and drive its reel end to end — the StayFrame pipeline orchestrator, re-entrant. Use when Jono says /jstack-sf-new, "new resort/hotel/client", "make a reel for <resort>", "start the reel for <resort>", "harvest images for <resort>", "pull <resort>'s photos and build the reel", gives a Booking.com / Agoda listing link, or wants to advance a resort to its next step (harvest → screen → catalog → creative → produce). Also covers "create a new reel / new format / a variant for <resort>" and engine comparisons ("test these engines", "bake-off") — deterministic new-content creation on the dashboard via tools/new_reel.py (see "Creating new content / a variant"). Detects which phase the resort is in from disk and runs forward to the next human gate. NOTE — iterating an in-progress reel from saved dashboard feedback is /jstack-sf-check; promoting what worked into canon after a reel passes is /jstack-sf-learn.
 ---
 
 # jstack-sf-new — start a resort, run the whole reel pipeline
@@ -44,6 +44,16 @@ At every stop, tell Jono exactly what to do and that re-invoking `/jstack-sf-new
 If Jono names a phase ("re-harvest more photos for X", "rebuild the catalog", "redo the concept"),
 do that phase regardless of furthest-artifact state. A re-pull always writes a NEW batch (never
 append to a triaged one).
+
+## Creating new content / a variant (deterministic — Produce-phase)
+When Jono wants **new content on the dashboard** for an existing client — "create a new reel / new
+format / a variant for <resort>", or compare engines ("test these engines", "bake-off") — do NOT
+re-derive the workflow. **Deterministically scaffold** the page(s) with `tools/new_reel.py --engine`,
+which stamps the engine's canon prompt skeleton (format-enforced by `sf_lint`); then fill each beat
+from `brand.md` + the approved still via the craft skills. Comparing engines is just **N pages sharing
+one stills set** (`--stills-from`), one per format — there is no separate "test mode". Full procedure +
+flags: one-hop `references/new-content.md`. This is a Produce-phase action; existing reels keep their
+own pages.
 
 ## Dependencies (kept as tools, not folded in)
 - **Harvest** calls `jstack-otagallery` (`scripts/booking_gallery.py`, OTA CDN patterns) — general skill.
