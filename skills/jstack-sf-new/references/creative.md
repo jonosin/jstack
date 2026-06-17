@@ -5,6 +5,15 @@ it, draft the brief — then surface the pick + brief for a yes before producing
 `~/ventures/stayframe/playbook/method/reel-deconstruction.md` and `prompts/reel-prompt-system.md`. Engine choice
 (`still_model`/`clip_model`) + the higgsfield reference map → `~/ventures/stayframe/playbook/index.md`.
 
+## 0. Cap check (concept ledger) — BEFORE drafting a new concept
+Before committing to a NEW concept for this client+pattern, run the ledger check and surface the
+result to Jono (SOFT — never blocks):
+```bash
+python3 ~/ventures/stayframe/tools/learnings.py concepts check <client> <pattern> --concept <new-concept-id>
+```
+A `WARN: ... at N/3 ...` means this client has already run 3 distinct concepts on this pattern —
+recommend rotating to a different pattern or retiring this one. Jono decides.
+
 ## 1. Learnings-first — query the catalog before mining
 The learnings catalog is a growing library of deconstructed high performers + the patterns abstracted
 from them (`playbook/learnings/`). Check it for a proven pattern that fits THIS client before spending
@@ -43,7 +52,8 @@ Exact cut times matter? Cross-check `ffmpeg -i reel.mp4 -vf "select='gt(scene,0.
 **Persist to the catalog (every mined winner):** write the analysis as a frontmatter'd deconstruction
 card under `playbook/learnings/deconstructions/<date>-<slug>.md` (schema: `learnings/deconstructions`
 frontmatter — `slug, source_url, source_platform, metrics, tag, replicability, property_type, beats,
-motion, register, candidate_pattern, reel`), then `python3 ~/ventures/stayframe/tools/learnings.py build`.
+motion, register, candidate_pattern, reel`), then `python3 ~/ventures/stayframe/tools/learnings.py build`,
+then `python3 ~/ventures/stayframe/tools/learnings.py concepts build   # rebuild the concept ledger (dashboard reflects it)`.
 When a 2nd reel rhymes with the first, promote: write/extend the pattern card
 (`playbook/learnings/patterns/<slug>.md`, `examples: [<both slugs>]`, flip `status` → `replicated`).
 
@@ -58,6 +68,14 @@ verbatim beats) → `clients/serenity-sands/briefs/2026-06-14-sands-v3-organic-b
   + duration as the per-beat prompts (a brief whose frontmatter and body disagree is a lint-passing bug).
   `still_model`/`clip_model` here are the *proposed defaults* (from the matrix); they're confirmed or
   overridden at the **Render Gate** in Produce, then written back.
+- **Storyboard the beats with the craft skills (provenance required).** Invoke
+  `video-prod-skills:storyboard-generation` to structure the beat sheet (hook → tour beats → close),
+  then `video-prod-skills:cinematic-motion-language` to author each beat's motion block. Record both
+  in the brief frontmatter `storyboard_skills: [storyboard-generation, cinematic-motion-language]` —
+  same "show the craft skill" provenance rule `/jstack-vidgen` enforces.
+- **Stamp concept provenance** in the brief frontmatter: `pattern`, `concept_id`
+  (`<client>-<pattern>-<slug>`; reuse an existing id for an iteration), `concept_title`, `look_anchor`.
+  Scaffolding via `tools/new_reel.py --pattern ... --concept-id ...` stamps these and rebuilds the ledger.
 - Continuity anchors (grade + property) copied **verbatim** into every prompt; red-line / props rules.
 - `## Beat N` per beat: a standalone still prompt + a standalone clip prompt (no "as above").
 
@@ -65,10 +83,10 @@ Prompt standard (binding — the engine picks the format; full matrix → `~/ven
 - **DEFAULT — any beat with a real camera move → Veo 3.1 single-start-frame block**
   (`prompts/reel-prompt-system.md §single-start-frame`): one start frame, no end frame, dolly/pan/tilt not zoom,
   named-plane parallax, living handheld. Decided 2026-06-15 → `DECISIONS.md`. Invoke
-  `creative-production-skills:cinematic-motion-language` for the camera/motion craft.
+  `video-prod-skills:cinematic-motion-language` for the camera/motion craft.
 - **visible-motion beat → Kling O3 ref-to-video, 9-field formula** (Subject / SubjectDescription /
   Movement / Scene / SceneDescription / Camera / Lighting / Atmosphere / Negative) — `method/reel-deconstruction.md §7`,
-  invoke `creative-production-skills:kling-3-prompt-director`.
+  invoke `video-prod-skills:kling-3-prompt-director`.
 - **deliberately flat micro-reframe → Kling O3 i2v** on a cropped first+end pair (`prompts/end-frame-method.md`).
 - A same-still i2v lock with no motion is the v2 slideshow failure — never the default; allowed only as a
   named deliberate-stillness choice.
