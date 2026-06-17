@@ -40,3 +40,11 @@ When active, adopt this voice:
 ## Persistence
 
 ACTIVE EVERY RESPONSE once triggered. No revert after many turns. No filler drift. Still active if unsure. Off only when user says "/jstack-voice off" or "voice mode off".
+
+## Next skills
+
+| Next | When |
+|------|------|
+| `/jstack-focus` | Voice is on but responses are still too long — layer the concision toggle on top for ~40% shorter output. |
+
+Standalone toggle — stays active until "/jstack-voice off"; no required next step. Companion: `/jstack-focus`.

@@ -51,3 +51,10 @@ If the user wants to capture the session as a second-brain raw drop, hand off to
 - Does not edit `wiki/`, `wiki/index.md`, `wiki/log.md`, or `wiki/hot.md`.
 - Does not call any external API. Pure local search.
 - Does not maintain a search index. Re-parses JSONLs on every query. Fine for ~50–200 sessions; slow for thousands.
+
+## Next skills
+
+| Next | When |
+|------|------|
+| `/jstack-savetobrain-from-claude` | You found the session and want it captured as a second-brain raw drop (pass the session ID; `--staging` for review first). |
+| `/jstack-handoff-from-claude` | You found the session and want a handoff artifact built from its transcript instead. |

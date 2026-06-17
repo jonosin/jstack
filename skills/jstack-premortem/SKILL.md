@@ -47,3 +47,11 @@ After generating the report, return the file paths and attach or link the HTML i
 ## Chat output
 
 After generating the files, summarize in three sentences maximum: most likely failure, hidden assumption, and the single most important revision.
+
+## Next skills
+
+| Next | When |
+|------|------|
+| `/jstack-challenge` | After the premortem, the user wants a fresh advisor to attack the *revised* plan's load-bearing assumptions head-on. |
+
+Otherwise standalone — the revised plan is the deliverable; no required next step.

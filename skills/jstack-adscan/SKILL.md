@@ -100,3 +100,11 @@ cd "$ADSCAN_DIR" && python3.11 -m venv .venv && \
   ./.venv/bin/pip install -U meta-ads-collector
 ```
 Needs `ffmpeg` on PATH for video poster frames.
+
+## Next skills
+
+| Next | When |
+|---|---|
+| `marketing-skills:ad-creative` | Turn the pulled competitor creative into your own ad-copy variations / iterations. |
+
+Otherwise standalone — adscan fetches and structures ads; grading and dossier-writing are the agent's/human's judgment after opening the media.

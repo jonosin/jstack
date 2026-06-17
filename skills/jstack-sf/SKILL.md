@@ -27,6 +27,8 @@ All paths under `~/ventures/stayframe/` (abbrev `SF`). The canonical map is `SF/
 | "make / build / start / render / harvest / advance the reel for <resort>", "go" | invoke **`jstack-sf-new`** (it self-detects phase from disk and runs to the next gate) |
 | "I saved feedback", "check the dashboard", "I left a note", "iterate <reel>"; or a `SF/qa/reels/*.json` has an actionable (non-empty `note`) `feedback` entry | invoke **`jstack-sf-check`** |
 | "the reel passed", "what did we learn", "promote to canon", "save the method"; or a reel just cleared every GATE B and was assembled | invoke **`jstack-sf-learn`** (diff brief method vs `playbook/`, write the proven rule into the playbook + `DECISIONS.md`; canon is the home — no brain copy) |
+| "lead list", "add/enrich leads", "prospect table", "S6", "rank leads", "S7" | invoke **`jstack-sf-leads`** (canonical prospect CSV, Apify enrichment, S7 ranked file) |
+| "outreach", "cold DM/email", "first 50 sends", "contact leads", "owner contact" | invoke **`jstack-sf-outreach`** (S7/S8 message/channel playbook; drafts route to `jstack-msgdraft`) |
 | "what's the rule for <step>", "which engine / prompt format", or about to do a craft sub-step | open **`SF/playbook/index.md`** → route to the governing playbook + engine-matrix row. No sub-skill. |
 
 If both an advance intent and pending feedback exist, surface the feedback first (`jstack-sf-check`),
@@ -63,3 +65,14 @@ Read files; write nothing. Do not call the generation engines.
 - `SF/playbook/index.md` — pipeline map + canonical engine matrix (Seedance / Kling O3 / Nano Banana / GPT Image 2) + higgsfield reference map.
 - `jstack-sf-new` — the pipeline orchestrator (start a resort → finished reel). `jstack-sf-check` — the dashboard-feedback loop. `jstack-sf-learn` — promote a passed reel's method to canon.
 - `SF/tools/sf_lint.py` — freshness gate (run in maintenance/pre-commit).
+
+## Next skills
+
+| Next | When |
+|------|------|
+| `/jstack-sf-new <resort>` | Advance the pipeline to its next gate (or start a resort). |
+| `/jstack-sf-check` | Feedback is pending in the dashboard — apply it, then iterate. |
+| `/jstack-vidgen` | At the Render Gate and generating agent-side (stills/clips) — the universal video-gen router (asks duration+resolution, shows the exact prompt + craft skill, no dup-frame). |
+| `/jstack-sf-learn` | A reel just cleared every GATE B — promote what worked to canon. |
+| `/jstack-sf-leads` | Add, enrich, validate, or rank prospect leads. |
+| `/jstack-sf-outreach` | Turn ranked leads into contact strategy, message drafts, and the first manual send plan. |

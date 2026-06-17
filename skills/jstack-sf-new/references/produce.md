@@ -21,9 +21,11 @@ Prompts are straight and approved; now decide HOW they render. **Ask Jono two th
 can override any single beat):
 1. **Manual or agent-generate?** — *manual* = Jono runs the prompts himself (stills on web relax /
    gemini.google.com; clips on his Gemini sub for Veo, or the web UI) and uploads results via the
-   dashboard; *agent-generate* = Claude dispatches via the Topview API (`topview-skill`,
-   `~/builds/topview-skill/scripts/video_gen.py`) for the engines that support it (Seedance / Kling).
-   **Veo has no API wired → Veo is manual-only for now.**
+   dashboard; *agent-generate* = Claude invokes **`/jstack-vidgen`**, the universal video-gen router
+   (it enforces the universal rules — ask duration+resolution, show the exact prompt + the
+   `video-prod-skills:<skill>` craft file used, no same-still dup-frame — and routes to the Topview
+   backend today, `~/builds/topview-skill/scripts/video_gen.py`) for the engines that support it
+   (Seedance / Kling). **Veo has no API wired → Veo is manual-only for now.**
 2. **Engine?** — the matrix (`playbook/index.md §2`) proposes the default per beat (still → NB Pro;
    moving beat → Veo single-start; flat reframe → Kling O3 i2v; reference reel → Seedance). Jono confirms
    or overrides.

@@ -90,3 +90,10 @@ human has already triaged — new pulls get a NEW batch so existing verdicts sta
 Photo count found vs downloaded, output dir, total size, and (if QA batch) the batch title
 as it appears in the dashboard. Log source URLs — provenance is part of the Stayframe
 pipeline contract.
+
+## Next skills
+
+| Next | When |
+|---|---|
+| `/jstack-sf-new <resort>` | The harvested photos are for a resort reel — feed them into the pipeline (screen → catalog → creative → produce). |
+| `/jstack-sf` | Unsure where the resort is in the pipeline — read-only status / route to the right next step. |

@@ -84,7 +84,7 @@ tool, plain `/jstack-savetobrain`, not this skill. A craft method is never that.
 - **Confirm before any canon write.** This skill proposes; Jono approves; then it writes.
 - **Method (rule + why) → `playbook/` + `DECISIONS.md` only.** No brain copy — the next session reads canon and uses it; duplicating to the brain just drifts. Brain is for business/strategy, not craft.
 - **Route, don't duplicate.** When you write canon, keep the plugin routing: record the StayFrame
-  rule/delta and point to `creative-production-skills:<skill>` (per `index.md §3`) for the generic
+  rule/delta and point to `video-prod-skills:<skill>` (per `index.md §3`) for the generic
   technique. Never copy the plugin's craft into the playbook — that re-creates the very divergence the
   routing model removes.
 - **`DECISIONS.md` is append-only** — history, never rewritten. Supersession is a new entry that
@@ -93,3 +93,10 @@ tool, plain `/jstack-savetobrain`, not this skill. A craft method is never that.
   the immutable record of what was produced.
 - The other skills stay the source of truth for their jobs: `jstack-sf-new` runs the pipeline,
   `jstack-sf-check` applies dashboard feedback, the `playbook/` docs hold the rules this skill writes.
+
+## Next skills
+
+| Next | When |
+|------|------|
+| `/jstack-sf-new <resort>` | Canon is updated — start the next resort, now ahead of this one. |
+| `/jstack-sf` | Want a read-only status of where things stand across resorts. |

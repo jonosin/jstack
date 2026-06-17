@@ -66,3 +66,10 @@ Do not invoke `/jstack-brainwork` automatically. The growth-loop convention is t
 - Does not run `tools/sb.py` (index, log, check, graph, or lint).
 - Does not generate wiki prose, summaries, or strategic analysis.
 - Does not auto-ingest the drop. Capture and brainwork stay decoupled.
+
+## Next skills
+
+| Next | When |
+|------|------|
+| `/jstack-brainwork` | After extracting the Claude session as a drop — process/ingest it (deferred by design; run when you want it compiled). |
+| `/jstack-claude-find` | If you still need to locate the session ID to extract. |

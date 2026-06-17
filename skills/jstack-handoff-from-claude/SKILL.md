@@ -30,3 +30,10 @@ After extraction, report the transcript path and turn counts.
 Now invoke `/jstack-handoff` and tell it:
 
 > Read `~/.jstack/transcripts/<session-id>.clean.md` and create a handoff from it.
+
+## Next skills
+
+| Next | When |
+|------|------|
+| `/jstack-handoff` | Immediately after extraction — point it at the cleaned transcript to produce the actual handoff artifact (the required next hop; this skill only extracts). |
+| `/jstack-claude-find` | You don't have the session ID yet and need to locate it first. |

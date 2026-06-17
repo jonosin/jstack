@@ -206,3 +206,11 @@ Do not bury the ask. The persona is polite, but usually clear about what they wa
 Before sending, ask: does this sound like a real founder sending a concrete follow-up to someone whose judgment he respects?
 
 If it sounds like an assistant trying to be professional, make it plainer, more specific, and less polished.
+
+## Next skills
+
+| Next | When |
+|------|------|
+| `/jstack-voice` | The user wants the *whole session's* tone shifted to this warm, direct voice, not just one drafted message. |
+
+Otherwise standalone — the drafted message is the deliverable; no required next step.

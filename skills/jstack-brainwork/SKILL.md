@@ -60,3 +60,10 @@ Use `references/pending-raw-triage.md`. It reads `raw/.ingest-cache.json` as the
 ## Final report
 
 Always emit per `references/final-report.md`: one to four short lines covering chosen route, raw sources processed (or why none), wiki/support files changed, `tools/sb.py check` result, and remaining pending work.
+
+## Next skills
+
+| Next | When |
+|------|------|
+| `/jstack-savetobrain` | Standalone terminal step — brainwork drains the backlog; capture a new session before there is anything to process. |
+| `/jstack-brainwork` (re-invoke) | Batch Ingest ran out of budget — a fresh `/jstack-brainwork` resumes the remaining pending raw. |

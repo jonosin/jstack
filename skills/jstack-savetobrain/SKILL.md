@@ -120,3 +120,9 @@ Pending ingest backlog: <N> source(s). Run /jstack-brainwork to process.
 
 If you saved nothing: `Nothing worth saving from this session: <reason>. No file written.`
 If several sources are pending, recommend `/jstack-brainwork all pending`.
+
+## Next skills
+
+| Next | When |
+|------|------|
+| `/jstack-brainwork` | After saving — process/ingest the new raw drop into the wiki (default next hop; bare `/jstack-brainwork` drains all pending). |

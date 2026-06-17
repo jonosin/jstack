@@ -35,3 +35,11 @@ Drop compression temporarily for: security warnings, irreversible action confirm
 ## Persistence
 
 ACTIVE EVERY RESPONSE once triggered. No revert after many turns. Off only when user says "/jstack-focus off" or "normal mode".
+
+## Next skills
+
+| Next | When |
+|------|------|
+| `/jstack-voice` | The user wants the warm advisor *tone*, not just shorter length — pair it with this concision toggle. |
+
+Standalone toggle — stays active until "/jstack-focus off"; no required next step. Companion: `/jstack-voice`.

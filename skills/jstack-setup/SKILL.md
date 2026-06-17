@@ -75,3 +75,11 @@ skills:
 
 Without this, `hermes skills list` sees the skills but `/skill` on Discord won't.
 Restart the gateway (`/restart` on Discord) after adding the config.
+
+## Next skills
+
+| Next | When |
+|------|------|
+| `/jstack` | Install is done and the user wants to author or scaffold a new jstack skill — read the packaging convention next. |
+
+Otherwise standalone — once the suite is installed and config written, no required next step.

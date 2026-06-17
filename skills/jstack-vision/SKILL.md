@@ -212,3 +212,10 @@ gv-batch --json ~/receipts/ "extract date, vendor, total as JSON" \
 - `references/file-type-notes.md` — size limits, keyframe recipe, model availability
 - `vendor/gemini-vision/AGENTS.md` — full operational contract
 - `vendor/gemini-vision/README.md` — human-facing docs
+
+## Next skills
+
+| Next | When |
+|------|------|
+| Calling skill (e.g. `/jstack-sf-new`) | jstack-vision is usually invoked BY another skill for catalog/creative analysis — return its result to that caller. |
+| Otherwise | Standalone — a one-off Gemini multimodal analysis with no required next step. |

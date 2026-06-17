@@ -65,6 +65,12 @@ description: "$desc"
 # $name
 
 TODO: write the skill body.
+
+## Next skills
+
+| Next | When |
+|------|------|
+| TODO | TODO — recommended skill to invoke after this one (video gen always goes to /jstack-vidgen) |
 EOF
   echo "created canonical skill: $canon/SKILL.md"
 else

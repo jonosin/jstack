@@ -76,6 +76,20 @@ does, the wiki pages you wrote did not reference the raw path — add the `sourc
 body `Source:` line) so the source is provably ingested. The cache alone does not make a source
 "ingested"; a wiki reference does.
 
+## Pitfalls
+
+**rawmap on sources without `#` headings:** `sb.py rawmap` scans for markdown ATX headings (`#`,
+`##`, etc.). Raw sources that use plain-text section titles (common in NotebookLM exports, PDF
+conversions, and some clipped articles) produce only a line-count line — no heading structure. When
+this happens, scan the raw file and manually note key section landmarks in the Raw map (e.g., `L11
+Clinical Dosing`, `L33 Circadian Kinetics`). The map still routes to correct line offsets even
+without machine-parsed headings. Never skip the Raw map section just because the tool output is
+minimal.
+
+**cache check exit code for new files:** `sb.py cache check` returns exit code 2 for files not yet
+in the cache. This is expected for first-time ingests — it means "changed/absent", not an error.
+Proceed with ingest.
+
 ## Reporting
 
 Hand control to `references/final-report.md` after writes complete (or after deciding to skip).

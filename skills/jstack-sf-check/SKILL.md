@@ -82,3 +82,11 @@ brief unless Jono asks; let him eyeball the result first.
 - Reel-agnostic: works for any `clients/*/briefs/*-brief.md` with the runsheet structure.
 - This skill does not generate images or launch the dashboard — `jstack-sf-new` runs the pipeline
   (harvest → screen → catalog → creative → produce). This one is purely the read → apply → clear loop.
+
+## Next skills
+
+| Next | When |
+|------|------|
+| `/jstack-vidgen` | Feedback applied — regenerate the affected beat agent-side (universal video-gen router: asks duration+resolution, shows the exact prompt + the `video-prod-skills:<skill>` craft file used, no dup-frame). |
+| `/jstack-sf-new <resort>` | Resume the pipeline toward the next gate after applying feedback. |
+| `/jstack-sf-learn` | The reel now clears every GATE B — promote what worked to canon. |

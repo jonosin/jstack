@@ -208,3 +208,11 @@ exist — it's the same credential used by `gv`. The `gcloud` binary is NOT requ
 - `vendor/gemini-image/AGENTS.md` — full operational contract for `gi` / `gi-pro` / `gi-batch`
 - `vendor/gemini-image/gi` — the Python wrapper script (readable, small)
 - `~/jstack/vendor/gemini-vision/` — the `gv` wrapper this skill mirrors structurally
+
+## Next skills
+
+| Next | When |
+|---|---|
+| `/jstack-vidgen` | Animate a generated still into a video clip (single-image i2v) — the universal video-gen router. |
+
+Otherwise standalone — image generation has no required next step.

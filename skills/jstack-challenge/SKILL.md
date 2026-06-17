@@ -121,3 +121,12 @@ Do NOT just dump the advisor's full response and walk away. The user invoked thi
 ## Persistence
 
 This is a single-shot skill. Each invocation spawns a fresh advisor with the latest position. The skill itself does not stay active across turns. If the user wants another pressure-test on a revised position later, invoke the skill again with a freshly-written prompt.
+
+## Next skills
+
+| Next | When |
+|------|------|
+| `/jstack-premortem` | The advisor's attack exposed real failure modes in a plan or commitment — run a structured premortem to map them before deciding. |
+| `/jstack-challenge` | The position changed materially after the attack — re-run on the revised position (single-shot; each run is a fresh advisor). |
+
+Otherwise standalone — the user decides what to do with the pushback; no required next step.

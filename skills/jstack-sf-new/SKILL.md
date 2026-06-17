@@ -68,3 +68,12 @@ against `playbook/`, and on confirm writes the new rule into the playbook + appe
 This is the step that makes the *next* resort start ahead of this one — do not skip it, and do not
 silently auto-write canon; `jstack-sf-learn` owns that with a confirm. Canon is the home; methods are
 not copied to the brain.
+
+## Next skills
+
+| Next | When |
+|------|------|
+| `/jstack-vidgen` | At the Render Gate, generating agent-side — the universal video-gen router (asks duration+resolution, shows the exact prompt + the `video-prod-skills:<skill>` craft file used, no same-still dup-frame; Topview backend today). |
+| `/jstack-sf-check` | Jono left per-beat feedback in the dashboard — apply it and iterate. |
+| `/jstack-sf-learn` | Every beat cleared GATE B and the reel is assembled — promote what worked to canon. |
+| `/jstack-sf` | Just want a read-only "where am I / next gate" status. |

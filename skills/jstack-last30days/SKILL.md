@@ -1707,3 +1707,11 @@ Want another prompt? Just tell me what you're creating next.
 **Bundled scripts:** `scripts/last30days.py` (main research engine), `scripts/lib/` (search, enrichment, rendering modules), `scripts/lib/vendor/bird-search/` (vendored X search client, MIT licensed)
 
 Review scripts before first use to verify behavior.
+
+## Next skills
+
+| Next | When |
+|------|------|
+| `research-router` | The recency scan surfaced a thread worth a deeper, multi-source dive — route the follow-up through the canonical research stack. |
+| `/jstack-savetobrain` | A finding is durable enough to keep — capture the briefing as a second-brain raw source. |
+| Otherwise | Standalone — `/last30days` is a self-contained recency report; no required next step. |
