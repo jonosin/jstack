@@ -1,5 +1,10 @@
 # Backend: Topview
 
+> **RUN-FIRST. Assume it works.** To generate a clip, copy the i2v flow under "Vidgen-relevant
+> flow" below and run it (`estimate-cost` is the spend-nothing validate step). Don't read
+> `video_gen.py` source or re-derive the call shape first. Only if a run FAILS do you diagnose,
+> fix the root cause, and update this doc + the script so the next agent doesn't hit it.
+
 Adapter/pointer for the **Topview** video backend. This is NOT a copy of the Topview skill —
 it routes to it. Topview owns its mechanical guards; `jstack-vidgen` owns the universal rules.
 

@@ -16,47 +16,92 @@ separately and point `ADSCAN_DIR` at it (default `~/builds/adscan`). See README.
 Run the wrapper (uses the repo's bundled venv):
 
 ```bash
-"$ADSCAN_DIR"/adscan <scan|build> ...      # ADSCAN_DIR default: ~/builds/adscan
+"$ADSCAN_DIR"/adscan <scan|resolve|build> ...      # ADSCAN_DIR default: ~/builds/adscan
 ```
 
-## Two modes
+> ## AGENT BEHAVIORAL RULE — page-id first, keyword is NEVER complete
+>
+> A keyword `scan` is **discovery only** and is **NEVER** a page's complete ad set.
+> To pull an advertiser's ads, **resolve the vague name to a page id**
+> (`adscan resolve` / `build --resolve`) and **enumerate by id**. Use
+> `--query`/`--match` (or `--page-name`) only as a **lossy** discovery fallback.
+> If the resulting `ads.json` reports a `recall_gap` with `lossy: true`, the keyword
+> result was **incomplete** — do NOT present it as the full set; **re-pull by page id**.
+>
+> This rule exists because a past run returned **1 ad** when the page had more.
+> The `recall_gap` signal is the tripwire that catches that; obey it.
 
-**Discovery** — which advertisers run ads for a keyword:
+## Three modes
+
+**Discovery (`scan`)** — which advertisers run ads for a keyword. Discovery ONLY —
+this never returns a page's complete set:
 ```bash
 "$ADSCAN_DIR"/adscan scan "peptide tracker"          # US, active, by impressions
 "$ADSCAN_DIR"/adscan scan "menopause tracker app" -n 40 -c US
 ```
 Prints advertiser, ad count, active count, image/video mix, and each app/landing link.
 
-**Build** — write one advertiser's ads to `<out>/<slug>/ads.json` + download creatives:
+**Resolve (`resolve`)** — deterministically map a vague advertiser name → its canonical
+ad-library page id (prints the id + a candidate ranking). No LLM, no randomness:
 ```bash
-# precise (recommended): by page name
-"$ADSCAN_DIR"/adscan build <slug> --page-name "Acme.io" --company "Acme" --out <dir>
+"$ADSCAN_DIR"/adscan resolve "Acme Resort Krabi" -c US
+```
 
-# or keyword + advertiser-substring filter
+**Build (`build`)** — write one advertiser's ads to `<out>/<slug>/ads.json` + download
+creatives. **Page-id first**, in recall order (most complete first):
+```bash
+# 1. RECOMMENDED — complete enumeration by page id (recall-complete via view_all_page_id)
+"$ADSCAN_DIR"/adscan build <slug> --page-id 61571201360436 --company "Acme" --out <dir>
+
+# 2. RECOMMENDED for a fuzzy name — resolve the name, then enumerate completely by id
+"$ADSCAN_DIR"/adscan build <slug> --resolve "Acme Resort Krabi" --company "Acme" --out <dir>
+
+# 3. LOSSY fallback only — keyword + advertiser-substring filter (or --page-name)
 "$ADSCAN_DIR"/adscan build <slug> --query "peptide tracker" --match "Acme" --out <dir>
 ```
 Images saved directly; videos saved as `.mp4` with an ffmpeg poster `.jpg`. Captures real
 flight dates, CTA, platforms, and the store/landing URL (which identifies the developer).
+`--page-id` paginates the page to exhaustion (`-n` never caps it); `--cap` is applied AFTER
+the complete pull and prints how many ads were dropped to stderr — no silent truncation.
 
 `--out` defaults to `$ADSCAN_ADS_DIR` or the current dir. Slug must match `[a-z0-9][a-z0-9-]*`.
-Other flags: `-c US` · `-t all|political|housing|employment|credit` · `-s active|inactive|all`
+Other flags: `--page-id` · `--resolve "<name>"` · `--page-name` · `--query`/`--match` ·
+`-c US` · `-t all|political|housing|employment|credit` · `-s active|inactive|all`
 · `-n` pull size · `--cap 7` ads kept · `--gap "..."` · `--no-clean`. Full flags: `adscan build -h`.
 
-## Page-name vs query fallback
+## Page-id-first flow (and the lossy keyword fallback)
 
-`--page-name` is precise but fragile. Meta page names often have trailing spaces, Unicode
-variants, or punctuation that cause "no ads matched." When a `--page-name` build fails,
-retry with `--query` + `--match` using the advertiser name from the scan output:
+To pull an advertiser, **prefer the page-id path** — it enumerates the page completely
+(via Meta's `view_all_page_id` primitive) instead of finding ads by keyword:
 
 ```bash
-# first attempt (precise)
-"$ADSCAN_DIR"/adscan build my-slug --page-name "Resort Name" --company "Resort" --out "$OUT"
+# best: you already have the id (from the Ad Library URL or a prior resolve)
+"$ADSCAN_DIR"/adscan build my-slug --page-id 61571201360436 --company "Resort" --out "$OUT"
 
-# fallback (query + substring match)
+# you only have a fuzzy name: resolve → enumerate completely, in one step
+"$ADSCAN_DIR"/adscan build my-slug --resolve "Resort Name Krabi" --company "Resort" --out "$OUT"
+
+# or resolve first to inspect the candidate ranking, then build by the printed id
+"$ADSCAN_DIR"/adscan resolve "Resort Name Krabi" -c US
+"$ADSCAN_DIR"/adscan build my-slug --page-id <printed-id> --company "Resort" --out "$OUT"
+```
+
+`--page-id` accepts either the ad-library URL id or the internal serving id — adscan
+auto-resolves between them.
+
+**Lossy keyword fallback** — use `--query`/`--match` (or `--page-name`) only when the
+page-id path can't land the advertiser. `--page-name` is precise but fragile: Meta page
+names often have trailing spaces, Unicode variants, or punctuation that cause "no ads
+matched"; fall back to `--query` + `--match` using the advertiser name from the scan:
+
+```bash
 "$ADSCAN_DIR"/adscan build my-slug --query "resort Krabi" --match "Resort Name" --out "$OUT"
 ```
 
+On this lossy path adscan computes a **`recall_gap`**: it resolves the dominant matched
+page, enumerates it completely, and compares counts. If `ads.json` shows
+`recall_gap.lossy == true` (and `fetch_status: "incomplete-keyword-recall"`), the keyword
+result is **INCOMPLETE** — re-pull by page id (`--page-id`/`--resolve`) before using it.
 Always open the scan results first to copy the exact advertiser name for `--match`.
 
 **Watch for truncated names in scan output.** The scan table column width is limited — names ending mid-word, at a punctuation mark, or with a trailing space/punctuation (e.g. `"Santhiya Phuket Natai Resort &"`, `"Baba Beach Club Natai by Sri p"`, `"The Cape Pool Villas - Koh Sam"`) are truncated. These will fail as `--page-name` values. When the scan name looks incomplete, skip `--page-name` and go straight to `--query` + `--match` with a known-unique substring from the visible portion.
@@ -64,16 +109,22 @@ Always open the scan results first to copy the exact advertiser name for `--matc
 ## Batch builds
 
 When pulling multiple advertisers, chain builds with `&&` under a single generous timeout.
-Run a `scan` first to discover exact page names, then batch the builds:
+Run a `scan` first to discover the advertisers, then batch the builds — prefer
+`--resolve "<name>"` (or a resolved `--page-id`) so each build is recall-complete:
 
 ```bash
 export ADSCAN_DIR=~/builds/adscan OUT=~/project/research/ads
-"$ADSCAN_DIR"/adscan build slug1 --page-name "Advertiser One" --company "One" --out "$OUT" && \
-"$ADSCAN_DIR"/adscan build slug2 --page-name "Advertiser Two" --company "Two" --out "$OUT" && \
-"$ADSCAN_DIR"/adscan build slug3 --page-name "Advertiser Three" --company "Three" --out "$OUT"
+"$ADSCAN_DIR"/adscan build slug1 --resolve "Advertiser One" --company "One" --out "$OUT" && \
+"$ADSCAN_DIR"/adscan build slug2 --resolve "Advertiser Two" --company "Two" --out "$OUT" && \
+"$ADSCAN_DIR"/adscan build slug3 --resolve "Advertiser Three" --company "Three" --out "$OUT"
 ```
 
-Failed builds exit non-zero and stop the chain. Retry failed ones individually with `--query` + `--match`. When running many builds (5+), prefer parallel `terminal()` calls with individual timeouts over a single chained command — this avoids losing all progress when one build fails.
+A `--page-id`/`--resolve` build writes a clean empty `ads.json` (exit 0) when a page has no
+ads, so it won't break the chain. The lossy `--query`/`--match` fallback also exits 0 on no
+match. When running many builds (5+), prefer parallel `terminal()` calls with individual
+timeouts over a single chained command — this avoids losing all progress when one build
+fails. After a lossy build, check `recall_gap` in each `ads.json` and re-pull any
+`lossy: true` result by page id.
 
 ## What it does NOT do
 Fetches and structures ads only. It does **not** grade creative (weak/okay/good) or write

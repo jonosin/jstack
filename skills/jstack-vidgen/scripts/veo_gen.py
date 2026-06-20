@@ -5,11 +5,13 @@ Wraps the google-genai SDK (vertexai=True) for Veo video generation, mirroring
 the CLI shape of jstack-imgen's `gi`. General-purpose: prompt + files come from
 the caller.
 
-STATUS: scaffold. `--dry-run` is fully working (resolves config + billing
-project, prints the invocation, spends nothing). The LIVE submit path is a
-clearly-marked TODO — authored without spending GCP credits. Implement the
-generate() body against references/veo-vertex-backend.md before first real run,
-and verify the model id + allowed durations in Model Garden.
+STATUS: live. The i2v/t2v submit path (generate(), below) is implemented and
+working — real client.models.generate_videos(...), polls the long-running op to
+completion (15-min ceiling), saves the mp4. `--dry-run` validates resolved config
++ billing project + cost estimate and prints the invocation WITHOUT calling the
+API (spends nothing) — use it to verify before the first real submit. Veo model
+ids rotate (`-preview` -> `-001`); if a run 404s, confirm the id + allowed
+durations in Model Garden and pin via GEMINI_VIDGEN_MODEL.
 
 Usage:
   veo_gen.py --prompt "..." --first-frame still.png -o out.mp4
@@ -45,6 +47,7 @@ import argparse
 import json
 import os
 import sys
+import time
 from pathlib import Path
 
 VERSION = "0.1.0"
@@ -184,31 +187,71 @@ def _dep_check():
 
 def generate(project, location, model, prompt, first_frame, duration,
              resolution, aspect_ratio, out_path):
-    """LIVE submit path — TODO. Authored without spending GCP credits.
+    """LIVE submit path — Veo on Vertex via google-genai (vertexai=True).
 
-    Implement against references/veo-vertex-backend.md:
-      from google import genai
-      from google.genai import types
-      client = genai.Client(vertexai=True, project=project, location=location)
-      image = types.Image.from_file(location=str(first_frame)) if first_frame else None
-      op = client.models.generate_videos(
-          model=model, prompt=prompt, image=image,
-          config=types.GenerateVideosConfig(
-              aspect_ratio=aspect_ratio, resolution=resolution,
-              duration_seconds=int(duration), number_of_videos=1,
-              generate_audio=True))
-      while not op.done:
-          time.sleep(10); op = client.operations.get(op)
-      for gv in op.response.generated_videos:
-          gv.video.save(str(out_path))
-      return [str(out_path)]
-
-    Verify the live model id + allowed durations in Model Garden first.
+    i2v when first_frame is a local path or GCS URI; t2v when first_frame is None.
+    Long-running op: submit, then poll to completion (clips take minutes). Output is
+    saved as inline bytes to out_path. Implemented per references/veo-vertex-backend.md.
     """
-    raise NotImplementedError(
-        "veo_gen live submit path is a scaffold TODO. Use --dry-run, or implement "
-        "generate() per references/veo-vertex-backend.md after verifying the model "
-        "id in Model Garden. No GCP credits were spent authoring this.")
+    from google import genai
+    from google.genai import types
+
+    client = genai.Client(vertexai=True, project=project, location=location)
+
+    image = None
+    if first_frame:
+        ff = str(first_frame)
+        if ff.startswith("gs://"):
+            # GCS URI — infer mime from extension (png/jpg).
+            mime = "image/png" if ff.lower().endswith(".png") else "image/jpeg"
+            image = types.Image(gcs_uri=ff, mime_type=mime)
+        else:
+            if not os.path.isfile(ff):
+                raise FileNotFoundError(f"first-frame not found: {ff}")
+            image = types.Image.from_file(location=ff)
+
+    cfg_kwargs = dict(
+        aspect_ratio=aspect_ratio,
+        resolution=resolution,
+        number_of_videos=1,
+        generate_audio=True,
+    )
+    if duration is not None:
+        cfg_kwargs["duration_seconds"] = int(duration)
+
+    submit_kwargs = dict(model=model, prompt=prompt,
+                         config=types.GenerateVideosConfig(**cfg_kwargs))
+    if image is not None:
+        submit_kwargs["image"] = image
+
+    op = client.models.generate_videos(**submit_kwargs)
+
+    # Long-running op — poll to completion (minutes). Cap the wait so a stuck op
+    # doesn't hang forever; Veo clips finish in a few minutes.
+    waited = 0
+    while not op.done:
+        time.sleep(10)
+        waited += 10
+        op = client.operations.get(op)
+        if waited > 900:  # 15 min ceiling
+            raise TimeoutError("Veo op did not finish within 15 min; check the console.")
+
+    resp = getattr(op, "response", None)
+    vids = getattr(resp, "generated_videos", None) if resp else None
+    if not vids:
+        # Surface RAI / safety blocks rather than failing silently.
+        rai = getattr(resp, "rai_media_filtered_reasons", None) if resp else None
+        raise RuntimeError(f"no video in response (op done but empty). rai={rai}")
+
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    written = []
+    for i, gv in enumerate(vids):
+        # number_of_videos=1, but write i-suffixed names if a model returns several.
+        dest = out_path if i == 0 else out_path.with_name(
+            f"{out_path.stem}-{i}{out_path.suffix}")
+        gv.video.save(str(dest))
+        written.append(str(dest))
+    return written
 
 
 # -- main -----------------------------------------------------------------
@@ -332,16 +375,6 @@ def main():
     try:
         out_files = generate(project, location, model, prompt, args.first_frame,
                              args.duration, args.resolution, args.aspect_ratio, out_path)
-    except NotImplementedError as e:
-        # Scaffold guard: live path not implemented. Loud, typed, no silent failure.
-        if json_mode:
-            emit_envelope(False, model, project, location, prompt, args.first_frame, [],
-                          duration=args.duration, resolution=args.resolution,
-                          aspect_ratio=args.aspect_ratio, cost=cost,
-                          error=str(e), error_class="usage", exit_code=EX_USAGE)
-        else:
-            print(f"veo_gen: error: {e}", file=sys.stderr)
-        sys.exit(EX_USAGE)
     except Exception as e:
         err_str = str(e)
         err_class = classify_error(err_str)

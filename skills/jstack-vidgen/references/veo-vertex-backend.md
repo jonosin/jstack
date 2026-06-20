@@ -1,5 +1,61 @@
 # Backend: Veo 3.1 on Vertex AI
 
+> **RUN-FIRST. The script works — do NOT read it before running.** `scripts/veo_gen.py`'s
+> live i2v/t2v submit path is implemented and tested. To generate a clip, copy the recipe
+> below and run it. Do **not** read the Python, re-derive the SDK call, or grep for
+> conventions first — everything you need is in this top section. Drop to "Debug — read only
+> if a run fails" (bottom) ONLY after a real failure, then fix the root cause and update this
+> doc + the script so the next agent doesn't hit it.
+
+## ▶ Generate a Veo clip (copy-paste, no script-reading needed)
+
+```bash
+# i2v from a local still — DEFAULT iterate tier (Veo 3.1 Fast). Validate first, then submit.
+PY=~/.jstack/imgen-venv/bin/python
+SCRIPT=~/.claude/skills/jstack-vidgen/scripts/veo_gen.py
+
+# 1. DRY-RUN first — validates config + billing project + cost, spends NOTHING:
+GEMINI_VIDGEN_MODEL=veo-3.1-fast-generate-001 "$PY" "$SCRIPT" --dry-run --json \
+  --prompt "<single-start motion block — see video-prod-skills:cinematic-motion-language>" \
+  --first-frame still.png \
+  --duration 4 --resolution 1080p --aspect-ratio 9:16 -o out.mp4
+
+# 2. Real submit (drop --dry-run). Spends GCP credits. Confirm cost with the human first:
+GEMINI_VIDGEN_MODEL=veo-3.1-fast-generate-001 "$PY" "$SCRIPT" --json \
+  --prompt "<...>" --first-frame still.png \
+  --duration 4 --resolution 1080p --aspect-ratio 9:16 -o out.mp4
+```
+
+- **t2v** (no still): omit `--first-frame`.
+- `--json` emits a `{ok, model, project, cost_estimate, files_out, exit_code, ...}` envelope.
+- **Standard quality** (final/hero clip): drop the `GEMINI_VIDGEN_MODEL` override (default is
+  `veo-3.1-generate-001`) or set it to that id explicitly.
+
+### Conventions baked in (so nobody greps for these again)
+
+| Convention | Value |
+|---|---|
+| **Default iterate tier** | **Veo 3.1 Fast** (`veo-3.1-fast-generate-001`, ~$0.15/output-sec). Use it for all iteration. |
+| Standard tier | `veo-3.1-generate-001`, ~$0.40/output-sec — reserve for the final/hero clip. |
+| **Fast min duration** | **~4s** — 3s is rejected (`INVALID_ARGUMENT`). |
+| Cost @ Fast | 4s ≈ **$0.60**, 8s ≈ **$1.20** |
+| Cost @ Standard | 4s ≈ **$1.60**, 8s ≈ **$3.20** |
+| Billing project | resolves `GEMINI_VIDGEN_PROJECT` → `GOOGLE_CLOUD_PROJECT` (already set in `~/.jstack/config.env`) — usually nothing to pass. |
+| ADC | `~/.config/gcloud/application_default_credentials.json` (type `authorized_user`; no `gcloud` binary needed at call time). |
+| Region | **`us-central1`** — Veo is regional, NOT `global` (don't copy imgen's `global` default). |
+| Venv | `~/.jstack/imgen-venv/bin/python` (homebrew python3 is broken on this machine). |
+
+**Pipeline note:** in the StayFrame reel pipeline the agent renders the clip with this script,
+then the **human drag-drops the mp4 onto the beat at GATE B** in the dashboard — the dashboard
+does not call Veo itself.
+
+---
+
+## Debug — read only if a run fails / you're debugging
+
+Everything below is theory + raw SDK. You do **not** need it to generate a clip; it's here so
+that when a run genuinely fails you can diagnose, fix the root cause, and update this doc.
+
 The Google Veo backend. Billed to the user's **GCP credits via ADC** (not Topview credits).
 Mirrors the auth/project/region conventions of `jstack-imgen` (`gi`) and `jstack-vision` (`gv`):
 `google-genai` SDK in Vertex mode, ADC auth, billing project pinned via a dedicated env var,
@@ -83,22 +139,13 @@ makes duration the dominant cost lever — confirm `duration` before every submi
   run** — Veo's accepted durations are model-version specific.
 - **Native audio** supported (drives the standard tier price; can be toggled).
 
-## Ready-to-run recipe (UNTESTED — no credits spent during authoring)
+## Raw SDK shape (internals — `veo_gen.py` already does this for you)
 
-Minimal `google-genai` SDK snippet, Vertex mode, **i2v from a local still**. This was NOT executed
-during authoring — no GCP credits were spent. Treat it as a starting point; verify model id +
-allowed durations first.
-
-```bash
-# Env it needs (set in shell or ~/.jstack/config.env):
-export GEMINI_VIDGEN_PROJECT="<your-gcp-project>"   # falls back to GOOGLE_CLOUD_PROJECT
-export GEMINI_VIDGEN_LOCATION="us-central1"          # Veo is regional, NOT global
-# ADC must exist: ~/.config/gcloud/application_default_credentials.json (type authorized_user)
-pip install google-genai        # zero third-party deps beyond Google's SDK
-```
+The `scripts/veo_gen.py` `generate()` body implements exactly this. You do NOT need to call the
+SDK directly — run the CLI recipe at the top. This snippet is here for debugging the script.
 
 ```python
-# veo_i2v.py — UNTESTED reference (no credits spent during authoring)
+# equivalent of what veo_gen.py generate() does
 import os, time
 from google import genai
 from google.genai import types
@@ -136,8 +183,9 @@ for i, gv in enumerate(op.response.generated_videos):
     print("wrote", f"out_{i}.mp4")
 ```
 
-A CLI scaffold mirroring imgen's `gi` shape ships at `scripts/veo_gen.py` (dry-run works without
-spending credits; the live submit path is a clearly-marked TODO). See its `--help` / `--dry-run`.
+The CLI at `scripts/veo_gen.py` (mirrors imgen's `gi` shape) wraps all of the above — its live
+submit path is implemented and tested. `--dry-run` validates config + cost without spending. See
+its `--help`. Use the top-of-file recipe to run it; you should not need to read its source.
 
 ## Failure handling (expected classes, mirrors imgen)
 

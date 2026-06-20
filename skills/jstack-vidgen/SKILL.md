@@ -18,15 +18,43 @@ door for all video generation. Two halves, both mandatory:
 
 ---
 
+## Operating principle: RUN-FIRST. Assume the tools work.
+
+Do **NOT** read `scripts/*.py` source or re-derive the SDK call shape before running — just run
+the documented command. Each backend's reference doc opens with a copy-paste recipe; that is all
+you need to act.
+
+**Common case ("generate a Veo clip"):** go straight to the ▶ recipe at the top of
+`references/veo-vertex-backend.md` and run it (validate with `--dry-run` first). You do not need
+to read the rest of that doc. For Topview, same idea — the i2v flow is at the top of
+`references/topview-backend.md`.
+
+**Only if a run FAILS** do you diagnose: read the actual error, fix the root cause in the
+script / reference / SKILL, re-run — and then **update this skill + the script + the reference so
+the next agent doesn't hit it.** The skill is a living contract; every real failure should leave
+it more correct. (The reference docs keep their deeper SDK/theory material below a "read only if a
+run fails" marker for exactly this.)
+
+---
+
 ## UNIVERSAL RULES (MANDATORY — every generation, every backend, no exceptions)
 
 1. **ASK for `duration` AND `resolution` before generating.** Never let them fall to
    silent defaults. Also confirm **model** and **aspect ratio** in the same breath. If
    the user has not stated all four, ask before spending anything.
-2. **SHOW the exact prompt + the craft skill used.** During generation, surface to the
-   user, per video: (a) the EXACT, verbatim prompt string sent, and (b) the exact
-   `video-prod-skills:<skill>` file(s) you read to engineer it. You do not have to stop
-   generating — but the prompt and its craft source must be visible to the user.
+2. **SHOW the exact prompt + the craft skill used — in your VISIBLE RESPONSE TEXT.** Per
+   video, surface to the user: (a) the EXACT, verbatim prompt string sent, and (b) the exact
+   `video-prod-skills:<skill>` (and any venture canon file, e.g. `reel-prompt-system.md`) you
+   read to engineer it. You do not have to stop generating — but both MUST appear where the
+   human reads them.
+   - **WHERE:** the prompt MUST be in the **prose you write to the human in chat**. Putting it
+     ONLY inside a tool call, a `--dry-run` JSON envelope, script stdout, or any
+     escaped/encoded payload does **NOT** satisfy this rule — the human cannot read those.
+   - **HOW:** render it as clean, readable text — **italicized and wrapped in quotation
+     marks** (a blockquote is ideal for a multi-line prompt). No JSON escaping, no literal
+     `\n`, no `—`-as-escape. Name the craft source in the prose alongside it.
+   - **Format to copy** (craft source: `video-prod-skills:cinematic-motion-language`):
+     > *"&lt;the exact prompt text, verbatim, italicized, in quotation marks&gt;"*
 3. **Dup first+end frame is RETIRED.** Never pass the same still as BOTH first and end
    frame — it yields micro-motion only ("never works"). For a single still, use instead:
    - a single-image i2v model — **Vidu Q3 Pro / Seedance 1.0 Pro / Sora 2 Pro**, or

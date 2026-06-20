@@ -1,10 +1,17 @@
 ---
 name: jstack-savetobrain
-description: Save the current conversation/session's durable output — from a single fact up to the full intellectual synthesis of a strategy session — as a raw source in the user's second brain, without ingesting it yet. Use when the user says /jstack-savetobrain, save to brain, save this to the second brain, capture this, remember this in the second brain, or asks to preserve session state, decisions, synthesis, links, research, personal facts, project context, or reusable knowledge for later brainwork.
+description: Save durable output to the second brain. Two routes: (1) YouTube URL → deterministic transcript capture via references/youtube-route.md; (2) conversation content → curated raw drop from session. Use when the user says /jstack-savetobrain, save to brain, save this to the second brain, capture this, remember this in the second brain, or provides a YouTube link to save as a transcript in the brain.
 user_invocable: true
 ---
 
 # jstack-savetobrain — curate this session into the brain
+
+## Intent router — read this first
+
+Before any other action, check the user's input:
+
+1. **YouTube URL detected** (`youtube.com/watch`, `youtu.be/`, `youtube.com/shorts`, `youtube.com/live`) → load `references/youtube-route.md` and follow it exactly. Do not read the rest of this SKILL.md — the YouTube route is self-contained and deterministic.
+2. **Conversation content** (decisions, facts, synthesis, links, external non-YouTube content) → continue below.
 
 ## What you are writing into
 
