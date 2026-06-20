@@ -62,6 +62,16 @@ somehow"), the expected output, and the expected exit behavior (e.g. "the gate e
 files; success = this grep is empty, not exit 0"). A stateless agent must never have to invent the
 check.
 
+**Unknown load-bearing values — never silently guess.** When a done-condition depends on a value the
+session did NOT establish — a port, a service URL, a file/entry path, a column or field name, a numeric
+threshold — do ONE of two things, never invent it: (a) make discovering it the milestone's first step,
+embedding the exact command that reads it (e.g. `grep -m1 PORT .env`, `jq -r .main package.json`), and
+phrase the check against that discovered value; or (b) if it can't be discovered, record it as an
+explicit **assumption with a chosen default** in Constraints (and seed it in the Decision Log), so the
+executor proceeds and the choice is visible — never a silent guess buried in a command. Likewise, a
+done-condition is never "looks right", "visually confirm", or "eyeball it": replace any visual/subjective
+acceptance with a runnable command whose output settles it (count rows, diff a file, curl + assert status).
+
 ## Step 2 — Write the durable plan
 
 Save to `~/.jstack/handoffs/session-YYYY-MM-DD-<slug>-goal.md` (append `-2`, `-3` if it exists).

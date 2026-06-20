@@ -1,0 +1,163 @@
+{
+  "skill": "jstack-handoff",
+  "target_skill_dir": "~/jstack/skills/jstack-handoff",
+  "optimization_target": "accuracy (mode-routing correctness + required-section completeness + <1500-char /goal prompt + self-containedness) with cold-judge self-sufficiency quality",
+  "composite": {
+    "formula": "0.70 * assertion_pass_rate + 0.30 * judge_self_sufficiency",
+    "assertion_pass_rate": "sum(passed assertions) / sum(total assertions) over probes in the split",
+    "judge_self_sufficiency": "mean cold-judge self-sufficiency score in [0,1] over probes in the split",
+    "note": "No efficiency dimension — handoff quality is correctness + self-sufficiency, not tokens. Documented adaptation of S2; weakens no probe."
+  },
+  "target_composite": 0.95,
+  "split": {"train": ["recap-1", "recap-2", "directive-1", "goal-1", "goal-2", "goal-bare-1"],
+            "heldout": ["recap-3", "directive-2", "goal-3", "goal-bare-2"]},
+  "forbidden_phrases_case_insensitive": [
+    "as we discussed", "as discussed earlier", "as discussed above",
+    "see the prior session", "see prior session", "the prior session above",
+    "as above", "as mentioned earlier", "as mentioned above",
+    "like we said", "from our earlier", "refer back to",
+    "you'll remember", "as you know from", "per our conversation",
+    "in our earlier discussion", "we talked about this"
+  ],
+  "savepath_pattern": "session-[0-9]{4}-[0-9]{2}-[0-9]{2}-.+\\.md$",
+  "runner_output_contract": {
+    "plan_file": "outputs/<id>.plan.md  (the handoff document the skill produces — REDIRECTED to sandbox, NOT ~/.jstack/handoffs/)",
+    "savepath_file": "outputs/<id>.savepath.txt  (the single intended canonical save-path string the skill computes, e.g. session-2026-06-21-foo-goal.md)",
+    "goalprompt_file": "outputs/<id>.goalprompt.txt  (goal modes only: the emitted /goal prompt verbatim, nothing else)",
+    "recap_file": "outputs/<id>.recap.txt  (goal modes only: the <200-word plain-English recap, nothing else)"
+  },
+  "judge_rubric": "Could a STATELESS agent with zero memory of the planning session execute this handoff to a verifiable result using ONLY the document + the repo working tree? Score [0,1]: 1.0 = fully self-sufficient, outcome-focused, every load-bearing fact embedded, done-condition machine-checkable; 0.5 = mostly usable but a load-bearing fact is referenced-not-embedded or a done-condition is vague; 0.0 = depends on unrecoverable prior-session memory. For goal mode also weight: milestones independently verifiable, observable acceptance (command+expected output), living-doc sections present and instructive.",
+  "probes": [
+    {
+      "id": "recap-1", "fixture": "fixtures/recap-1.md", "arg": "", "expected_mode": "recap",
+      "assertions": {
+        "savepath_no_goal_suffix": "savepath.txt does NOT end with -goal.md",
+        "savepath_pattern": "savepath.txt matches savepath_pattern",
+        "must_contain_sections": ["## Continue from here", "## Brief recap", "## Files to read", "## Current state", "## Don't lose", "## Suggested skills"],
+        "must_contain_resume": ["Please read", "continue"],
+        "must_reference_session_files": ["rateLimit", "auth.ts"],
+        "no_forbidden_phrases": true
+      }
+    },
+    {
+      "id": "recap-2", "fixture": "fixtures/recap-2.md", "arg": "", "expected_mode": "recap",
+      "assertions": {
+        "savepath_no_goal_suffix": "savepath.txt does NOT end with -goal.md",
+        "savepath_pattern": "savepath.txt matches savepath_pattern",
+        "must_contain_sections": ["## Continue from here", "## Brief recap", "## Files to read", "## Current state", "## Don't lose", "## Suggested skills"],
+        "must_contain_resume": ["Please read", "continue"],
+        "must_reference_session_files": ["settlement.py", "test_settlement"],
+        "no_forbidden_phrases": true
+      }
+    },
+    {
+      "id": "recap-3", "fixture": "fixtures/recap-3.md", "arg": "", "expected_mode": "recap",
+      "assertions": {
+        "savepath_no_goal_suffix": "savepath.txt does NOT end with -goal.md",
+        "savepath_pattern": "savepath.txt matches savepath_pattern",
+        "must_contain_sections": ["## Continue from here", "## Brief recap", "## Files to read", "## Current state", "## Don't lose", "## Suggested skills"],
+        "must_contain_resume": ["Please read", "continue"],
+        "must_reference_session_files": ["tokens.css", "token-migration"],
+        "no_forbidden_phrases": true
+      }
+    },
+    {
+      "id": "directive-1", "fixture": "fixtures/directive-1.md", "arg": "directive Implement the CSV export of the currently-filtered metrics view", "expected_mode": "directive",
+      "assertions": {
+        "savepath_no_goal_suffix": "savepath.txt does NOT end with -goal.md",
+        "savepath_pattern": "savepath.txt matches savepath_pattern",
+        "must_contain_sections": ["## Suggested skills"],
+        "must_contain_resume": ["Please read", "continue"],
+        "must_carry_directive": ["CSV", "export"],
+        "must_reference_session_files": ["useMetrics"],
+        "not_goal_mode": "must NOT contain a /goal prompt block or living-doc banner",
+        "no_forbidden_phrases": true
+      }
+    },
+    {
+      "id": "directive-2", "fixture": "fixtures/directive-2.md", "arg": "directive Write integration tests for the full auth flow (login, refresh, logout, expired/invalid token)", "expected_mode": "directive",
+      "assertions": {
+        "savepath_no_goal_suffix": "savepath.txt does NOT end with -goal.md",
+        "savepath_pattern": "savepath.txt matches savepath_pattern",
+        "must_contain_sections": ["## Suggested skills"],
+        "must_contain_resume": ["Please read", "continue"],
+        "must_carry_directive": ["integration test", "auth"],
+        "must_reference_session_files": ["Supertest", "requireAuth"],
+        "not_goal_mode": "must NOT contain a /goal prompt block or living-doc banner",
+        "no_forbidden_phrases": true
+      }
+    },
+    {
+      "id": "goal-1", "fixture": "fixtures/goal-1.md", "arg": "goal Make the packages/web build pass, all tests green, and lint clean", "expected_mode": "goal",
+      "assertions": {
+        "savepath_goal_suffix": "savepath.txt DOES end with -goal.md",
+        "savepath_pattern": "savepath.txt matches savepath_pattern",
+        "must_contain_sections": ["## Goal", "## Purpose", "## Context", "## Milestones", "## Execution protocol", "## Constraints", "## Validation", "Files &", "## Suggested skills", "## Progress", "## Surprises & Discoveries", "## Decision Log", "## Outcomes & Retrospective"],
+        "must_contain_living_banner": ["Living document"],
+        "goalprompt_max_chars": 1500,
+        "goalprompt_must_contain": ["NO memory", "Stop only when", "Do not widen scope"],
+        "recap_max_words": 200,
+        "must_have_verifiable_done": ["npm run build", "npm test", "npm run lint"],
+        "no_forbidden_phrases": true
+      }
+    },
+    {
+      "id": "goal-2", "fixture": "fixtures/goal-2.md", "arg": "goal Reduce the production Docker image below 200MB while /health still returns 200", "expected_mode": "goal",
+      "assertions": {
+        "savepath_goal_suffix": "savepath.txt DOES end with -goal.md",
+        "savepath_pattern": "savepath.txt matches savepath_pattern",
+        "must_contain_sections": ["## Goal", "## Purpose", "## Context", "## Milestones", "## Execution protocol", "## Constraints", "## Validation", "Files &", "## Suggested skills", "## Progress", "## Surprises & Discoveries", "## Decision Log", "## Outcomes & Retrospective"],
+        "must_contain_living_banner": ["Living document"],
+        "goalprompt_max_chars": 1500,
+        "goalprompt_must_contain": ["NO memory", "Stop only when", "Do not widen scope"],
+        "recap_max_words": 200,
+        "must_have_verifiable_done": ["docker images", "200"],
+        "no_forbidden_phrases": true
+      }
+    },
+    {
+      "id": "goal-3", "fixture": "fixtures/goal-3.md", "arg": "goal Add cursor pagination to GET /api/users and prove a full walk reconstructs every user exactly once", "expected_mode": "goal",
+      "assertions": {
+        "savepath_goal_suffix": "savepath.txt DOES end with -goal.md",
+        "savepath_pattern": "savepath.txt matches savepath_pattern",
+        "must_contain_sections": ["## Goal", "## Purpose", "## Context", "## Milestones", "## Execution protocol", "## Constraints", "## Validation", "Files &", "## Suggested skills", "## Progress", "## Surprises & Discoveries", "## Decision Log", "## Outcomes & Retrospective"],
+        "must_contain_living_banner": ["Living document"],
+        "goalprompt_max_chars": 1500,
+        "goalprompt_must_contain": ["NO memory", "Stop only when", "Do not widen scope"],
+        "recap_max_words": 200,
+        "must_have_verifiable_done": ["/api/users", "nextCursor"],
+        "no_forbidden_phrases": true
+      }
+    },
+    {
+      "id": "goal-bare-1", "fixture": "fixtures/goal-bare-1.md", "arg": "goal", "expected_mode": "goal-agent-decides",
+      "assertions": {
+        "savepath_goal_suffix": "savepath.txt DOES end with -goal.md",
+        "savepath_pattern": "savepath.txt matches savepath_pattern",
+        "must_contain_sections": ["## Goal", "## Purpose", "## Context", "## Milestones", "## Execution protocol", "## Constraints", "## Validation", "Files &", "## Suggested skills", "## Progress", "## Surprises & Discoveries", "## Decision Log", "## Outcomes & Retrospective"],
+        "must_contain_living_banner": ["Living document"],
+        "goalprompt_max_chars": 1500,
+        "goalprompt_must_contain": ["NO memory", "Stop only when", "Do not widen scope"],
+        "recap_max_words": 200,
+        "agent_decides_rationale": "recap.txt contains a 'chose'/'inferred this goal' rationale (agent-decides)",
+        "must_have_verifiable_done": ["38", "test"],
+        "no_forbidden_phrases": true
+      }
+    },
+    {
+      "id": "goal-bare-2", "fixture": "fixtures/goal-bare-2.md", "arg": "goal", "expected_mode": "goal-agent-decides",
+      "assertions": {
+        "savepath_goal_suffix": "savepath.txt DOES end with -goal.md",
+        "savepath_pattern": "savepath.txt matches savepath_pattern",
+        "must_contain_sections": ["## Goal", "## Purpose", "## Context", "## Milestones", "## Execution protocol", "## Constraints", "## Validation", "Files &", "## Suggested skills", "## Progress", "## Surprises & Discoveries", "## Decision Log", "## Outcomes & Retrospective"],
+        "must_contain_living_banner": ["Living document"],
+        "goalprompt_max_chars": 1500,
+        "goalprompt_must_contain": ["NO memory", "Stop only when", "Do not widen scope"],
+        "recap_max_words": 200,
+        "agent_decides_rationale": "recap.txt contains a 'chose'/'inferred this goal' rationale (agent-decides)",
+        "must_have_verifiable_done": ["clients.size", "RSS"],
+        "no_forbidden_phrases": true
+      }
+    }
+  ]
+}

@@ -33,11 +33,15 @@ Write the document with these sections:
     - Done: …
     - In-flight: … (what's half-finished, and where)
     - Immediate next action(s): …
-    - Open decisions / questions: …
+    - Open decisions / questions: … — for each, give the options **and a recommended default /
+      current leaning** (one line why), so the next session can proceed instead of stalling on it.
+      Don't hand forward a bare unanswered question; if it's blocked on someone else, say who and what
+      the unblock is.
 
     ## Don't lose
     Key decisions, constraints, and gotchas the next session must respect — anything that would be
-    expensive to rediscover.
+    expensive to rediscover. Where a load-bearing fact lives only in a session file, embed a one-line
+    summary here too, so a critical detail isn't a pure pointer.
 
     ## Suggested skills
     Skills the next agent should load (per shared rules).
