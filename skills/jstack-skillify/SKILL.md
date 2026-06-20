@@ -1,6 +1,6 @@
 ---
 name: jstack-skillify
-description: "Codify a successful interactive session into a permanent, deterministic skill. Walks back through the conversation, extracts the working path, and codifies it — the agent decides the implementation. Triggered by: 'skillify this', 'codify this', 'save this as a skill', 'make this permanent', 'turn this into a skill.'"
+description: "Make a jstack skill better — two modes. (1) CODIFY a successful interactive session into a new deterministic skill ('skillify this', 'codify this', 'save this as a skill', 'make this permanent', 'turn this into a skill'). (2) TUNE an existing skill to improve its ACCURACY or EFFICIENCY: an autoresearch loop (adapted from GodModeAI2025/skill-forge, the Karpathy-autoresearch-for-skills repo) that, in a temp sandbox, mutates the SKILL.md one change at a time, scores each against a held-out eval set (assertions + judge + efficiency), keeps wins / reverts regressions, promotes on green, then deletes the sandbox ('tune this skill', 'make this skill more accurate', 'make this skill's output consistent', 'improve/iterate/optimize this skill', 'make the skill more efficient', 'eval this skill')."
 ---
 
 # jstack-skillify
@@ -9,11 +9,26 @@ The productivity multiplier. You just did something that worked — pulled data 
 
 **Fully harness-agnostic.** This skill does not prescribe tools, languages, or file layouts. It runs the codification workflow. You (the agent) ran the prototype — you decide the best deterministic route.
 
+## Modes — pick one
+
+| Mode | Use when | Where |
+|------|----------|-------|
+| **A — Codify** | A session just did something that worked and you want it as a NEW deterministic skill | Steps 1–10 below |
+| **B — Tune** | An EXISTING skill works but you want it more accurate / consistent / efficient | `references/tune-mode.md` |
+
+If the request is "save/codify what we just did" → Mode A. If it names an existing skill and complains the
+output is inconsistent / unreliable / varies → Mode B; **load `references/tune-mode.md` and follow it.** If
+ambiguous, ask one line: "Codify the session into a new skill, or tune an existing skill's consistency?"
+
+The Iron contract below governs **both** modes (sandbox, test, approval, no half-shipped state).
+
 ## Iron contract
 
 Skills are user-trust artifacts. A broken skill erodes confidence. Write to a temp dir, test there, and only move into the final path on test pass plus explicit user approval. On either failure, remove the temp dir entirely. No "almost shipped" state.
 
 ---
+
+# Mode A — codify a session into a new skill
 
 ## Step 1 — Provenance guard
 
@@ -109,16 +124,22 @@ End with: "Skill '<name>' committed at ~/jstack/skills/<name>/."
 
 ## What this skill does NOT do
 
-- Codify failed or partial attempts.
-- Codify flows that fundamentally require human judgment at runtime.
-- Edit existing skills.
+- Codify failed or partial attempts (Mode A).
+- Codify flows that fundamentally require human judgment at runtime (Mode A).
+- Add unrelated features or widen a skill's scope (Mode B tightens for consistency; it does not redesign).
 - Remove or tombstone skills.
+- Weaken an eval/probe to force a green gate (Mode B — the eval is the ruler).
+
+> Editing an existing skill IS in scope now — but only Mode B's disciplined consistency loop
+> (`references/tune-mode.md`), never an ad-hoc rewrite.
 
 ## Next steps
 
 | Next | When |
 |------|------|
-| `skill-creator` | Step 6 — authoring the skill files. Load it before writing SKILL.md. |
-| `/jstack-savetobrain` | The codified skill or its output is durable knowledge worth ingesting into the second brain. |
+| `skill-creator` | Mode A step 6 (author files) and Mode B (degrees-of-freedom framing for tightening). Load before editing a SKILL.md. |
+| `references/tune-mode.md` | Mode B — the consistency eval loop for an existing skill. |
+| `/jstack-handoff` (goal) | Mode B's loop is long and you want it to run unattended — emit a `/goal` prompt to run the tune loop overnight. |
+| `/jstack-savetobrain` | The codified/tuned skill or its eval results are durable knowledge worth ingesting into the second brain. |
 
-Otherwise standalone — the committed skill is the deliverable.
+Otherwise standalone — the committed (or tuned) skill is the deliverable.
