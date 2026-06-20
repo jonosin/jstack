@@ -1,7 +1,7 @@
 ---
 name: jstack-handoff
 description: Compact the current conversation into a handoff for another agent to pick up. Two categories — Normal (a handoff document the next attended session reads and continues) and Goal (an autonomous /goal prompt that runs unattended in a fresh session). Modes — recap, directive, goal. Saves to ~/.jstack/handoffs/session-YYYY-MM-DD-[slug].md.
-argument-hint: "[recap | directive <what to do> | goal <objective>]  (omit = recap)"
+argument-hint: "[recap | directive <what to do> | goal <objective>]  (omit = recap — re-orient a fresh session to continue this work, file-pointer handoff)"
 ---
 
 If given a file path, read that file as the conversation source instead of the current conversation.
@@ -25,7 +25,7 @@ If given a file path, read that file as the conversation source instead of the c
 
 | Argument | Mode | Reference |
 |----------|------|-----------|
-| empty | **recap** (Normal / agent-decides) | `references/recap.md` |
+| empty | **recap** (Normal / agent-decides) — re-orient a fresh session to continue this work (file-pointer handoff) | `references/recap.md` |
 | starts with `directive` (or any descriptive text with no keyword) | **directive** (Normal / directed) | `references/directive.md` |
 | starts with `goal` | **goal** — rest of the line is the objective (directed); empty rest = agent-decides | `references/goal.md` |
 
