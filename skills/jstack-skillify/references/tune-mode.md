@@ -14,17 +14,52 @@ revert regressions, until the score plateaus. Two things you can optimize — th
 Contents: Execution modes · Principles · S0 sandbox · S1 setup · S2 score · S3 loop · S4 coverage ·
 S5 stop · S6 promote+cleanup · Overfitting protection.
 
-## Execution modes
+## Execution modes — two only
 
-- **Auto** — fully autonomous loop, ideal overnight (hand to `/jstack-handoff goal` to run unattended).
-- **Guided** — 5 checkpoints (evals, hypothesis, mutation, keep/revert, continue) where Jono decides.
-  Default for a new skill or uncertain evals. Auto skips all five and decides by the thresholds in S3.
+Both modes run the S3 loop under the **`/goal` engine** (turn-looping, an independent judge each turn,
+maker ≠ checker). They differ only in whether Jono gates the eval set first.
+
+- **Auto** — fully autonomous; decides and runs end-to-end until an S5 stop. Triggered when invoked under
+  `/goal` (`/goal /jstack-skillify <name>`, or `/loop 30m /goal /jstack-skillify <name>` for runs past
+  ~20 turns) **or** with an explicit `auto` arg (`/jstack-skillify <name> auto`). It generates the evals
+  (S1) and **surfaces them + the reasoning in its thinking/output** so Jono can watch and abort if they look
+  wrong — but it does **NOT** wait for confirmation; it continues automatically.
+- **Show-eval** (default — a bare `/jstack-skillify <name>` with no `/goal`/`auto`) — the ONE attended gate.
+  Infer the optimization target from the skill, generate the 6–12 evals + record the baseline (S1 incl. the
+  dry-run gate), then **show them with the "why"**: each eval + the §S4 category it targets + why it is the
+  right ruler, plus the inferred target (Jono can correct it — e.g. "optimize for efficiency instead"). Wait
+  for Jono to approve/edit. **On approval, do NOT run the loop inline, and do NOT re-invoke this skill** —
+  it is already in context; re-invoking just duplicates `SKILL.md` + this file. Instead **emit a ready-to-
+  paste `/goal` objective** that points the already-loaded loop at the approved sandbox:
+
+  ```
+  /goal Continue the Mode B tune for `<name>` from the approved sandbox /tmp/skilltune-<name>-<ts>/
+  (evals.json approved, baseline recorded). Run the tune-mode S3 loop already in context: the Opus
+  orchestrator forms each hypothesis + mutation and makes keep/revert decisions; delegate running the
+  eval cases + machine assertions to Sonnet 4.6 subagents and soft-quality grading to an Opus 4.8
+  cold-judge subagent (maker != checker); keep/revert by the S2/S3 thresholds. Stop at S5; promote the
+  winner to canonical on green held-out; then delete the sandbox.
+  ```
+
+  Jono pastes it in the same session; the `/goal` engine runs the loop using the rules + approved evals
+  already in context (the sandbox path keeps it robust to compaction). No skill reload.
+
+  **Same-session only.** There is no fresh-session resume inside this skill. If Jono wants a *fresh*
+  session to run the loop, he invokes **`/jstack-handoff goal`** to hand off running skillify Mode B on the
+  skill with the approved evals — that machinery owns the cross-session bridge, not this skill.
 
 ## Principles (do not violate — they are the whole point)
 
 - **The eval is the ruler.** Freeze the probes + rubric BEFORE editing; never weaken/delete one to pass.
 - **One change per iteration.** Mutate → verify → keep/revert; a win must be attributable to one change.
 - **Maker ≠ checker.** A COLD judge subagent grades outputs; never the agent that mutated the skill.
+- **Opus drives, Sonnet does grunt work.** The orchestrator (Opus 4.8) does the important, non-repetitive
+  work itself — hypothesis, mutation, and every keep/revert · stop/promote decision. Delegate only
+  grunt / repetitive / token-heavy work — running eval cases, machine assertion checks, the report,
+  bookkeeping — to **Sonnet 4.6 subagents** (`claude-sonnet-4-6`), spawned aggressively, so their bulky
+  output stays out of the main context. An important task that must be a *separate* agent (the cold
+  quality-judge, for maker ≠ checker) runs on an **Opus 4.8 subagent** (`claude-opus-4-8`). Smart → Opus;
+  mechanical / verbose → Sonnet.
 - **Held-out split.** 60% train / 40% held-out. The held-out probes are NEVER shown to the hypothesis or
   mutator step — they only score a candidate. Train-only gains = overfit → revert. Held-out is the verdict.
 - **Diagnose from traces; generalize, don't memorize.** Tune the pattern, not the individual test case.
@@ -55,8 +90,8 @@ NEVER edit the canonical skill during the loop. Create a temp workspace and work
 - **Goal:** accuracy, efficiency, or both — one line.
 - **Target + scope:** the skill dir; scope = its `SKILL.md` + scripts. Copy it to `snapshots/v0/`.
 - **Evals:** 6–12 realistic cases, each with **machine-checkable assertions** (+ a 1–2 line judge rubric
-  for soft quality). Split **60% train / 40% held-out**; write `evals.json`. (Auto-generate if none exist;
-  in Guided, Jono reviews them — checkpoint 1.)
+  for soft quality). Split **60% train / 40% held-out**; write `evals.json`. Auto-generate if none exist.
+  **Show-eval:** present them with rationale — the one approval gate. **Auto:** generate and proceed.
 - **Metric:** the composite score (S2) for accuracy; or, for a pure-efficiency/generic target, a shell
   command that prints one number (e.g. `… | tail -1`).
 - **Dry-run gate (hard):** run ONE train eval on the baseline; confirm grading yields valid JSON with
@@ -74,15 +109,17 @@ composite = 0.50 * assertion_pass_rate   # hard facts: do the assertions pass?
 
 ## S3 — The experiment loop (per iteration)
 
-1. **Hypothesis** (cold "scientist"): read the last evals' raw traces (input → output → per-assertion
-   pass/fail) + the coverage matrix + any near-misses; pick the weakest area or least-covered category;
-   form ONE testable hypothesis AND state how it generalizes beyond the train cases. *(Guided checkpoint 2.)*
-2. **Mutate** (the "surgeon"): copy the current best → `vN/`; apply ONE focused change — wording, an
-   example, structure, a script, or a tightened/trimmed instruction (for efficiency). Log what + why. *(Guided checkpoint 3.)*
-3. **Run:** for each TRAIN eval, spawn a subagent with the mutated skill; grade with the cold judge →
-   `grading.json`. Held-out runs too, but only to score — never shown to steps 1–2.
+1. **Hypothesis** (main orchestrator, Opus 4.8): read the last evals' raw traces (input → output →
+   per-assertion pass/fail) + the coverage matrix + any near-misses; pick the weakest area or least-covered
+   category; form ONE testable hypothesis AND state how it generalizes beyond the train cases.
+2. **Mutate** (main orchestrator, Opus 4.8): copy the current best → `vN/`; apply ONE focused change —
+   wording, an example, structure, a script, or a tightened/trimmed instruction (for efficiency). Log what + why.
+3. **Run + grade:** for each TRAIN eval, spawn a **Sonnet 4.6 subagent** (`claude-sonnet-4-6`) to execute
+   the mutated skill and run the machine assertions → outputs; then a SEPARATE **Opus 4.8 cold-judge
+   subagent** (`claude-opus-4-8`) scores soft quality → `grading.json` (maker ≠ checker). Held-out runs too,
+   but only to score — never shown to steps 1–2.
 4. **Score:** composite on train and held-out.
-5. **Decide** *(Guided checkpoint 4 — Jono may override)*:
+5. **Decide** (both modes decide automatically here, by these thresholds):
    - **KEEP** if `composite > baseline + 0.02` AND the held-out moved with the train set.
    - **REVERT** if `composite < baseline − 0.05`, OR train improved but held-out did not (overfit).
    - **NEAR_MISS** if delta ∈ [−0.05, +0.02]: revert, but mark the hypothesis promising (retry a different
@@ -98,18 +135,19 @@ structure`. Track per category: experiments, kept, best_delta, saturated. **Satu
 none > +0.01. The hypothesis step prefers untouched categories early (explore), re-tries high-success
 categories late (exploit), and avoids saturated ones.
 
-## S5 — Stop criteria *(Guided checkpoint 5 to continue)*
+## S5 — Stop criteria
 
 composite ≥ target (e.g. 0.95) on the held-out set · `max_experiments` (default 10) · 3 consecutive
-NEUTRAL/REVERT (plateau) · 3 consecutive crashes (infra problem) · Guided: Jono says stop.
+NEUTRAL/REVERT (plateau) · 3 consecutive crashes (infra problem).
 
 ## S6 — Promote + clean up
 
 On green (held-out ≥ baseline, no regression): back up canonical, `rsync` the winning snapshot over the
 canonical skill, re-run the eval against canonical to confirm identical-green (roll back the backup if
 not). Copy `evals.json` → the skill's `references/eval/` (permanent regression fixture — the skill now
-carries its own ruler). Write `report.md` (start→end score, top 3 mutations, dead ends, coverage, ASCII
-score chart). **Then delete the sandbox workspace.** Report baseline vs final score per held-out probe.
+carries its own ruler). Have a **Sonnet 4.6 subagent** write `report.md` (start→end score, top 3 mutations,
+dead ends, coverage, ASCII score chart). **Then delete the sandbox workspace.** The orchestrator reports
+baseline vs final score per held-out probe.
 
 ## Overfitting protection (carried from skill-forge)
 

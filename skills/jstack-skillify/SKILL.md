@@ -9,22 +9,37 @@ The productivity multiplier. You just did something that worked — pulled data 
 
 **Fully harness-agnostic.** This skill does not prescribe tools, languages, or file layouts. It runs the codification workflow. You (the agent) ran the prototype — you decide the best deterministic route.
 
-## Modes — pick one
+## Modes — routed by the argument
 
-| Mode | Use when | Where |
+| You invoke with… | Mode | Where |
 |------|----------|-------|
-| **A — Codify** | A session just did something that worked and you want it as a NEW deterministic skill | Steps 1–10 below |
-| **B — Tune** | An EXISTING skill works but you want it more accurate / consistent / efficient | `references/tune-mode.md` |
+| **the name of an existing skill** (`/jstack-skillify <name>`) | **B — Tune** that skill | `references/tune-mode.md` |
+| **a description of something** (no matching skill) | **A — Codify** it into a NEW skill | Steps 1–10 below |
 
-If the request is "save/codify what we just did" → Mode A. If it names an existing skill and complains the
-output is inconsistent / unreliable / varies → Mode B; **load `references/tune-mode.md` and follow it.** If
-ambiguous, ask one line: "Codify the session into a new skill, or tune an existing skill's consistency?"
+**Routing rule:** check the argument against `~/jstack/skills/`. A match → **Mode B (tune)**. A description
+that names no existing skill (or "save/codify what we just did") → **Mode A (codify)**. Ambiguous → ask one
+line: "Tune the existing skill `<x>`, or codify something new?" For Mode B, **load `references/tune-mode.md`
+and follow it** — it defines the two execution modes (Auto via `/goal` / `auto` arg, Show-eval by default).
+A fresh/unattended session is delegated to `/jstack-handoff goal`, not handled here.
 
 The Iron contract below governs **both** modes (sandbox, test, approval, no half-shipped state).
 
 ## Iron contract
 
 Skills are user-trust artifacts. A broken skill erodes confidence. Write to a temp dir, test there, and only move into the final path on test pass plus explicit user approval. On either failure, remove the temp dir entirely. No "almost shipped" state.
+
+## Orchestration — Opus drives, Sonnet does the grunt work (both modes)
+
+The main session is the **orchestrator on Opus 4.8** and does the *important, non-repetitive* work itself:
+forming hypotheses, mutating the skill/files, and every keep/revert · next-step · stop/promote decision —
+the smart model on the high-leverage steps. Delegate only **grunt / repetitive / token-heavy** work —
+running tests and eval cases, capturing fixtures, machine assertion checks, writing the report,
+bookkeeping — to **Sonnet 4.6 subagents** (`claude-sonnet-4-6`), spawned aggressively, one job each, so
+their bulky output never enters the main context. When an *important* task must run as a **separate**
+subagent (e.g. the cold quality-judge, to keep maker ≠ checker), use an **Opus 4.8 subagent**
+(`claude-opus-4-8`) — smarter model for the more important task. Rule of thumb: smart / creative /
+judgment → Opus (orchestrator or Opus subagent); repetitive / mechanical / verbose → Sonnet 4.6 subagent.
+Maker ≠ checker always.
 
 ---
 
@@ -139,7 +154,7 @@ End with: "Skill '<name>' committed at ~/jstack/skills/<name>/."
 |------|------|
 | `skill-creator` | Mode A step 6 (author files) and Mode B (degrees-of-freedom framing for tightening). Load before editing a SKILL.md. |
 | `references/tune-mode.md` | Mode B — the consistency eval loop for an existing skill. |
-| `/jstack-handoff` (goal) | Mode B's loop is long and you want it to run unattended — emit a `/goal` prompt to run the tune loop overnight. |
+| `/goal` (or `/loop 30m /goal …`) | Run Mode B unattended: `/goal /jstack-skillify <name>` is Auto mode — the tune loop runs itself end-to-end. `/loop` wraps it for runs past ~20 turns. |
 | `/jstack-savetobrain` | The codified/tuned skill or its eval results are durable knowledge worth ingesting into the second brain. |
 
 Otherwise standalone — the committed (or tuned) skill is the deliverable.
