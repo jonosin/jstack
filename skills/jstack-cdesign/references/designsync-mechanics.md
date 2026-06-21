@@ -42,6 +42,18 @@ The closing `list_files` is **mandatory, never optional** — a write is not don
    context** (cheap for large assets). Max **256 files per call**; split larger batches under one `planId`.
 4. `delete_files(projectId, planId, paths)` — only paths listed in the plan's `deletes`.
 
+## Lifecycle / teardown — there is NO `delete_project`
+
+The connector can create projects and create/overwrite/**delete files**, but it has **no
+`delete_project` / archive method**. `delete_files` only empties a project's files; the project itself
+**persists in `list_projects`** as an empty shell. So:
+- "Delete / clean up the project" via the connector means **`delete_files` every path** (then `list_files`
+  → `[]` to confirm) — the named shell remains and can only be removed by hand in the claude.ai/design UI.
+- Don't orphan shells: prefer reusing/overwriting one project to spawning throwaways you can't delete.
+  Record the project in `.claude-design.json` so a re-run targets the same shell instead of leaving a new one.
+- A project's `type` is fixed at creation and cannot be deleted-and-recreated cheaply — get the
+  `name`/`type` right up front.
+
 ## The round-trip loop (pull an existing build back)
 
 ```
@@ -60,6 +72,23 @@ can edit, diff, screenshot, and later run the finishing pass / deploy against th
 - Record the project next to the deliverable as `.claude-design.json` (`projectId`, `url`, `package`,
   `note`) so a re-run targets the same project instead of orphaning a new one. URL form:
   `https://claude.ai/design/p/<projectId>`.
+
+## Make a preview show as a Design System pane card
+
+If you upload a preview/spec HTML that should appear as a **card** in the project's Design System pane,
+the card is **not** automatic from the file alone. The pane builds its index from each preview HTML's
+**first-line marker**:
+
+```html
+<!-- @dsCard group="Components" -->
+```
+
+The app compiles these markers into `_ds_manifest.json` on its self-check — so just `write_files` the
+HTML **with that first line** and the card appears (group = the pane section label, e.g. `Components`,
+`Type`, `Colors`). The marker round-trips intact through `get_file`. **Legacy fallback:**
+`register_assets` / `unregister_assets` explicitly register/remove a card by path for hand-authored
+projects that lack `@dsCard` markers — no longer required for marker-tagged files. Plain
+brief+tokens+asset uploads that are not pane cards need none of this.
 
 ## Gotchas
 
