@@ -48,6 +48,28 @@ def resolve_python() -> str:
 
 PYTHON = resolve_python()
 
+
+def _fetch_cmd(video_id: str) -> list:
+    """Command that runs the (unmodified) Hermes fetch script under a forced-IPv4
+    bootstrap. The IPv4 fix lives HERE — in this versioned repo — not in the fetch
+    script (which is outside version control): on networks where IPv6 is
+    blackholed, requests/urllib3 connect to the IPv6 address YouTube resolves
+    first and hang forever with no Happy-Eyeballs fallback. Pinning AF_INET in the
+    child process before any network call makes the fetch deterministic.
+    """
+    bootstrap = (
+        "import socket\n"
+        "try:\n"
+        "    import urllib3.util.connection as _c\n"
+        "    _c.allowed_gai_family = lambda: socket.AF_INET\n"
+        "except Exception:\n"
+        "    pass\n"
+        "import runpy, sys\n"
+        f"sys.argv = ['fetch_transcript', {video_id!r}]\n"
+        f"runpy.run_path({FETCH_SCRIPT!r}, run_name='__main__')\n"
+    )
+    return [PYTHON, "-c", bootstrap]
+
 # --- ASR / name fixes ---
 # Map of common YouTube ASR misspellings → corrections.
 # Extend this map when you encounter new patterns.
@@ -103,7 +125,7 @@ def extract_video_id(url: str) -> str:
 def fetch_transcript(video_id: str) -> dict:
     """Fetch transcript JSON from the youtube-content helper."""
     result = subprocess.run(
-        [PYTHON, FETCH_SCRIPT, video_id],
+        _fetch_cmd(video_id),
         capture_output=True, text=True, timeout=60,
     )
     if result.returncode != 0:
@@ -113,7 +135,7 @@ def fetch_transcript(video_id: str) -> dict:
             capture_output=True,
         )
         result = subprocess.run(
-            [PYTHON, FETCH_SCRIPT, video_id],
+            _fetch_cmd(video_id),
             capture_output=True, text=True, timeout=60,
         )
         if result.returncode != 0:
