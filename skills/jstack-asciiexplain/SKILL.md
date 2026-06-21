@@ -26,12 +26,21 @@ craft to `/ascii-art` and owns the *explain-with-a-picture* intent. Generic; wor
    - **user supplied an image** to explain → image-to-ascii (Tool 6).
 3. **Emit diagram + legend.** Output the art, then **1-3 lines of labels/legend** that name the parts
    and the flow. The picture carries the structure; the legend makes it readable. Never dump raw art
-   with no explanation — this is an *explanation* skill.
+   with no explanation — this is an *explanation* skill. **If the topic won't fit one ≤25-line scene,
+   split it into multiple labeled panels** (each a diagram + legend) rather than truncating or
+   overflowing — see the Output contract.
 
 ## Output contract (terminal-safe)
 
+- **Always draw.** Every answer contains an actual rendered diagram built from lines / boxes / shapes
+  (box-drawing / block / geometric Unicode). Never prose-only, never plain text bullets — if there is a
+  topic, there is a drawing, then its legend.
 - Monospace only; box-drawing / block / geometric Unicode palette.
-- **≤ ~72 chars wide.** Banners ≤ 15 lines; scenes ≤ 25 lines.
+- **≤ ~72 chars wide.** Banners ≤ 15 lines; **each scene ≤ 25 lines** — the cap bounds one *picture*,
+  NOT the whole answer.
+- **Decompose, don't truncate.** A topic too dense for one 25-line scene splits into multiple labeled
+  panels (`Part 1 / Part 2`, or grouped stages), each its own ≤25-line diagram + legend. Never crush
+  detail to fit; never overflow a single scene past the cap.
 - Diagram first, then a short legend. Label nodes/edges so each glyph maps to a named idea.
 - Keep it generic — no hardcoded domain assumptions; adapt the shape to the topic.
 

@@ -17,16 +17,18 @@ When active:
 - Break complex sentences into two shorter ones.
 - Fragments OK when meaning stays clear.
 
-## Shorten Previous Response
+## Shorten Previous Response (the ONLY use of the `[shortened]` marker)
 
-When invoked immediately after the agent gave a long response, the agent rewrites its last message in focus-mode compression and presents the shortened version. Format:
+The `[shortened]` block is for ONE case only: the user invokes focus right after a long answer to make the agent **rewrite that prior message**. Only then, emit:
 
 ```
 [shortened]
-... compressed version ...
+... compressed version of the previous message ...
 ```
 
 Then continue in focus mode.
+
+**Every other focus response is compressed inline with NO marker.** A fresh answer, a status update, an explanation, the next reply in a thread: compress it, do not prefix `[shortened]`. The marker means "I am restating my last message shorter," nothing else. If you are answering a new question or giving a status, there is no prior message to restate, so no marker.
 
 ## Auto-Clarity Exception
 

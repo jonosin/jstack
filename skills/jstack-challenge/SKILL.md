@@ -27,6 +27,8 @@ Do NOT invoke for routine questions, drafting tasks, or decisions the user has c
 
 The advisor can run on one of two engines. Pick automatically. The engine choice never changes the role, the six-section prompt, or the surfacing protocol. Everything from "How to write the prompt" onward is identical regardless of which engine runs.
 
+> **Hard rule — always run the advisor in the background (both engines, every invocation).** The advisor takes 30–600s to think; running it in the foreground blocks the user staring at a loading bar. So *whichever* engine you pick, you MUST launch it with `run_in_background: true` and surface the result when it completes — never run it synchronously, even if a quick local probe returns instantly. The ONLY synchronous step is `probe` (Step 1). The two checklist steps below that say `run_in_background: true` are not optional polish; they are this rule applied. If you ever find yourself blocking on the advisor's output inline, you have done it wrong — relaunch in the background.
+
 **Step 1: probe for a background Codex engine.** Run this synchronously:
 
 ```bash

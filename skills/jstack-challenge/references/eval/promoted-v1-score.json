@@ -1,0 +1,44 @@
+{
+  "rows": [
+    {
+      "eval_id": "happy-codex-ok",
+      "composite": 0.9714
+    },
+    {
+      "eval_id": "codex-unavailable",
+      "composite": 1.0
+    },
+    {
+      "eval_id": "codex-run-timeout",
+      "composite": 1.0
+    },
+    {
+      "eval_id": "efficiency-clean-path",
+      "composite": 0.95
+    },
+    {
+      "eval_id": "six-section-prompt",
+      "composite": 1.0
+    },
+    {
+      "eval_id": "codex-run-empty",
+      "composite": 1.0
+    },
+    {
+      "eval_id": "codex-auth-error",
+      "composite": 1.0
+    },
+    {
+      "eval_id": "negative-routine-question",
+      "composite": 1.0
+    },
+    {
+      "eval_id": "happy-codex-ok-ho",
+      "composite": 1.0
+    }
+  ],
+  "train": 0.9843,
+  "heldout": 1.0,
+  "all": 0.9913,
+  "denoised": true
+}

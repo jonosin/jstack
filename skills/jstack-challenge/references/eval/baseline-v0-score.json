@@ -1,0 +1,92 @@
+{
+  "rows": [
+    {
+      "eval_id": "happy-codex-ok",
+      "passed": 8,
+      "total": 9,
+      "assertion_pass_rate": 0.8889,
+      "efficiency": 1.0,
+      "composite": 0.9222,
+      "failures": [
+        "backgrounded"
+      ]
+    },
+    {
+      "eval_id": "codex-unavailable",
+      "passed": 7,
+      "total": 7,
+      "assertion_pass_rate": 1.0,
+      "efficiency": 1.0,
+      "composite": 1.0,
+      "failures": []
+    },
+    {
+      "eval_id": "codex-run-timeout",
+      "passed": 5,
+      "total": 5,
+      "assertion_pass_rate": 1.0,
+      "efficiency": 1.0,
+      "composite": 1.0,
+      "failures": []
+    },
+    {
+      "eval_id": "efficiency-clean-path",
+      "passed": 4,
+      "total": 5,
+      "assertion_pass_rate": 0.8,
+      "efficiency": 1.0,
+      "composite": 0.86,
+      "failures": [
+        "backgrounded"
+      ]
+    },
+    {
+      "eval_id": "six-section-prompt",
+      "passed": 3,
+      "total": 3,
+      "assertion_pass_rate": 1.0,
+      "efficiency": 1.0,
+      "composite": 1.0,
+      "failures": []
+    },
+    {
+      "eval_id": "codex-run-empty",
+      "passed": 5,
+      "total": 5,
+      "assertion_pass_rate": 1.0,
+      "efficiency": 1.0,
+      "composite": 1.0,
+      "failures": []
+    },
+    {
+      "eval_id": "codex-auth-error",
+      "passed": 4,
+      "total": 4,
+      "assertion_pass_rate": 1.0,
+      "efficiency": 1.0,
+      "composite": 1.0,
+      "failures": []
+    },
+    {
+      "eval_id": "negative-routine-question",
+      "passed": 2,
+      "total": 2,
+      "assertion_pass_rate": 1.0,
+      "efficiency": 1.0,
+      "composite": 1.0,
+      "failures": []
+    },
+    {
+      "eval_id": "happy-codex-ok-ho",
+      "passed": 7,
+      "total": 7,
+      "assertion_pass_rate": 1.0,
+      "efficiency": 1.0,
+      "composite": 1.0,
+      "failures": []
+    }
+  ],
+  "train": 0.9564,
+  "heldout": 1.0,
+  "all": 0.9758
+}

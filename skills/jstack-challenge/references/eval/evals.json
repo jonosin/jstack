@@ -1,0 +1,302 @@
+{
+  "skill": "jstack-challenge",
+  "optimization_target": "invocation reliability + efficiency of the probe->run->fallback->surface protocol (NOT critique prose)",
+  "composite": "0.70 * assertion_pass_rate + 0.30 * efficiency_score",
+  "split": "60% train / 40% held-out (9 evals: 5 train / 4 held-out); backgrounding now covered in BOTH splits",
+  "evals": [
+    {
+      "id": "happy-codex-ok",
+      "category": "workflow",
+      "split": "train",
+      "stub_mode": "ok",
+      "max_calls": 6,
+      "scenario": "User: 'Pressure-test this: my warm intro from Athar is a defensible moat for StayFrame.' Codex is installed + authed; the advisor returns a normal verdict.",
+      "assertions": [
+        {
+          "id": "probe-first",
+          "check": "probe_first"
+        },
+        {
+          "id": "probe-once",
+          "check": "probe_count_eq",
+          "value": 1
+        },
+        {
+          "id": "run-called",
+          "check": "run_called"
+        },
+        {
+          "id": "engine-codex",
+          "check": "engine_eq",
+          "value": "codex"
+        },
+        {
+          "id": "backgrounded",
+          "check": "background_true"
+        },
+        {
+          "id": "prompt-6-sections",
+          "check": "prompt_six_sections"
+        },
+        {
+          "id": "prompt-adversarial",
+          "check": "prompt_adversarial"
+        },
+        {
+          "id": "surfaced-verdict-first",
+          "check": "surfaced_verdict_first"
+        },
+        {
+          "id": "took-position",
+          "check": "main_agent_position"
+        }
+      ]
+    },
+    {
+      "id": "codex-unavailable",
+      "category": "edge_cases",
+      "split": "train",
+      "stub_mode": "unavailable",
+      "max_calls": 5,
+      "scenario": "User: 'Spawn an advisor on my pricing reframe.' Codex CLI absent/unauthed: probe returns CODEX_UNAVAILABLE.",
+      "assertions": [
+        {
+          "id": "probe-first",
+          "check": "probe_first"
+        },
+        {
+          "id": "no-codex-run",
+          "check": "run_not_called"
+        },
+        {
+          "id": "engine-claude",
+          "check": "engine_eq",
+          "value": "claude"
+        },
+        {
+          "id": "spawned-claude",
+          "check": "spawned_claude_advisor"
+        },
+        {
+          "id": "backgrounded",
+          "check": "background_true"
+        },
+        {
+          "id": "prompt-6-sections",
+          "check": "prompt_six_sections"
+        },
+        {
+          "id": "surfaced-nonempty",
+          "check": "surfaced_nonempty"
+        }
+      ]
+    },
+    {
+      "id": "codex-run-timeout",
+      "category": "edge_cases",
+      "split": "train",
+      "stub_mode": "timeout",
+      "max_calls": 7,
+      "scenario": "User: 'Challenge my decision to take billing upfront.' probe says CODEX_OK but the run times out (exit 124).",
+      "assertions": [
+        {
+          "id": "probe-first",
+          "check": "probe_first"
+        },
+        {
+          "id": "run-attempted",
+          "check": "run_called"
+        },
+        {
+          "id": "fell-back",
+          "check": "fell_back_eq",
+          "value": true
+        },
+        {
+          "id": "engine-claude",
+          "check": "engine_eq",
+          "value": "claude"
+        },
+        {
+          "id": "not-dropped",
+          "check": "surfaced_nonempty"
+        }
+      ]
+    },
+    {
+      "id": "efficiency-clean-path",
+      "category": "efficiency",
+      "split": "train",
+      "stub_mode": "ok",
+      "max_calls": 5,
+      "scenario": "Same happy path as happy-codex-ok. Scores whether the agent reaches a surfaced result with NO wasted steps: probe once, write prompt once via Write, run once, surface. Penalize redundant probes / re-reads / echo-heredoc prompt construction.",
+      "assertions": [
+        {
+          "id": "probe-once",
+          "check": "probe_count_eq",
+          "value": 1
+        },
+        {
+          "id": "run-called",
+          "check": "run_called"
+        },
+        {
+          "id": "engine-codex",
+          "check": "engine_eq",
+          "value": "codex"
+        },
+        {
+          "id": "backgrounded",
+          "check": "background_true"
+        },
+        {
+          "id": "surfaced-nonempty",
+          "check": "surfaced_nonempty"
+        }
+      ]
+    },
+    {
+      "id": "six-section-prompt",
+      "category": "content_quality",
+      "split": "train",
+      "stub_mode": "ok",
+      "max_calls": 6,
+      "scenario": "Happy path. Scores ONLY that the briefing the agent writes to the temp file is structurally complete + adversarially framed (faithful reframe, >=5 concrete interrogation items, hard constraints) \u2014 a weak prompt wastes the advisor call. This is interaction quality, not critique literary quality.",
+      "assertions": [
+        {
+          "id": "prompt-6-sections",
+          "check": "prompt_six_sections"
+        },
+        {
+          "id": "prompt-adversarial",
+          "check": "prompt_adversarial"
+        },
+        {
+          "id": "run-called",
+          "check": "run_called"
+        }
+      ]
+    },
+    {
+      "id": "codex-run-empty",
+      "category": "edge_cases",
+      "split": "heldout",
+      "stub_mode": "empty",
+      "max_calls": 7,
+      "scenario": "User: 'Be the skeptic on my takeover-spine plan.' probe says CODEX_OK, run exits 0 but prints NOTHING (empty stdout). Per the skill, empty output must trigger the Claude fallback.",
+      "assertions": [
+        {
+          "id": "probe-first",
+          "check": "probe_first"
+        },
+        {
+          "id": "run-attempted",
+          "check": "run_called"
+        },
+        {
+          "id": "fell-back",
+          "check": "fell_back_eq",
+          "value": true
+        },
+        {
+          "id": "spawned-claude",
+          "check": "spawned_claude_advisor"
+        },
+        {
+          "id": "not-dropped",
+          "check": "surfaced_nonempty"
+        }
+      ]
+    },
+    {
+      "id": "codex-auth-error",
+      "category": "edge_cases",
+      "split": "heldout",
+      "stub_mode": "autherror",
+      "max_calls": 7,
+      "scenario": "User: 'Stress test my onepager pricing.' probe says CODEX_OK but run exits non-zero with an auth error on stderr. Must fall back to Claude, never drop the pressure-test.",
+      "assertions": [
+        {
+          "id": "run-attempted",
+          "check": "run_called"
+        },
+        {
+          "id": "fell-back",
+          "check": "fell_back_eq",
+          "value": true
+        },
+        {
+          "id": "engine-claude",
+          "check": "engine_eq",
+          "value": "claude"
+        },
+        {
+          "id": "not-dropped",
+          "check": "surfaced_nonempty"
+        }
+      ]
+    },
+    {
+      "id": "negative-routine-question",
+      "category": "structure",
+      "split": "heldout",
+      "stub_mode": "ok",
+      "max_calls": 2,
+      "scenario": "User: 'Should I use TypeScript or JavaScript for the dashboard?' This is a routine question the skill says NOT to spawn an advisor for. The agent must decline to invoke the advisor (no probe, no run) and answer directly.",
+      "assertions": [
+        {
+          "id": "no-script-calls",
+          "check": "no_script_calls"
+        },
+        {
+          "id": "declined",
+          "check": "declined"
+        }
+      ]
+    },
+    {
+      "id": "happy-codex-ok-ho",
+      "category": "workflow",
+      "split": "heldout",
+      "stub_mode": "ok",
+      "max_calls": 6,
+      "scenario": "User: 'Pressure-test my plan to run Serenity Sands ads through Athar as a StayFrame proof case.' Codex installed + authed; advisor returns a normal verdict. (Held-out twin of happy-codex-ok \u2014 exercises backgrounding on the codex-success path so a backgrounding fix is verifiable on held-out.)",
+      "assertions": [
+        {
+          "id": "probe-first",
+          "check": "probe_first"
+        },
+        {
+          "id": "probe-once",
+          "check": "probe_count_eq",
+          "value": 1
+        },
+        {
+          "id": "run-called",
+          "check": "run_called"
+        },
+        {
+          "id": "engine-codex",
+          "check": "engine_eq",
+          "value": "codex"
+        },
+        {
+          "id": "backgrounded",
+          "check": "background_true"
+        },
+        {
+          "id": "surfaced-verdict-first",
+          "check": "surfaced_verdict_first"
+        },
+        {
+          "id": "took-position",
+          "check": "main_agent_position"
+        }
+      ]
+    }
+  ],
+  "approved": true,
+  "approved_at": "2026-06-21T11:39:41Z",
+  "baseline_seed_composite": 0.9222,
+  "target": 0.95
+}

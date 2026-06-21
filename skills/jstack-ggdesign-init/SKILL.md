@@ -1,10 +1,10 @@
 ---
-name: jstack-design-init
-description: Initialize Google's DESIGN.md design system in a build repo. Two routes — (1) DESIGN.md already exists → lint it and instruct the coding agent, (2) no DESIGN.md → author one from the starter template, lint it, export Tailwind tokens, and instruct the agent. Invoke when the user says /jstack-design-init, init design, setup design system, add DESIGN.md, or is about to delegate UI work and needs a design system in place.
+name: jstack-ggdesign-init
+description: Initialize Google's DESIGN.md design system in a build repo. Two routes — (1) DESIGN.md already exists → lint it and instruct the coding agent, (2) no DESIGN.md → author one from the starter template, lint it, export Tailwind tokens, and instruct the agent. Invoke when the user says /jstack-ggdesign-init, init design, setup design system, add DESIGN.md, or is about to delegate UI work and needs a design system in place.
 user_invocable: true
 ---
 
-# jstack-design-init — initialize the design system
+# jstack-ggdesign-init — initialize the design system
 
 ## Intent router — read this first
 

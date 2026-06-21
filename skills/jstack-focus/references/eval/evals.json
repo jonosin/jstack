@@ -1,0 +1,109 @@
+{
+  "skill": "jstack-focus",
+  "target": "accuracy + efficiency (compress ~40% while preserving decision-critical meaning, honoring auto-clarity exceptions, and emitting [shortened] when invoked after a long response)",
+  "composite": "0.50*assertion_pass_rate + 0.30*llm_judge_score + 0.20*efficiency_score (efficiency = closeness of word-reduction to the 30-50% band, 0 outside it)",
+  "judge_rubric": "Score [0,1]: is every decision-critical fact (numbers, names, file paths, the recommendation) preserved, is the result still unambiguous to act on, and does the tone read like a sharp colleague (not telegraphic gibberish)? Penalize lost facts hard; penalize awkward fragments lightly.",
+  "split": {"train": [1, 2, 4, 5, 7], "heldout": [3, 6, 8]},
+  "probes": [
+    {
+      "id": 1,
+      "category": "efficiency",
+      "split": "train",
+      "invocation": "User typed /jstack-focus, then asked: explain why the build is slow.",
+      "input": "The build is slow primarily because the bundler is re-processing every single source file on each run rather than relying on its incremental cache, which means that even a one-line change forces a full re-transpile of all 1,240 modules. On top of that, source maps are being generated in their most expensive, fully-inlined form, and the minifier is running in single-threaded mode. If you enable persistent caching, switch source maps to the cheaper external mode, and turn on the 4-worker parallel minifier, rebuild time should drop from roughly 90 seconds to around 22 seconds.",
+      "assertions": [
+        {"type": "word_reduction_band", "min": 0.30, "max": 0.55, "desc": "30-55% fewer words than input"},
+        {"type": "contains_all", "values": ["1,240", "90", "22"], "desc": "key numbers preserved"},
+        {"type": "contains_any", "values": ["cache", "caching"], "desc": "the fix (caching) preserved"},
+        {"type": "not_starts_with_marker", "marker": "[shortened]", "desc": "fresh inline answer, NOT a rewrite-previous, so no [shortened] block"},
+        {"type": "no_em_dash", "desc": "no em dashes"}
+      ]
+    },
+    {
+      "id": 2,
+      "category": "edge_cases",
+      "split": "train",
+      "invocation": "/jstack-focus is active. Agent is about to advise running a destructive command.",
+      "input": "Before you run this, understand that `git reset --hard origin/main` will permanently discard every uncommitted change in your working tree, including the three files you have been editing this afternoon, and there is no undo. If you want to keep that work, stash it first with `git stash`. Once you are sure, the command will reset your branch to match the remote exactly.",
+      "assertions": [
+        {"type": "contains_all", "values": ["git reset --hard", "permanently", "git stash"], "desc": "destructive-action warning + the safe alternative retained in full"},
+        {"type": "contains_any", "values": ["no undo", "discard", "lose", "permanently"], "desc": "irreversibility flagged"},
+        {"type": "no_em_dash", "desc": "no em dashes"}
+      ]
+    },
+    {
+      "id": 3,
+      "category": "edge_cases",
+      "split": "heldout",
+      "invocation": "/jstack-focus is active. Agent is giving an ordered setup procedure.",
+      "input": "To get the dev environment running, first clone the repo and cd into it. Second, copy `.env.example` to `.env` and fill in the DATABASE_URL. Third, run `npm install` to pull dependencies. Fourth, run `npm run db:migrate` to create the schema, which must happen before seeding. Fifth, run `npm run dev` and open localhost:3000.",
+      "assertions": [
+        {"type": "ordered_steps_present", "markers": [".env", "npm install", "db:migrate", "npm run dev"], "desc": "all steps present in original order"},
+        {"type": "contains_any", "values": ["DATABASE_URL", ".env"], "desc": "env config step retained"},
+        {"type": "no_em_dash", "desc": "no em dashes"}
+      ]
+    },
+    {
+      "id": 4,
+      "category": "formatting",
+      "split": "train",
+      "invocation": "Agent JUST gave a long multi-paragraph answer; user immediately replied '/jstack-focus'. The skill must shorten the PREVIOUS response and present it in the [shortened] block format.",
+      "input": "PREVIOUS_RESPONSE: There are a few different ways you could approach the caching problem here, and honestly each one has tradeoffs worth thinking through carefully. You could use an in-memory LRU cache, which is the simplest and fastest but loses everything on restart. You could use Redis, which survives restarts and scales across instances but adds an operational dependency. Or you could use the filesystem, which is durable and dependency-free but slower under high concurrency. Given that you are running a single instance and restarts are rare, I would lean toward the in-memory LRU cache for now.",
+      "assertions": [
+        {"type": "starts_with_marker", "marker": "[shortened]", "desc": "output opens with the [shortened] block marker"},
+        {"type": "word_reduction_band", "min": 0.30, "max": 0.60, "desc": "meaningfully shorter than the previous response"},
+        {"type": "contains_any", "values": ["LRU", "in-memory"], "desc": "the recommendation preserved"}
+      ]
+    },
+    {
+      "id": 5,
+      "category": "content_quality",
+      "split": "train",
+      "invocation": "/jstack-focus active. User asked which pricing tier to pick.",
+      "input": "Based on what you described, you are processing roughly 2 million API calls a month, which puts you just over the free tier ceiling of 1 million. The Growth plan at $49 a month covers up to 5 million calls and includes the priority support you said you wanted, whereas the Starter plan at $19 only covers 2 million calls flat with no support. Since you are already near 2 million and growing, I would pick Growth to avoid hitting the ceiling again in two months.",
+      "assertions": [
+        {"type": "contains_all", "values": ["Growth", "$49", "5 million"], "desc": "recommended tier + price + limit preserved (tolerant: 5M == 5 million)"},
+        {"type": "word_reduction_band", "min": 0.30, "max": 0.55, "desc": "compressed within band"},
+        {"type": "not_starts_with_marker", "marker": "[shortened]", "desc": "inline answer, not a rewrite-previous"},
+        {"type": "no_em_dash", "desc": "no em dashes"}
+      ]
+    },
+    {
+      "id": 6,
+      "category": "edge_cases",
+      "split": "heldout",
+      "invocation": "/jstack-focus active. Baseline text is riddled with em dashes that must be removed.",
+      "input": "The migration ran cleanly — all 14 tables created — but the seed step failed because the admin user already existed. You have two options here — either drop the existing admin row and re-seed, or skip seeding entirely and create the admin by hand. I would drop and re-seed — it is the cleaner path.",
+      "assertions": [
+        {"type": "no_em_dash", "desc": "zero em dashes in output"},
+        {"type": "contains_all", "values": ["14", "seed"], "desc": "core facts preserved"},
+        {"type": "word_reduction_band", "min": 0.20, "max": 0.55, "desc": "compressed"}
+      ]
+    },
+    {
+      "id": 7,
+      "category": "workflow",
+      "split": "train",
+      "invocation": "Focus mode was active for several turns. User now types '/jstack-focus off' and in the same breath asks for a full walkthrough of the auth flow.",
+      "input": "TASK: Acknowledge focus is off and return to normal verbosity for the answer that follows. The auth flow content itself: the user logs in, a session token is issued, it is stored in an httpOnly cookie, and validated on each request by middleware.",
+      "assertions": [
+        {"type": "focus_off_respected", "desc": "output is NOT in compressed/fragment mode; normal verbosity resumes (no [shortened] block, full sentences)"},
+        {"type": "contains_any", "values": ["httpOnly", "session token", "middleware"], "desc": "auth facts preserved"}
+      ]
+    },
+    {
+      "id": 8,
+      "category": "efficiency",
+      "split": "heldout",
+      "invocation": "/jstack-focus active. User asked for a one-line status; agent had been rambling.",
+      "input": "So I went ahead and looked into the failing test, and what I found is that it is actually not a real failure in the sense that the code is broken, but rather the test itself has a hardcoded timestamp that assumes the year is 2025, and now that we are in 2026 the assertion comparing the formatted date string no longer matches, so the test fails even though nothing in the application logic has changed at all, and the fix is simply to update the expected value or, better, mock the clock.",
+      "assertions": [
+        {"type": "word_reduction_band", "min": 0.40, "max": 0.70, "desc": "heavy compression for a rambling status"},
+        {"type": "contains_any", "values": ["hardcoded", "timestamp", "mock"], "desc": "root cause + fix preserved"},
+        {"type": "single_status", "desc": "reads as a tight status, not a multi-paragraph ramble"},
+        {"type": "not_starts_with_marker", "marker": "[shortened]", "desc": "status request, not an explicit rewrite-previous, so no [shortened] block"},
+        {"type": "no_em_dash", "desc": "no em dashes"}
+      ]
+    }
+  ]
+}
