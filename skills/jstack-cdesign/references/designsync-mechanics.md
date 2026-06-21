@@ -27,6 +27,8 @@ Most iteration after the first build is the mechanical path — Claude Code now 
 ## Write methods (require a finalized plan)
 
 Order is strict: **read → `finalize_plan` → `write_files` / `delete_files` → `list_files` to verify.**
+The closing `list_files` is **mandatory, never optional** — a write is not done until you call
+`list_files` and confirm the paths landed. Always include it as the final op of any write sequence.
 
 1. `create_project(name)` → new empty design-system project (permission prompt). Only when starting fresh.
    Pick a name that does not collide with `list_projects`.

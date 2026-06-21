@@ -30,6 +30,15 @@ All four assume the two shared references — read them once; every use case rid
 - `references/prompt-authoring.md` — the self-contained package, the asset legend, the hand-back rule, and
   the core **constrain-the-guardrails / free-the-composition** principle for every prompt and edit message.
 
+**`assets` is compositional, not a sibling.** It is a *sub-step* that feeds `build`/`edit`, not a
+peer deliverable. Route by the request's **primary deliverable**:
+- The task is *only* to generate media and feed it into a design that already exists → **`assets`**
+  (e.g. "generate textures and put them in the build").
+- The request also **builds or edits a deliverable** ("build the page *using* generated images",
+  "remake the hero *with* new shots") → route to **`build`/`edit` as primary** and run `assets` as the
+  pre-step that produces the `ref-*` files, then fold them into that use case's package (per
+  `uc-assets.md` → "hand off or edit"). Do **not** label the whole job `assets`.
+
 When the mode is ambiguous, ask Jono one short question rather than guessing — a wrong package or a
 misdirected edit costs a whole Claude Design round.
 
