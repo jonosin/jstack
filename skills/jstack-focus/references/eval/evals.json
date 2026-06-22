@@ -1,109 +1,179 @@
 {
   "skill": "jstack-focus",
-  "target": "accuracy + efficiency (compress ~40% while preserving decision-critical meaning, honoring auto-clarity exceptions, and emitting [shortened] when invoked after a long response)",
-  "composite": "0.50*assertion_pass_rate + 0.30*llm_judge_score + 0.20*efficiency_score (efficiency = closeness of word-reduction to the 30-50% band, 0 outside it)",
-  "judge_rubric": "Score [0,1]: is every decision-critical fact (numbers, names, file paths, the recommendation) preserved, is the result still unambiguous to act on, and does the tone read like a sharp colleague (not telegraphic gibberish)? Penalize lost facts hard; penalize awkward fragments lightly.",
-  "split": {"train": [1, 2, 4, 5, 7], "heldout": [3, 6, 8]},
-  "probes": [
+  "optimization_target": "Make any-session responses fast to read/glance AND keep everything important. Judge scores scan-ability + right-shape (prose vs list vs ASCII) + completeness; assertions pin texture (no em dash / no filler), completeness (contains_all), and shape-fit (has_structure / no_gratuitous_structure).",
+  "composite": "0.50*assertion_pass_rate + 0.30*judge_readability + 0.20*efficiency(skill-token leanness)",
+  "split": "55% train / 45% held-out (11 evals: 6 train / 5 held-out)",
+  "baseline_tokens": 519,
+  "evals": [
     {
-      "id": 1,
+      "id": "simple-factual",
+      "split": "train",
       "category": "efficiency",
+      "user_turn": "What port does Postgres listen on by default?",
+      "gold_example": "5432.",
+      "judge_rubric": "Simplest possible answer: one short line of prose, no structure. Reward a plain one-liner; penalize any preamble or list.",
+      "assertions": [
+        {"id": "no-em-dash", "check": "no_em_dash"},
+        {"id": "no-filler", "check": "no_filler_opener"},
+        {"id": "nonempty", "check": "nonempty"},
+        {"id": "max-2-sentences", "check": "max_sentences", "value": 2},
+        {"id": "no-gratuitous-structure", "check": "no_gratuitous_structure"},
+        {"id": "has-answer", "check": "contains_all", "value": ["5432"]}
+      ]
+    },
+    {
+      "id": "summarize-risks",
       "split": "train",
-      "invocation": "User typed /jstack-focus, then asked: explain why the build is slow.",
-      "input": "The build is slow primarily because the bundler is re-processing every single source file on each run rather than relying on its incremental cache, which means that even a one-line change forces a full re-transpile of all 1,240 modules. On top of that, source maps are being generated in their most expensive, fully-inlined form, and the minifier is running in single-threaded mode. If you enable persistent caching, switch source maps to the cheaper external mode, and turn on the 4-worker parallel minifier, rebuild time should drop from roughly 90 seconds to around 22 seconds.",
-      "assertions": [
-        {"type": "word_reduction_band", "min": 0.30, "max": 0.55, "desc": "30-55% fewer words than input"},
-        {"type": "contains_all", "values": ["1,240", "90", "22"], "desc": "key numbers preserved"},
-        {"type": "contains_any", "values": ["cache", "caching"], "desc": "the fix (caching) preserved"},
-        {"type": "not_starts_with_marker", "marker": "[shortened]", "desc": "fresh inline answer, NOT a rewrite-previous, so no [shortened] block"},
-        {"type": "no_em_dash", "desc": "no em dashes"}
-      ]
-    },
-    {
-      "id": 2,
-      "category": "edge_cases",
-      "split": "train",
-      "invocation": "/jstack-focus is active. Agent is about to advise running a destructive command.",
-      "input": "Before you run this, understand that `git reset --hard origin/main` will permanently discard every uncommitted change in your working tree, including the three files you have been editing this afternoon, and there is no undo. If you want to keep that work, stash it first with `git stash`. Once you are sure, the command will reset your branch to match the remote exactly.",
-      "assertions": [
-        {"type": "contains_all", "values": ["git reset --hard", "permanently", "git stash"], "desc": "destructive-action warning + the safe alternative retained in full"},
-        {"type": "contains_any", "values": ["no undo", "discard", "lose", "permanently"], "desc": "irreversibility flagged"},
-        {"type": "no_em_dash", "desc": "no em dashes"}
-      ]
-    },
-    {
-      "id": 3,
-      "category": "edge_cases",
-      "split": "heldout",
-      "invocation": "/jstack-focus is active. Agent is giving an ordered setup procedure.",
-      "input": "To get the dev environment running, first clone the repo and cd into it. Second, copy `.env.example` to `.env` and fill in the DATABASE_URL. Third, run `npm install` to pull dependencies. Fourth, run `npm run db:migrate` to create the schema, which must happen before seeding. Fifth, run `npm run dev` and open localhost:3000.",
-      "assertions": [
-        {"type": "ordered_steps_present", "markers": [".env", "npm install", "db:migrate", "npm run dev"], "desc": "all steps present in original order"},
-        {"type": "contains_any", "values": ["DATABASE_URL", ".env"], "desc": "env config step retained"},
-        {"type": "no_em_dash", "desc": "no em dashes"}
-      ]
-    },
-    {
-      "id": 4,
-      "category": "formatting",
-      "split": "train",
-      "invocation": "Agent JUST gave a long multi-paragraph answer; user immediately replied '/jstack-focus'. The skill must shorten the PREVIOUS response and present it in the [shortened] block format.",
-      "input": "PREVIOUS_RESPONSE: There are a few different ways you could approach the caching problem here, and honestly each one has tradeoffs worth thinking through carefully. You could use an in-memory LRU cache, which is the simplest and fastest but loses everything on restart. You could use Redis, which survives restarts and scales across instances but adds an operational dependency. Or you could use the filesystem, which is durable and dependency-free but slower under high concurrency. Given that you are running a single instance and restarts are rare, I would lean toward the in-memory LRU cache for now.",
-      "assertions": [
-        {"type": "starts_with_marker", "marker": "[shortened]", "desc": "output opens with the [shortened] block marker"},
-        {"type": "word_reduction_band", "min": 0.30, "max": 0.60, "desc": "meaningfully shorter than the previous response"},
-        {"type": "contains_any", "values": ["LRU", "in-memory"], "desc": "the recommendation preserved"}
-      ]
-    },
-    {
-      "id": 5,
       "category": "content_quality",
+      "user_turn": "Summarize the risks in this plan so I can scan them fast: (a) the vendor contract auto-renews in 14 days, (b) we have no rollback for the schema migration, (c) the on-call engineer is on leave launch week, (d) the load test only covered 30% of expected traffic.",
+      "gold_example": "- Vendor contract auto-renews in 14 days\n- No rollback path for the schema migration\n- On-call engineer on leave during launch week\n- Load test only hit 30% of expected traffic",
+      "judge_rubric": "Four distinct risks the user wants to *scan* — a tight list is the right shape. Reward four glanceable items, all present, no padding; penalize a prose wall.",
+      "assertions": [
+        {"id": "no-em-dash", "check": "no_em_dash"},
+        {"id": "no-filler", "check": "no_filler_opener"},
+        {"id": "nonempty", "check": "nonempty"},
+        {"id": "all-four-risks", "check": "contains_all", "value": ["renew", "rollback", "leave", "load"]},
+        {"id": "scannable", "check": "has_structure"}
+      ]
+    },
+    {
+      "id": "status-update",
       "split": "train",
-      "invocation": "/jstack-focus active. User asked which pricing tier to pick.",
-      "input": "Based on what you described, you are processing roughly 2 million API calls a month, which puts you just over the free tier ceiling of 1 million. The Growth plan at $49 a month covers up to 5 million calls and includes the priority support you said you wanted, whereas the Starter plan at $19 only covers 2 million calls flat with no support. Since you are already near 2 million and growing, I would pick Growth to avoid hitting the ceiling again in two months.",
-      "assertions": [
-        {"type": "contains_all", "values": ["Growth", "$49", "5 million"], "desc": "recommended tier + price + limit preserved (tolerant: 5M == 5 million)"},
-        {"type": "word_reduction_band", "min": 0.30, "max": 0.55, "desc": "compressed within band"},
-        {"type": "not_starts_with_marker", "marker": "[shortened]", "desc": "inline answer, not a rewrite-previous"},
-        {"type": "no_em_dash", "desc": "no em dashes"}
-      ]
-    },
-    {
-      "id": 6,
-      "category": "edge_cases",
-      "split": "heldout",
-      "invocation": "/jstack-focus active. Baseline text is riddled with em dashes that must be removed.",
-      "input": "The migration ran cleanly — all 14 tables created — but the seed step failed because the admin user already existed. You have two options here — either drop the existing admin row and re-seed, or skip seeding entirely and create the admin by hand. I would drop and re-seed — it is the cleaner path.",
-      "assertions": [
-        {"type": "no_em_dash", "desc": "zero em dashes in output"},
-        {"type": "contains_all", "values": ["14", "seed"], "desc": "core facts preserved"},
-        {"type": "word_reduction_band", "min": 0.20, "max": 0.55, "desc": "compressed"}
-      ]
-    },
-    {
-      "id": 7,
-      "category": "workflow",
-      "split": "train",
-      "invocation": "Focus mode was active for several turns. User now types '/jstack-focus off' and in the same breath asks for a full walkthrough of the auth flow.",
-      "input": "TASK: Acknowledge focus is off and return to normal verbosity for the answer that follows. The auth flow content itself: the user logs in, a session token is issued, it is stored in an httpOnly cookie, and validated on each request by middleware.",
-      "assertions": [
-        {"type": "focus_off_respected", "desc": "output is NOT in compressed/fragment mode; normal verbosity resumes (no [shortened] block, full sentences)"},
-        {"type": "contains_any", "values": ["httpOnly", "session token", "middleware"], "desc": "auth facts preserved"}
-      ]
-    },
-    {
-      "id": 8,
       "category": "efficiency",
-      "split": "heldout",
-      "invocation": "/jstack-focus active. User asked for a one-line status; agent had been rambling.",
-      "input": "So I went ahead and looked into the failing test, and what I found is that it is actually not a real failure in the sense that the code is broken, but rather the test itself has a hardcoded timestamp that assumes the year is 2025, and now that we are in 2026 the assertion comparing the formatted date string no longer matches, so the test fails even though nothing in the application logic has changed at all, and the fix is simply to update the expected value or, better, mock the clock.",
+      "user_turn": "Quick status on the auth migration?",
+      "gold_example": "Backend's cut over and green in staging. Frontend flips tomorrow, then we delete the old path.",
+      "judge_rubric": "A status glance: one or two sentences of prose, no list. Reward short and plain; penalize structure or padding.",
       "assertions": [
-        {"type": "word_reduction_band", "min": 0.40, "max": 0.70, "desc": "heavy compression for a rambling status"},
-        {"type": "contains_any", "values": ["hardcoded", "timestamp", "mock"], "desc": "root cause + fix preserved"},
-        {"type": "single_status", "desc": "reads as a tight status, not a multi-paragraph ramble"},
-        {"type": "not_starts_with_marker", "marker": "[shortened]", "desc": "status request, not an explicit rewrite-previous, so no [shortened] block"},
-        {"type": "no_em_dash", "desc": "no em dashes"}
+        {"id": "no-em-dash", "check": "no_em_dash"},
+        {"id": "no-filler", "check": "no_filler_opener"},
+        {"id": "nonempty", "check": "nonempty"},
+        {"id": "max-2-sentences", "check": "max_sentences", "value": 2},
+        {"id": "no-gratuitous-structure", "check": "no_gratuitous_structure"}
+      ]
+    },
+    {
+      "id": "decision-two-paths",
+      "split": "train",
+      "category": "content_quality",
+      "user_turn": "Should we server-side render the marketing site or keep the current React SPA? Small team, SEO matters, content changes weekly.",
+      "gold_example": "Server-side render it. SEO is the deciding factor for a marketing site, and an SPA makes crawlers work for content that should be instantly indexable. The cost is a bit more build complexity, but with weekly content changes a static/SSR setup also gives you faster pages for free.",
+      "judge_rubric": "Weighs two paths: must lead with a clear pick and the deciding reason (SEO), not a balanced menu. Reward decisiveness up front.",
+      "assertions": [
+        {"id": "no-em-dash", "check": "no_em_dash"},
+        {"id": "no-filler", "check": "no_filler_opener"},
+        {"id": "nonempty", "check": "nonempty"},
+        {"id": "addresses-seo", "check": "contains_all", "value": ["SEO"]}
+      ]
+    },
+    {
+      "id": "sequence-steps",
+      "split": "train",
+      "category": "structure",
+      "user_turn": "How do I rotate our database password without downtime?",
+      "gold_example": "1. Create a second credential with the same grants.\n2. Update the app's secret to the new credential and roll a deploy/reload.\n3. Confirm all instances are using the new credential (no errors on the old one).\n4. Revoke the old credential.",
+      "judge_rubric": "An ordered procedure: numbered steps are the right shape. Reward sensible order, adding the new credential before revoking the old, nothing critical skipped.",
+      "assertions": [
+        {"id": "no-em-dash", "check": "no_em_dash"},
+        {"id": "no-filler", "check": "no_filler_opener"},
+        {"id": "nonempty", "check": "nonempty"},
+        {"id": "add-then-revoke", "check": "contains_all", "value": ["new", "revoke"]},
+        {"id": "ordered-shape", "check": "has_structure"}
+      ]
+    },
+    {
+      "id": "em-dash-filler-temptation",
+      "split": "train",
+      "category": "formatting",
+      "user_turn": "Can you explain why our API latency might spike right after a deploy?",
+      "gold_example": "Usually it's cold caches and JIT warmup. A fresh process starts with empty in-memory caches and connection pools, so the first wave of requests pays full price until they fill. Add any eager work on boot (migrations, warmup jobs) and the first minute looks worse than steady state.",
+      "judge_rubric": "A diagnostic explanation: must avoid filler openers and em dashes, lead with the probable cause, stay tight. Prose is fine here.",
+      "assertions": [
+        {"id": "no-em-dash", "check": "no_em_dash"},
+        {"id": "no-filler", "check": "no_filler_opener"},
+        {"id": "nonempty", "check": "nonempty"},
+        {"id": "max-5-sentences", "check": "max_sentences", "value": 5}
+      ]
+    },
+    {
+      "id": "architecture-ascii",
+      "split": "heldout",
+      "category": "structure",
+      "user_turn": "Walk me through how a request flows through our stack: it hits CloudFront, then the ALB, then the API service, which checks Redis before falling back to Postgres. I want to be able to picture it.",
+      "gold_example": "```\nClient\n  -> CloudFront (CDN/cache)\n  -> ALB (load balancer)\n  -> API service\n       -> Redis  (hit? return)\n       -> Postgres (miss -> read, then warm Redis)\n```\nSo the API checks Redis first and only touches Postgres on a cache miss.",
+      "judge_rubric": "User explicitly wants to *picture* a 5-hop flow: an ASCII diagram (or a clean structured flow) is far easier to grasp than prose. Reward a clear visual showing the path and the Redis->Postgres fallback; all five hops present.",
+      "assertions": [
+        {"id": "no-em-dash", "check": "no_em_dash"},
+        {"id": "no-filler", "check": "no_filler_opener"},
+        {"id": "nonempty", "check": "nonempty"},
+        {"id": "all-hops", "check": "contains_all", "value": ["cloudfront", "alb", "redis", "postgres"]},
+        {"id": "not-a-wall", "check": "has_structure"}
+      ]
+    },
+    {
+      "id": "decision-heldout",
+      "split": "heldout",
+      "category": "content_quality",
+      "user_turn": "Postgres or DynamoDB for a new feature: high write volume, simple key-value access, but we already run Postgres everywhere else. Which one?",
+      "gold_example": "Stay on Postgres. Your access pattern is simple enough that Postgres handles it, and the operational familiarity (one datastore, known backups, known tooling) outweighs DynamoDB's write-scaling edge until you actually hit Postgres's write ceiling. Revisit Dynamo only if write volume genuinely outgrows a single Postgres primary.",
+      "judge_rubric": "Must commit to one with the deciding reason, not hedge. Both options acknowledged, a clear pick leads.",
+      "assertions": [
+        {"id": "no-em-dash", "check": "no_em_dash"},
+        {"id": "no-filler", "check": "no_filler_opener"},
+        {"id": "nonempty", "check": "nonempty"},
+        {"id": "compares-both", "check": "contains_all", "value": ["postgres", "dynamodb"]}
+      ]
+    },
+    {
+      "id": "shorten-that",
+      "split": "heldout",
+      "category": "workflow",
+      "user_turn": "Here's what you told me a minute ago:\n\n\"There are a few things worth considering here. First, the caching layer is currently set to a 60 second TTL, which is probably too aggressive for data that only changes a few times a day, so you may want to raise it. Second, the database connection pool is capped at 10, and under load we saw it saturate, which suggests raising it to maybe 25 would help. Third, there's no circuit breaker on the downstream payment call, so a slow dependency can cascade. And finally, the logs are very noisy at info level which makes incidents harder to debug.\"\n\nshorten that",
+      "gold_example": "[shortened]\n- TTL 60s is too aggressive for data that changes a few times a day, raise it\n- Connection pool of 10 saturates under load, raise to ~25\n- No circuit breaker on the payment call, a slow dependency can cascade\n- Logs too noisy at info level, hard to debug incidents",
+      "judge_rubric": "A 'shorten that' on a four-point answer: must restate far shorter, keep all four points (TTL, pool, circuit breaker, noisy logs), and lead with the [shortened] marker.",
+      "assertions": [
+        {"id": "no-em-dash", "check": "no_em_dash"},
+        {"id": "no-filler", "check": "no_filler_opener"},
+        {"id": "nonempty", "check": "nonempty"},
+        {"id": "retains-points", "check": "contains_all", "value": ["ttl", "pool", "circuit", "log"]},
+        {"id": "shortened-marker", "check": "contains_all", "value": ["[shortened]"]}
+      ]
+    },
+    {
+      "id": "simple-factual-ho",
+      "split": "heldout",
+      "category": "efficiency",
+      "user_turn": "What's the difference between git fetch and git pull?",
+      "gold_example": "fetch downloads new commits but leaves your working branch untouched. pull is fetch plus an immediate merge (or rebase) into your current branch. So pull = fetch + integrate.",
+      "judge_rubric": "A simple factual contrast: two or three sentences of prose (pull = fetch + merge) is ideal. Tight and complete, no gratuitous structure.",
+      "assertions": [
+        {"id": "no-em-dash", "check": "no_em_dash"},
+        {"id": "no-filler", "check": "no_filler_opener"},
+        {"id": "nonempty", "check": "nonempty"},
+        {"id": "fetch-vs-merge", "check": "contains_all", "value": ["fetch", "merge"]},
+        {"id": "max-3-sentences", "check": "max_sentences", "value": 3}
+      ]
+    },
+    {
+      "id": "shorten-narrative-decisions",
+      "split": "heldout",
+      "category": "workflow",
+      "user_turn": "Here's what you told me a minute ago:\n\n\"We decided to ship the billing migration behind a feature flag so we can roll back without a redeploy. The team agreed to move the invoice reconciliation cron job to a dedicated worker because the shared queue was starving customer-facing requests under load. We're going to stop using the third-party email provider at the end of the quarter since their deliverability dropped after their last infrastructure change, and we'll move to a self-hosted SMTP relay with a managed fallback. The on-call rotation is being expanded from four to six engineers to reduce the burnout signal we saw in the last retro. The API rate limiter is being rewritten in Rust to cut the p99 latency the Go version was adding.\"\n\nshorten that",
+      "gold_example": "[shortened]\n- Billing migration ships behind a feature flag so we can roll back without a redeploy\n- Invoice reconciliation cron moves to a dedicated worker; shared queue was starving customer requests\n- Dropping the third-party email provider end of quarter (deliverability dropped), moving to self-hosted SMTP relay with managed fallback\n- On-call rotation expands 4 -> 6 engineers to reduce burnout\n- API rate limiter rewritten in Rust to cut p99 latency the Go version added",
+      "judge_rubric": "A 'shorten that' on a NARRATIVE (not enumerated) message with five distinct decisions woven into prose. The old over-compression defect kept the lead decision and dropped the rest. Must keep ALL FIVE decisions (feature flag, dedicated worker, email provider switch, on-call expansion, Rust rate limiter), compress only the wording. Lead with the [shortened] marker. A tight list is the right shape here.",
+      "assertions": [
+        {"id": "no-em-dash", "check": "no_em_dash"},
+        {"id": "no-filler", "check": "no_filler_opener"},
+        {"id": "nonempty", "check": "nonempty"},
+        {"id": "shortened-marker", "check": "contains_all", "value": ["[shortened]"]},
+        {"id": "keeps-feature-flag", "check": "contains_all", "value": ["feature flag"]},
+        {"id": "keeps-dedicated-worker", "check": "contains_all", "value": ["dedicated worker"]},
+        {"id": "keeps-email-provider", "check": "contains_all", "value": ["email provider"]},
+        {"id": "keeps-oncall", "check": "contains_all", "value": ["on-call"]},
+        {"id": "keeps-rust", "check": "contains_all", "value": ["rust"]},
+        {"id": "scannable", "check": "has_structure"}
       ]
     }
-  ]
+  ],
+  "approved": true,
+  "approved_note": "Auto mode under /goal: surfaced for the user to watch/abort, not gated."
 }
