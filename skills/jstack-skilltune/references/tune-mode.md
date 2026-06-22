@@ -53,6 +53,11 @@ maker ≠ checker). They differ only in whether Jono gates the eval set first.
 
 ## Principles (do not violate — they are the whole point)
 
+- **Show percentages, compute in [0,1].** Scores live in [0,1] internally. Whenever you show a score,
+  delta, target, or baseline to Jono — in chat, the dashboard, or the report — multiply by 100 and write
+  it as a percentage with 2 decimals (`0.834 → 83.40%`, delta `0.02 → +2.00%`). The S2 weights and the
+  S2/S3 decision thresholds stay decimal — they are internal math, not displayed scores. Raw-metric runs
+  (KB / ms / tokens / lint) keep their real units, not %.
 - **The eval is the ruler.** Freeze the probes + rubric BEFORE editing; never weaken/delete one to pass.
 - **One change per iteration.** Mutate → verify → keep/revert; a win must be attributable to one change.
 - **Maker ≠ checker.** A COLD judge subagent grades outputs; never the agent that mutated the skill.
@@ -168,7 +173,7 @@ categories late (exploit), and avoids saturated ones.
 
 ## S5 — Stop criteria
 
-composite ≥ target (e.g. 0.95) on the held-out set · `max_experiments` (default 10) · 3 consecutive
+composite ≥ target (e.g. 0.95, shown as 95%) on the held-out set · `max_experiments` (default 10) · 3 consecutive
 NEUTRAL/REVERT (plateau) · 3 consecutive crashes (infra problem).
 
 ## S6 — Promote + clean up
@@ -176,14 +181,26 @@ NEUTRAL/REVERT (plateau) · 3 consecutive crashes (infra problem).
 On green (held-out ≥ baseline, no regression): back up canonical, `rsync` the winning snapshot over the
 canonical skill, re-run the eval against canonical to confirm identical-green (roll back the backup if
 not). Copy `evals.json` → the skill's `references/eval/` (permanent regression fixture — the skill now
-carries its own ruler). Have a **Sonnet 4.6 subagent** write `report.md` (start→end score, top 3 mutations,
-dead ends, coverage, ASCII score chart). Set `history.json` `status: "done"` (or `"stopped"` if aborted)
+carries its own ruler). Have a **Sonnet 4.6 subagent** write `report.md` — **short, plain-English,
+least-jargon**, written for Jono to read after the sandbox is deleted. Structure it in this order:
+1. **Goal** — which skill, why it was tuned (what was off), what "better" meant. One or two sentences.
+2. **What I changed** — each kept change in one plain line ("before, it did A; now it does B").
+3. **What I tried that didn't stick** — brief, each with the reason it didn't help.
+4. **Outcome & what to expect** — `baseline X% → final Y% (+Z%)`, then in plain words what Jono will
+   notice when using the skill now.
+5. **The stats** — the mutations table (change · train% · held% · Δ% · decision) + baseline / final /
+   target. The table is the one place technical labels are fine.
+All numbers as percentages (2 decimals). Translate the jargon: *composite* → "overall score",
+*assertion pass-rate* → "the automatic checks", *held-out* → "fresh cases kept hidden so it couldn't game
+them". No ASCII chart — the table carries the detail. Lead with goal + outcome; keep it tight.
+Set `history.json` `status: "done"` (or `"stopped"` if aborted)
 and run `scripts/dashboard.py <sandbox>` once more so an open dashboard freezes on the final state and stops
 auto-refreshing. **Then delete the sandbox workspace** (the ephemeral dashboard goes with it). The
 orchestrator reports baseline vs final score per held-out probe. The dashboard tab the agent opened at S1
 stays open in the browser, now **frozen on the final state** (status `done`/`stopped` stops the
 auto-refresh) — it **survives this teardown** because it was opened live at S1. **Persist `report.md`
-BEFORE deleting the sandbox** so the run's results outlive the ephemeral dashboard file.
+BEFORE deleting the sandbox** so the run's results outlive the ephemeral dashboard file. (All scores the
+orchestrator reports here — baseline vs final per probe — are shown as percentages, per the Principles.)
 
 ## Overfitting protection (carried from skill-forge)
 

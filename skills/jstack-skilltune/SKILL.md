@@ -28,6 +28,12 @@ rely on a human to open it; this is identical in BOTH Auto and Show-eval modes**
 human to tell, so a deferred "tell Jono to open it" guarantees the live tab never appears). The already-open
 tab survives S6 teardown frozen on the final state, so it stays viewable after the sandbox is deleted.
 
+**Scores are shown as percentages.** The loop computes in [0,1] internally, but every score / delta /
+target / baseline shown to Jono — the dashboard, the chat summary, and `report.md` — is rendered as a
+percentage (×100, 2 decimals, e.g. `83.40%`, delta `+2.00%`). Raw-metric runs (KB / ms / tokens / lint)
+keep their real units. `report.md` is written in **plain English, least jargon, short** — goal, what
+changed, what didn't stick, the outcome + what to expect, then the stats table.
+
 ## Execution modes — two only
 
 Both modes run the S3 loop under the **`/goal` engine** (turn-looping, an independent judge each turn,

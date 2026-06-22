@@ -28,6 +28,8 @@ Expected history.json schema (all fields optional; the dashboard degrades):
 
   # OPTIONAL — only for pure non-normalized metric targets (bundle size, latency,
   # tokens, lint count). Absent => composite convention: y-axis [0,1], higher better.
+  # NOTE: composite [0,1] values are stored as-is but DISPLAYED as percentages
+  # (x100, 2 decimals, "%"); raw-metric runs keep their real units.
   # When set, the chart scales the y-axis to [min,max], labels the unit, and shows the
   # better-direction; train/heldout/baseline/target then hold raw metric values.
   "metric": {"name": "bundle size", "unit": "KB", "direction": "lower", "min": 0, "max": 400}
@@ -135,10 +137,12 @@ const M = D.metric || null;
 const LO = (M && M.min!=null) ? M.min : 0;
 const HI = (M && M.max!=null) ? M.max : 1;
 const U  = (M && M.unit) ? (" "+M.unit) : "";
+// Display rule: [0,1] composite scores are SHOWN as percentages (x100, 2dp, "%").
+// Raw-metric runs keep their real units. The stored values + chart scaling stay [0,1].
 const fmt = v => (v==null||isNaN(v)) ? "–"
   : (M ? Number(v).toLocaleString(undefined,{maximumFractionDigits:2})+U
-       : Number(v).toFixed(3));
-const fmtAxis = t => (M ? Number(t).toLocaleString(undefined,{maximumFractionDigits:2}) : t.toFixed(2));
+       : (Number(v)*100).toFixed(2)+"%");
+const fmtAxis = t => (M ? Number(t).toLocaleString(undefined,{maximumFractionDigits:2}) : (t*100).toFixed(0)+"%");
 
 document.getElementById("skill").textContent = D.skill ? "· "+D.skill : "";
 document.getElementById("base").textContent = fmt(D.baseline_composite);
@@ -208,7 +212,7 @@ document.getElementById("chartTitle").textContent =
       <div class="c-name">${k}${c.saturated?' · saturated':''}</div>
       <div><b>${kept}</b>/${n} kept</div>
       <div class="c-bar"><div class="c-fill" style="width:${pct}%"></div></div>
-      <div class="c-name">best Δ ${c.best_delta!=null?(c.best_delta>0?"+":"")+Number(c.best_delta).toFixed(3):"–"}</div>
+      <div class="c-name">best Δ ${c.best_delta!=null?(c.best_delta>0?"+":"")+fmt(c.best_delta):"–"}</div>
     </div>`;
   }).join("");
 })();
