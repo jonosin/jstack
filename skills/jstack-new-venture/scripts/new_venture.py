@@ -93,6 +93,9 @@ deterministically so this table stays in sync — **never hand-edit the table**:
   `/jstack-brainwork`). **Never write `~/second-brain/wiki/` from inside this repo.**
 - **Planning docs** (specs/designs/ADRs) → `docs/superpowers/` (global standard).
 - **Lean + shallow:** minimal top-level dirs, avoid nesting. Context belongs in the brain, not new folders.
+- **Keep this router current.** When the repo's structure or operating mechanics change, update this
+  file in the *same* change: add folders via `register_folder.py`; fix routing/pointers inline. Stay a
+  pure router — never add venture strategy (that goes to the brain hub). Keep it lean; delete stale lines.
 - **Cold start:** read `BRAIN.md` → `knowledge_home` in the brain for everything venture-specific.
 """
 
