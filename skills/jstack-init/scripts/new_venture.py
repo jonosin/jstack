@@ -49,9 +49,10 @@ from pathlib import Path
 AGENTS_TMPL = """# {name} — venture router (agents)
 
 > Built for agents. Jono does not read this repo. Terse + machine-parseable.
-> This file is a ROUTER + operating rules only. No venture strategy lives here — strategy lives
-> in the brain (§1). If you are tempted to write a fact about *what this venture is or does*, it
-> belongs in the brain, not this file.
+> **Purpose:** a work-product *router* for this venture — not a software build repo (code builds live
+> in `~/builds`), not the knowledge base (that is the brain, §1). It carries pointers + operating rules
+> only. If you are tempted to write a fact about *what this venture is or does*, it belongs in the
+> brain, not this file.
 
 ## 0. Persona + the one ritual
 
@@ -83,7 +84,7 @@ pricing, the offer, positioning, decisions, the *why*) lives in the **second bra
 Adding a top-level folder needs a real reason (keep the tree lean + shallow, avoid nesting). Do it
 deterministically so this table stays in sync — **never hand-edit the table**:
 
-    python3 ~/jstack/skills/jstack-new-venture/scripts/register_folder.py --venture {slug} --path <name> --desc "<one line>"
+    python3 ~/jstack/skills/jstack-init/scripts/register_folder.py --venture {slug} --path <name> --desc "<one line>"
 
 ## 3. Operating principles (identical across every venture)
 
@@ -93,9 +94,13 @@ deterministically so this table stays in sync — **never hand-edit the table**:
   `/jstack-brainwork`). **Never write `~/second-brain/wiki/` from inside this repo.**
 - **Planning docs** (specs/designs/ADRs) → `docs/superpowers/` (global standard).
 - **Lean + shallow:** minimal top-level dirs, avoid nesting. Context belongs in the brain, not new folders.
-- **Keep this router current.** When the repo's structure or operating mechanics change, update this
-  file in the *same* change: add folders via `register_folder.py`; fix routing/pointers inline. Stay a
-  pure router — never add venture strategy (that goes to the brain hub). Keep it lean; delete stale lines.
+- **Keep this router current — gated.** When the repo's structure or operating mechanics change, update
+  this file in the *same* change (add folders via `register_folder.py`; fix routing/pointers inline).
+  Before adding any line ask: *is this a durable operating rule needed every session?* If it's a
+  procedure, template, research note, or strategy decision, put it in the brain / a skill / a playbook
+  and **link it** instead. Propose structural edits; never absorb strategy.
+- **Hard size cap (~120 lines).** If this router grows past ~120 lines, something belongs in the brain
+  or a skill — move it out. Check: `python3 ~/jstack/skills/jstack-init/scripts/lint_agents.py`.
 - **Cold start:** read `BRAIN.md` → `knowledge_home` in the brain for everything venture-specific.
 """
 
@@ -123,7 +128,7 @@ decisions (offer, pricing, positioning, the *why*) do NOT live here — capture 
 
 | Date | Decision | Why |
 |---|---|---|
-| {today} | Scaffolded `{name}` as a lean venture repo (jstack-new-venture). | New venture spun up; standard lean tree + brain coupling (hub page + satellite registry). |
+| {today} | Scaffolded `{name}` as a lean venture repo (jstack-init). | New venture spun up; standard lean tree + brain coupling (hub page + satellite registry). |
 """
 
 GITIGNORE_TMPL = """.DS_Store
@@ -145,7 +150,7 @@ DEFAULT_PERSONA = (
 HUB_TMPL = """---
 type: personal-venture
 title: "{name}"
-summary: "{one_liner} Work product: ~/ventures/{slug}/. Hub stub created {today} via jstack-new-venture; durable decisions land here via /jstack-savetobrain → /jstack-brainwork."
+summary: "{one_liner} Work product: ~/ventures/{slug}/. Hub stub created {today} via jstack-init; durable decisions land here via /jstack-savetobrain → /jstack-brainwork."
 created: {today}
 updated: {today}
 tags: [venture, {slug}]
@@ -245,7 +250,7 @@ def scaffold_repo(repo: Path, name: str, slug: str, one_liner: str, persona: str
             return
         run(["git", "add", "-A"], cwd=repo)
         r = run(["git", "commit", "-m",
-                 f"chore: scaffold {name} lean venture repo (jstack-new-venture)"], cwd=repo)
+                 f"chore: scaffold {name} lean venture repo (jstack-init)"], cwd=repo)
         if r.returncode == 0:
             info("git: initial commit created")
         else:

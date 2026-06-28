@@ -1,17 +1,11 @@
----
-name: jstack-new-venture
-description: "Scaffold a new lean venture repo at ~/ventures/<slug>/ AND wire it into the second brain (hub page + satellites registry + index/log/check). Use when Jono says /jstack-new-venture, new venture, start a new venture, scaffold a venture repo, spin up a venture, or create a satellite repo for the brain."
----
+# new-venture — venture path operating doc
 
-# jstack-new-venture
+Scaffold a lean **work-product** venture as a satellite of the second brain: the repo at
+`~/ventures/<slug>/` AND its brain wiring are born together. Use this path when the deliverable is
+strategy/services/GTM/clients, not running code. (Code → `references/new-build.md`.)
 
-Spin up a new lean venture as a **satellite of the second brain** in one deterministic shot:
-scaffold the work-product repo at `~/ventures/<slug>/` AND wire it into the brain (hub page +
-satellite registry + index/log/check). The brain coupling is the whole point — a venture repo and
-its brain hub are born together so a cold agent landing in either discovers the other.
-
-> v0 first cut. A detailed spec/hardening pass (per-venture extras, GTM seeding, richer hub) is a
-> later session. Prioritize a working deterministic scaffold + clean brain wiring.
+> v0 first cut. A detailed hardening pass (per-venture extras, GTM seeding, richer hub) is a later
+> session. Prioritize a working deterministic scaffold + clean brain wiring.
 
 ## What it produces
 
@@ -19,11 +13,11 @@ its brain hub are born together so a cold agent landing in either discovers the 
 `~/ventures/geo-optimization`):
 
 ```
-AGENTS.md              pure router: generic persona + the ritual + identical operating rules
-CLAUDE.md -> AGENTS.md  symlink
-BRAIN.md               satellite pointer back to the brain
+AGENTS.md               pure router: generic persona + the ritual + identical operating rules
+CLAUDE.md -> AGENTS.md   symlink
+BRAIN.md                satellite pointer back to the brain
 .gitignore
-docs/decisions.md      append-only operational log (seeded header)
+docs/decisions.md       append-only operational log (seeded header)
 docs/scratch/.gitkeep
 docs/superpowers/specs/.gitkeep
 docs/superpowers/adr/.gitkeep
@@ -42,7 +36,7 @@ Then `git init` + an initial commit.
 ## AGENTS.md is a PURE ROUTER — no venture strategy
 
 AGENTS.md carries **only** generic pointers + operating rules. It never states what the venture *is
-or does* (that is strategy, and strategy lives in the brain). Sections 1-3 (where-context-lives,
+or does* (that is strategy, and strategy lives in the brain). Sections 1–3 (where-context-lives,
 folder map, operating principles) are byte-identical boilerplate across every venture.
 
 - **Persona (§0) is GENERIC** — an operating *disposition* (e.g. "a lean strategic partner;
@@ -56,17 +50,6 @@ folder map, operating principles) are byte-identical boilerplate across every ve
 If you find yourself wanting to write a fact about the business into AGENTS.md, that is the signal it
 belongs in the brain hub (`wiki/personal/ventures/<slug>.md`) instead.
 
-## Adding a folder later (keep AGENTS.md in sync deterministically)
-
-The folder map is **never hand-edited**. To add a top-level folder (and only when there's a real
-reason — keep the tree lean + shallow), use the companion script, which creates the dir + inserts the
-table row in one shot, idempotently, and rejects nested paths:
-
-```bash
-python3 ~/jstack/skills/jstack-new-venture/scripts/register_folder.py \
-  --venture <slug> --path <name> --desc "<one line>"
-```
-
 ## Run it
 
 Collect the inputs (prompt for any missing):
@@ -79,7 +62,7 @@ Collect the inputs (prompt for any missing):
 - `--short` (optional) terse registry-row descriptor; defaults to `--desc`
 
 ```bash
-python3 ~/jstack/skills/jstack-new-venture/scripts/new_venture.py \
+python3 ~/jstack/skills/jstack-init/scripts/new_venture.py \
   --name "GEO Optimization" --slug geo-optimization \
   --desc "A Generative Engine Optimization service for owner-operated boutique hotels." \
   --short "Generative Engine Optimization for boutique hotels"
@@ -91,6 +74,26 @@ overwrites** an existing brain hub page or registry row, so a partial re-run is 
 
 Testing flags (never scaffold a throwaway under the real `~/ventures/`): `--ventures-base <dir>`,
 `--brain <dir>`, `--no-git` redirect everything to a temp sandbox.
+
+## Adding a folder later (keep AGENTS.md in sync deterministically)
+
+The folder map is **never hand-edited**. To add a top-level folder (and only when there's a real
+reason — keep the tree lean + shallow), use the companion script, which creates the dir + inserts the
+table row in one shot, idempotently, and rejects nested paths:
+
+```bash
+python3 ~/jstack/skills/jstack-init/scripts/register_folder.py \
+  --venture <slug> --path <name> --desc "<one line>"
+```
+
+## Size cap + lint
+
+Venture routers are capped at **~120 lines** (the router stays thin; detail lives in the brain).
+Enforce with:
+
+```bash
+python3 ~/jstack/skills/jstack-init/scripts/lint_agents.py
+```
 
 ## The brain gate (important)
 
@@ -105,11 +108,3 @@ this skill to write venture canon; use it only to scaffold.
 - Capture durable decisions (offer, pricing, the *why*) via `/jstack-savetobrain`.
 - Planning docs (specs / designs / ADRs) → `docs/superpowers/` in the venture repo.
 - Work the go-to-market via `/jstack-gtm`.
-
-## Next skills
-
-| Next | When |
-|------|------|
-| `/jstack-savetobrain` | A durable venture decision/fact surfaced and should persist to the brain hub. |
-| `/jstack-gtm` | The new venture needs go-to-market strategy (the usual next move after scaffolding). |
-| `/jstack-brainwork` | Pending raw captured for this venture needs compiling into the wiki. |
