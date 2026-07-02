@@ -41,6 +41,8 @@ Use `references/pending-raw-triage.md`. It reads `raw/.ingest-cache.json` as the
 
 - Always use `tools/sb.py` for index, log, cache, check, graph, and lint. Never hand-edit `wiki/index.md` or `wiki/log.md`.
 - After any write, run `python3 tools/sb.py check`. Report if it is not clean.
+- **Card-structure lint matches savetobrain's ingest-time check.** Before compiling a raw source into a wiki page, confirm it carries the same minimum frontmatter savetobrain enforces at write time (`title`, `source`, `collected`, `tags`, plus `supersedes`/`supersedes_hint` when present). A raw file missing these is a savetobrain-side defect — flag it in the final report rather than silently patching around it, so the lint backlog doesn't grow.
+- **Surface `supersedes`/`supersedes_hint` chains during processing.** When ingesting a raw source that carries either key, resolve it against the vault, apply the wiki-side supersession protocol (`status: superseded` + `superseded_by:` + `superseded_on:` on the superseded page, per `llm-wiki` conventions), and name the chain explicitly in the final report (`X supersedes Y`) so stale facts stay discoverable rather than silently orphaned.
 - Refresh `wiki/hot.md` (LLM judgment) only when current state actually changed: active projects, location, commitments, events, or notable new learned topics.
 - Conversation-derived material still needs explicit user confirmation. Brainwork operates on already-saved raw sources by default; it does not capture new ones (that's `jstack-savetobrain`).
 - Word-level routing wins: if the user says `lint`/`check`/`graph`/`health`/`maintenance`/`fix links`, choose Maintenance even when pending raw exists. If the user says `dry run`, do not write.

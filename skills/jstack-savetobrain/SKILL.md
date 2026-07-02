@@ -96,21 +96,29 @@ transcript you saw.
    unmistakable is not.
 3. **Frontmatter minimum — these exact keys:** `title`, `source: conversation` (or the external
    origin), `collected: YYYY-MM-DD`, `tags`. Do not substitute your own schema (`date`, `slug`,
-   `type` instead of `title`/`collected` breaks downstream tooling). If the user said this
+   `type` instead of `title`/`collected` breaks downstream tooling). **Supersede mechanism —
+   mark the relationship explicitly, don't let brainwork guess:** if the user said this
    *replaces* an earlier decision/plan/fact ("we pivoted", "scrap X, now Y"), add
-   `supersedes_hint: ["..."]` quoting the user's own description of what is replaced ("the per-post
-   pricing idea from last week"), or a wiki/raw path you verified exists on disk — never an
-   invented or guessed date. Brainwork resolves the hint and applies the supersession protocol.
-4. **Destinations are fixed.** Conversation-derived material → `raw/drops/YYYY-MM-DD-<slug>.md`.
+   `supersedes: ["<verified raw/ or wiki/ path>"]` when you have confirmed that path exists on
+   disk, or `supersedes_hint: ["..."]` quoting the user's own description of what is replaced
+   ("the per-post pricing idea from last week") when you have not verified an exact path — never
+   an invented or guessed date/path. Brainwork resolves `supersedes_hint` against the vault and
+   applies the supersession protocol; a hard `supersedes:` path it can act on directly.
+4. **Ingest-time structure check (do this immediately before writing):** confirm the drop's
+   frontmatter has all four minimum keys above (plus `supersedes`/`supersedes_hint` when
+   relevant) and that the body has at least one section a reader can act on — never write a raw
+   file that fails this check. A malformed card is exactly what grows brainwork's lint backlog;
+   catching it here means brainwork's `tools/sb.py check` finds nothing to fix.
+5. **Destinations are fixed.** Conversation-derived material → `raw/drops/YYYY-MM-DD-<slug>.md`.
    External sources the user shared (article, paste, transcript) → `raw/clips/<slug>.md`, content
    preserved verbatim — never editorialize external content. Topic goes in `tags`, not folders.
-5. **Reuse, don't duplicate.** Check `raw/.ingest-cache.json` and the target directory first. If an
+6. **Reuse, don't duplicate.** Check `raw/.ingest-cache.json` and the target directory first. If an
    artifact for this content already exists, reuse or extend the record via a new dated drop —
    `raw/` is immutable, never edit an existing raw file.
-6. **Raw only.** No `wiki/` writes, no `tools/sb.py` write subcommands, no ingest. The single
+7. **Raw only.** No `wiki/` writes, no `tools/sb.py` write subcommands, no ingest. The single
    allowed call is read-only `python3 tools/sb.py pending` for the final report. Brainwork is a
    separate, later invocation.
-7. **Confirmation gate** (`AGENTS.md` §2): an explicit "save this" / "/jstack-savetobrain" /
+8. **Confirmation gate** (`AGENTS.md` §2): an explicit "save this" / "/jstack-savetobrain" /
    "capture" counts as the yes. Otherwise offer first; writing needs a yes.
 
 ## Downstream contract — who reads your file

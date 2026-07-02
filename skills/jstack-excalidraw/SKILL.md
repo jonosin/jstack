@@ -54,11 +54,15 @@ Worked example, pattern picks, styling with `classDef`, and troubleshooting: **`
 | Brand palette — single source of truth for fills, strokes, text colours | `references/excalidraw-diagram/references/color-palette.md` |
 | Element JSON schema + templates (hand-authoring only) | `references/excalidraw-diagram/references/json-schema.md`, `element-templates.md` |
 
-## Verify
+## Verify — mandatory output-quality gate
 
-A real render is a PNG well over ~10 KB; a blank canvas is tiny. Check byte size first, then open and
-eyeball against the brief. Smoke test: pipe `references/smoke.mmd` through both steps → expect a
-non-trivial PNG. Needs network at render time (esm.sh CDN).
+A real render is a PNG well over ~10 KB; a blank canvas is tiny. Check byte size first, then run the
+**mandatory** self-review checklist in `references/playbook.md` ("The self-validation loop") against
+the actual PNG: no overlapping elements, labels readable at 100%, visual hierarchy matches the
+argument, non-trivial layout (not a single row of boxes), isomorphism test. Iterate up to the
+documented cap (3 cycles); a diagram that fails the checklist is not presented as final. Smoke test:
+pipe `references/smoke.mmd` through both steps → expect a non-trivial PNG. Needs network at render
+time (esm.sh CDN).
 
 ## Next skills
 

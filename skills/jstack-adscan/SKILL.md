@@ -126,6 +126,39 @@ timeouts over a single chained command — this avoids losing all progress when 
 fails. After a lossy build, check `recall_gap` in each `ads.json` and re-pull any
 `lossy: true` result by page id.
 
+## Verification pass (active-count reliability)
+
+Active-ad counts from `scan` can be noisy (pagination timing, rate limiting). Before
+reporting an active count as fact: re-run the same `scan`/`resolve` query once and compare
+the two counts.
+- **Match** → report the count normally.
+- **Mismatch** → report BOTH counts explicitly and flag low confidence, e.g. "active count
+  varied between runs (14 vs 17) — treat as approximate, re-pull by page id for the
+  authoritative set." Never silently pick one number.
+This is a re-query, not a full re-build — it only applies to the cheap `scan`/`resolve`
+counts, not a full `build`.
+
+## Friendly error mapping (no raw tracebacks)
+
+Map the CLI's failure modes to one-line, actionable messages instead of surfacing a raw
+Python traceback or stack dump:
+
+| Failure mode | Message to give the user |
+|---|---|
+| No page/advertiser resolved (`resolve` returns no candidates) | "No advertiser page matched '<name>'. Try a shorter/different substring, or search the Ad Library UI for the exact page name." |
+| Auth/session missing (internal GraphQL call unauthenticated or blocked) | "adscan's Meta session looks expired or blocked. Re-run the repo's login/session-refresh step in `$ADSCAN_DIR`, then retry." |
+| Empty result (`ads.json` has zero ads, page has no active/inactive ads matching filters) | "No ads found for this advertiser under the current filters (country/status/type). Confirm the page id is correct or widen `-s`/`-c`/`-t`." |
+| Stale `doc_id` warning | "Meta changed its internal API shape. Run the repo-maintenance upgrade below (`pip install -U meta-ads-collector`) and retry." |
+| Any other non-zero exit with a traceback | Surface the last stderr line only, prefixed "adscan failed:" — do not paste the full Python traceback into the response. |
+
+## Config resolution
+
+All adscan output-path config (`ADSCAN_DIR`, `ADSCAN_OUT`, `ADSCAN_ADS_DIR`) resolves in
+order: environment variable → `~/.jstack/config.env` → built-in default (`ADSCAN_DIR` →
+`~/builds/adscan`; `ADSCAN_OUT`/`ADSCAN_ADS_DIR` → the consuming project's `research/ads`
+dir, or the current dir if none). Never hardcode a personal absolute path in this skill —
+use `$ADSCAN_DIR`/`$ADSCAN_OUT` or the config-file lookup above.
+
 ## What it does NOT do
 Fetches and structures ads only. It does **not** grade creative (weak/okay/good) or write
 any dossier — that's the agent/human's judgment after opening the downloaded media.

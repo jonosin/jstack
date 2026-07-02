@@ -65,6 +65,23 @@ run fails" marker for exactly this.)
 
 ---
 
+## Pre-flight validation (MANDATORY — before any backend call)
+
+1. **Argument validation against the capability table.** Check the requested `model` +
+   `duration` + `resolution` (+ `aspect_ratio` where applicable) against
+   `references/capability-table.md`. If the combination is not in the allowed set for that
+   engine, **fail fast**: tell the user the allowed values from the table and ask them to pick
+   one — never let a raw backend/argparse error (`INVALID_ARGUMENT`, `ret:1201`, out-of-set
+   resolution, etc.) be the first thing the human sees.
+2. **Prompt-quality gate.** The crafted prompt MUST satisfy the "Minimum structure checklist" in
+   the matching guide under `references/prompt-guides/` (shot, camera, motion, duration all
+   present) before it is submitted. If a required element is missing, fix the prompt first —
+   do not submit a prompt that fails its own guide's checklist.
+
+Both checks happen BEFORE Universal Rule 4 (cost estimate + confirm).
+
+---
+
 ## Prompt-format routing (which `video-prod-skills` skill for which engine)
 
 | Engine / format | Prompt shape | Craft skill(s) |

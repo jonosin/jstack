@@ -25,6 +25,13 @@
   (provide start AND end image → Veo interpolates the transition, with audio), reference/
   "ingredients" images (up to 3), scene extension, add/remove object.
 
+## Minimum structure checklist (prompt-quality gate)
+Before submitting, confirm the prompt hits all four — a prompt missing any of these is not ready:
+- [ ] **Shot** — composition/framing named (wide, close-up, medium, two-shot, etc.)
+- [ ] **Camera** — camera work/movement named (dolly, crane, pan, static, POV, etc.) or explicitly static
+- [ ] **Motion** — the subject's action described concretely (not just a pose)
+- [ ] **Duration** — the requested duration is one of {4, 6, 8}s and matches what was asked/confirmed
+
 ## The official five-part formula
 ```
 [Cinematography] + [Subject] + [Action] + [Context] + [Style & Ambiance]

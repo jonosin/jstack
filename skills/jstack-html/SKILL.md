@@ -85,6 +85,20 @@ python3 <skill-dir>/scripts/fast_html.py <json> --out /tmp/check.html
 
 For PDF/PNG, verify the file exists and is non-empty. If Chrome rendering fails, still deliver the HTML and state the Chrome blocker directly.
 
+## Local preview
+
+Never open the rendered HTML via a `file://` URL — it is blocked in the sandbox. Serve it deterministically instead:
+
+```bash
+PORT="${JSTACK_PREVIEW_PORT:-8931}"   # resolution: env var → ~/.jstack/config.env → 8931 default
+python3 -m http.server "$PORT" --directory "$(dirname out.html)" >/tmp/preview.log 2>&1 &
+SERVER_PID=$!
+# navigate to http://localhost:$PORT/$(basename out.html) and capture the screenshot
+kill "$SERVER_PID"
+```
+
+Screenshots go to the session's scratch directory (always allowed inside the sandbox), then get moved to the deliverable path if the task needs them there. Kill the server every time — do not leave it running past the capture.
+
 ## Next skills
 
 | Next | When |

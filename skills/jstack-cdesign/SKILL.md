@@ -65,12 +65,22 @@ In both modes, mechanics live in `designsync-mechanics.md`. The `edit` use case 
 ## Hard rules
 
 - Claude Design has no session memory: everything it needs goes into the project + the message.
+- **`finalize_plan` ALWAYS takes a `deletes` array — pass `deletes: []` when nothing is deleted.**
+  Omitting it is a known recurring validation rejection (`designsync-mechanics.md` → write methods).
+  Never call `finalize_plan` without the field, even on a plain "add these files" write.
 - **Never paste a full CD prompt or edit message into the Claude Code chat.** Upload it into the project
   as a file and, in chat, **summarize what it changes** — Jono opens Claude Design and copies it from the
   project. (`prompt-authoring.md` → hand-back)
 - **Feed real documents, do not re-curate them.** Upload the session's actual spec / plan / implementation
   docs into the package verbatim rather than rewriting them into a new file — re-curation loses fidelity.
   This applies to **every** use case that has a spec or plan (build AND new-system). (`prompt-authoring.md`)
+- **Handoff-package completeness.** Whatever gets pushed to Claude Design MUST include, as its own
+  section or file: (1) the full spec/plan verbatim, (2) every decision agreed this session stated
+  verbatim (not paraphrased), (3) any prior-round feedback already given on this build (so CD doesn't
+  re-litigate a settled note). Push all of it into the project yourself via `write_files` — do not ask
+  Jono to relay context by hand. His only unavoidable manual step is pasting the message into CD's chat
+  (DesignSync cannot drive CD's generative agent — that is an architecture limit, not a shortcut you get
+  to skip).
 - **Constrain the guardrails, free the composition** — lock only brand/honesty/mandatory changes; let CD
   own placement, scale, layering, motion. (`prompt-authoring.md`)
 - **Editing a live build: `get_file` first, diff intent vs reality, re-assert critical rules** — never
@@ -81,6 +91,11 @@ In both modes, mechanics live in `designsync-mechanics.md`. The `edit` use case 
 - Keep a local mirror of any build you edit, so the finishing pass / deploy runs against the same bytes.
 - Record `.claude-design.json` next to the deliverable so a re-run targets the same project.
 - The heavy component-library converter is `/design-sync`'s job, not this skill's.
+- **Local preview, never `file://`.** When visually verifying any local HTML artifact (a build mirror
+  before pushing, a finishing-pass check), `file://` URLs are blocked in the sandbox. Serve the
+  artifact's directory with `python3 -m http.server <port>` and navigate to `http://localhost:<port>/…`;
+  kill the server after capture. Write screenshots only inside the session's allowed scratch directory
+  (shared rule with `jstack-html`).
 
 ## Next skills
 

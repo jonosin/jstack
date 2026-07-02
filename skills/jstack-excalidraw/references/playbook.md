@@ -78,16 +78,39 @@ Loop: author JSON → render → read the PNG → fix overlaps/alignment → re-
 
 ---
 
-## The self-validation loop (both paths)
+## The self-validation loop (both paths) — MANDATORY, not optional
 
-The whole point of the renderer is that the agent *sees* its own output and corrects it before delivering:
+The whole point of the renderer is that the agent *sees* its own output and corrects it before delivering.
+This loop is a hard gate: **a diagram that has not passed the checklist below is not a finished diagram —
+do not present it as final, and do not tell the user it's ready.**
 
 ```
-brief → author (Mermaid or JSON) → render → READ the PNG → revise → re-render → until it matches
+brief → author (Mermaid or JSON) → render → READ the PNG against the checklist → revise → re-render →
+until the checklist passes OR the iteration cap is hit
 ```
 
-Never deliver a diagram you haven't rendered and looked at. A good diagram passes the **isomorphism
-test**: strip the text and the structure alone still communicates the concept.
+### Output-quality checklist (run against the actual rendered PNG, every time)
+
+- [ ] **No overlapping elements** — no box/arrow/label sits on top of another; nothing is clipped at
+      the canvas edge.
+- [ ] **Labels are readable at 100% zoom** — text is not truncated, doesn't overrun its container, and
+      is legible at the PNG's native size (not just "would be fine if I zoomed in").
+- [ ] **Visual hierarchy matches the argument** — the thing that matters most is visually dominant
+      (size/position/colour), not just first in the source order; grouping and flow direction reflect
+      the actual relationships in the brief.
+- [ ] **Non-trivial layout** — the diagram is not a single row/column of uniform boxes when the brief's
+      structure calls for more (branching, grouping, hierarchy, zoom). A flat row is a red flag that the
+      structure was under-modeled, not a valid "simple" diagram.
+- [ ] **Isomorphism test** — strip the text and the structure alone still communicates the concept.
+
+### Iteration cap
+
+Iterate up to **3 render/read/revise cycles**. If the checklist still fails after 3 iterations, stop,
+show the best version to the user, and say explicitly which checklist item(s) still fail and why
+(e.g. "labels overflow their containers at this node count — needs a wider canvas or fewer nodes") —
+do not silently ship a diagram that fails its own checklist, and do not loop indefinitely.
+
+Never deliver a diagram you haven't rendered, read, and checked against this list.
 
 ---
 

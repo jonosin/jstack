@@ -14,8 +14,21 @@ description: >-
 # jstack-vision — generic Gemini multimodal router
 
 Wraps the official `gemini` CLI (Vertex AI mode) for one-off or batch
-multimodal analysis. Generic — no domain vocabulary, no industry-specific
-defaults. Caller supplies the prompt and the files.
+multimodal analysis of **images, audio, VIDEO, and PDFs** — all four media
+types are fully supported today, not a roadmap item. Generic — no domain
+vocabulary, no industry-specific defaults. Caller supplies the prompt and
+the files.
+
+## What it handles
+
+| Media type | Supported | Notes |
+|---|---|---|
+| Images | Yes | Photos, screenshots, diagrams, UI, product/art shots. OCR via prompt. |
+| Audio | Yes | Verbatim transcription, summarization. See `references/file-type-notes.md` for size limits. |
+| Video | Yes | Frame-by-frame or full-clip analysis and description; see `references/file-type-notes.md` for the keyframe recipe on longer clips. |
+| PDFs | Yes | Summarize, extract terms, structured extraction. |
+| Live streams / real-time | No | Vertex AI has streaming endpoints via SDK, but the `gemini` CLI doesn't expose them headlessly. |
+| Image generation | No | Analysis only — see "What this skill does NOT do". |
 
 **When this skill applies**: the user has explicitly opted in to using
 Gemini for the analysis. Do not auto-route to this skill when Claude's

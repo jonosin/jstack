@@ -19,6 +19,13 @@
   - **Omni / all-reference mode** (全能参考) — supply real photos as `@图1 / <<<Name>>>`
     references for character/scene/object consistency.
 
+## Minimum structure checklist (prompt-quality gate)
+Before submitting, confirm the prompt hits all four — a prompt missing any of these is not ready:
+- [ ] **Shot** — material/role spec pins WHO/WHAT (and which reference image, if omni mode)
+- [ ] **Camera** — camera language named (镜头语言: push-in, orbit, close-up, etc.)
+- [ ] **Motion** — action/plot described concretely (动作/剧情), not just a static scene
+- [ ] **Duration** — the requested duration is within the engine's allowed set (check `list-models`, typically 4–15s) and matches what was asked/confirmed
+
 ## Core formula
 ```
 [Material/role spec] + [Action/plot] + [Camera language] + [Atmosphere/audio]

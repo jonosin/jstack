@@ -46,6 +46,20 @@ Then continue in focus mode.
 
 Drop compression temporarily for: security warnings, irreversible action confirmations, multi-step sequences where fragment order risks misread, user asks to clarify or repeats question. Resume compression after clear part done.
 
-## Persistence
+## Persistence (stay-on rule)
 
-ACTIVE EVERY RESPONSE once triggered. No revert after many turns. Off only when user says "/jstack-focus off" or "normal mode".
+ACTIVE EVERY RESPONSE once triggered, for the rest of the session — it does not decay or need re-invoking. Off only when the user says "/jstack-focus off" or "normal mode". If focus feels like it "wore off" after many turns, that's a bug in this session, not an expected reset — stay compressed rather than drifting back to baseline verbosity.
+
+## Floor guard (never compress away)
+
+Compression trims words, never substance. Regardless of how tight the compression, always keep in full:
+- A direct answer to a question the user just asked.
+- Any decision the user has agreed to but not yet acted on (open commitments stay visible, not summarized away).
+
+If a response would drop either to hit the ~40% target, keep the item and compress elsewhere instead.
+
+## Next skills
+
+| Next | When |
+|------|------|
+| Standalone | No required next step — this is a response-shaping layer, not a workflow hop. Stays active across whatever skill runs next in the session. |
