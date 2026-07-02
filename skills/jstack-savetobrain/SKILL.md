@@ -1,6 +1,12 @@
 ---
 name: jstack-savetobrain
-description: Save durable output to the second brain. Two routes: (1) YouTube URL → deterministic transcript capture via references/youtube-route.md; (2) conversation content → curated raw drop from session. Use when the user says /jstack-savetobrain, save to brain, save this to the second brain, capture this, remember this in the second brain, or provides a YouTube link to save as a transcript in the brain.
+description: >
+  Save durable output to the second brain. Routes: (1) YouTube URL → deterministic
+  transcript capture via references/youtube-route.md; (2) X/Twitter URL →
+  deterministic raw clip capture via references/x-link-route.md; (3) conversation
+  content → curated raw drop from session. Use when the user says /jstack-savetobrain,
+  save to brain, save this to the second brain, capture this, remember this in the
+  second brain, or provides a YouTube/X link to save in the brain.
 user_invocable: true
 ---
 
@@ -11,7 +17,8 @@ user_invocable: true
 Before any other action, check the user's input:
 
 1. **YouTube URL detected** (`youtube.com/watch`, `youtu.be/`, `youtube.com/shorts`, `youtube.com/live`) → load `references/youtube-route.md` and follow it exactly. Do not read the rest of this SKILL.md — the YouTube route is self-contained and deterministic.
-2. **Conversation content** (decisions, facts, synthesis, links, external non-YouTube content) → continue below.
+2. **X/Twitter URL detected** (`x.com/<handle>/status/<id>`, `twitter.com/<handle>/status/<id>`) → load `references/x-link-route.md` and follow it exactly. Do not read the rest of this SKILL.md — the X route is self-contained and deterministic for raw clip capture.
+3. **Conversation content** (decisions, facts, synthesis, links, external non-YouTube/X content) → continue below.
 
 ## What you are writing into
 

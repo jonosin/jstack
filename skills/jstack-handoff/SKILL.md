@@ -38,6 +38,14 @@ text. If you're unsure whether the user wants Normal or Goal, ask one line:
 - Save to `~/.jstack/handoffs/session-YYYY-MM-DD-<short-slug>.md` (append `-2`, `-3` if the path
   exists). Slug from the directive/goal, or the session topic in recap. The **goal** mode suffixes
   the slug with `-goal`.
+- Treat `~/.jstack/handoffs/` as the canonical output location. Do not create extra convenience
+  copies beside the user's project artifacts unless they explicitly ask for duplicate copies.
+- After saving, return a paste-ready prompt for the next session, e.g. `Read and execute this
+  handoff: <absolute path>`, plus any one-line execution emphasis the user requested. Do not only
+  describe the file location.
+- Do not duplicate content already captured in other artifacts (PRDs, plans, ADRs, issues, commits,
+  diffs). Reference them by path or URL instead.
+  explicitly asks for a duplicate there; the jstack pattern is canonical handoff path plus paste prompt.
 - Do not duplicate content already captured in other artifacts (PRDs, plans, ADRs, issues, commits,
   diffs). Reference them by path or URL instead.
 - Redact any sensitive information (API keys, passwords, PII).

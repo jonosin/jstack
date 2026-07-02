@@ -1,0 +1,35 @@
+{
+  "title": "Athar Follow-Up Close Package",
+  "eyebrow": "StayFrame",
+  "dek": "A fast client-facing brief generated from a stable JSON shape, not a hand-rolled page.",
+  "meta": ["client-ready", "single-file", "deterministic"],
+  "density": "normal",
+  "sections": [
+    {
+      "type": "text",
+      "kicker": "Decision",
+      "title": "What matters",
+      "lead": "Lead with the commercial outcome, then support it with proof.",
+      "items": ["One clear promise", "Three proof points", "One next action"]
+    },
+    {
+      "type": "cards",
+      "title": "Package shape",
+      "cards": [
+        {"title": "Hook", "metric": "01", "metric_label": "top fold", "text": "Make the buyer feel the immediate gain."},
+        {"title": "Proof", "metric": "03", "metric_label": "support blocks", "text": "Use concrete evidence, not adjective soup."},
+        {"title": "Close", "metric": "01", "metric_label": "action", "text": "End with a clean yes/no step."}
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Repo patterns borrowed",
+      "rows": [
+        {"Pattern": "Tokens", "Use": "Stable CSS variables for brand consistency"},
+        {"Pattern": "Chrome PDF", "Use": "Local render to PDF without a SaaS dependency"},
+        {"Pattern": "Chrome PNG", "Use": "Screenshot artifact previews and cards"}
+      ]
+    },
+    {"type": "callout", "title": "Rule", "text": "If the doc needs React, routing, or a database, this is the wrong skill. Use frontend-design or a build repo instead."}
+  ]
+}

@@ -1,0 +1,113 @@
+{
+  "snapshot": "v1",
+  "runs_per_case": 3,
+  "rows": [
+    {
+      "eval_id": "sf-paid-pilot-athar",
+      "split": "train",
+      "composite": 0.9482,
+      "assertion_pass_rate": 0.9524,
+      "judge_score": 0.9067,
+      "efficiency": 1.0,
+      "per_run_composites": [
+        0.8986,
+        0.97,
+        0.976
+      ]
+    },
+    {
+      "eval_id": "first-sdr-before-pmf",
+      "split": "train",
+      "composite": 0.97,
+      "assertion_pass_rate": 1.0,
+      "judge_score": 0.9,
+      "efficiency": 1.0,
+      "per_run_composites": [
+        0.97,
+        0.97,
+        0.97
+      ]
+    },
+    {
+      "eval_id": "resort-reel-pipeline-10-clients",
+      "split": "train",
+      "composite": 0.968,
+      "assertion_pass_rate": 1.0,
+      "judge_score": 0.8933,
+      "efficiency": 1.0,
+      "per_run_composites": [
+        0.97,
+        0.97,
+        0.964
+      ]
+    },
+    {
+      "eval_id": "migrate-prod-db-friday",
+      "split": "train",
+      "composite": 0.9562,
+      "assertion_pass_rate": 0.9524,
+      "judge_score": 0.9333,
+      "efficiency": 1.0,
+      "per_run_composites": [
+        0.976,
+        0.979,
+        0.9136
+      ]
+    },
+    {
+      "eval_id": "underspecified-rebrand",
+      "split": "train",
+      "composite": 0.965,
+      "assertion_pass_rate": 1.0,
+      "judge_score": 0.8833,
+      "efficiency": 1.0,
+      "per_run_composites": [
+        0.97,
+        0.97,
+        0.955
+      ]
+    },
+    {
+      "eval_id": "raise-seed-round",
+      "split": "heldout",
+      "composite": 0.966,
+      "assertion_pass_rate": 1.0,
+      "judge_score": 0.8867,
+      "efficiency": 1.0,
+      "per_run_composites": [
+        0.97,
+        0.958,
+        0.97
+      ]
+    },
+    {
+      "eval_id": "double-subscription-price",
+      "split": "heldout",
+      "composite": 0.9482,
+      "assertion_pass_rate": 0.9524,
+      "judge_score": 0.9067,
+      "efficiency": 1.0,
+      "per_run_composites": [
+        0.976,
+        0.8986,
+        0.97
+      ]
+    },
+    {
+      "eval_id": "negative-tweet-feedback",
+      "split": "heldout",
+      "composite": 0.978,
+      "assertion_pass_rate": 1.0,
+      "judge_score": 1.0,
+      "efficiency": 0.89,
+      "per_run_composites": [
+        0.934,
+        1.0,
+        1.0
+      ]
+    }
+  ],
+  "train": 0.9615,
+  "heldout": 0.9641,
+  "all": 0.9625
+}

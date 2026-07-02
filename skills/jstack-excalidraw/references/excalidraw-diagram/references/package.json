@@ -1,0 +1,11 @@
+{
+  "name": "excalidraw-mermaid-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Author Mermaid -> auto-laid-out .excalidraw JSON, rendered via the skill's Playwright renderer.",
+  "dependencies": {
+    "@excalidraw/excalidraw": "^0.18.1",
+    "@excalidraw/mermaid-to-excalidraw": "^2.2.2"
+  }
+}

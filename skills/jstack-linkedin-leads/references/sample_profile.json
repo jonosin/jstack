@@ -1,0 +1,557 @@
+{
+  "id": "ACoAACLevxsBfWQoDUYkHyCP2jzl81cDAvckQEI",
+  "publicIdentifier": "towhid-rahman",
+  "linkedinUrl": "https://www.linkedin.com/in/towhid-rahman",
+  "firstName": "Towhid",
+  "lastName": "Rahman, PharmD",
+  "headline": "Pharmacology | Medical Science Liasion | Pharmacovigilence | Regulatory Toxicologist | Process Validation | Project Management | Leadership | Photography",
+  "openToWork": false,
+  "hiring": false,
+  "premium": false,
+  "influencer": false,
+  "memorialized": false,
+  "location": {
+    "linkedinText": "Los Angeles, California, United States",
+    "countryCode": "US",
+    "parsed": {
+      "text": "Los Angeles, CA, United States",
+      "countryCode": "US",
+      "regionCode": null,
+      "country": "United States",
+      "countryFull": "United States of America",
+      "state": "California",
+      "city": "Los Angeles"
+    }
+  },
+  "objectUrn": "585023259",
+  "registeredAt": "2017-07-29T17:39:39.165Z",
+  "topSkills": "Pharmacology • Patient Counseling",
+  "connectionsCount": 262,
+  "followerCount": 266,
+  "verified": true,
+  "about": "I find myself at a unique crossroads where science meets compassion. With over eight years of experience in pharmacology, my journey has been fueled by a genuine desire to improve patient lives. Working at CVS Health has allowed me to interact with over 100 patients each week, guiding them through their health journeys not just by dispensing medications but by truly listening and building trust. I …[truncated in sample]",
+  "currentPosition": [
+    {
+      "companyId": "4680",
+      "companyLinkedinUrl": "https://www.linkedin.com/company/4680/",
+      "companyName": "CVS Health",
+      "dateRange": {
+        "start": {
+          "month": 1,
+          "year": 2024,
+          "day": null
+        },
+        "end": null
+      }
+    }
+  ],
+  "profileTopEducation": [
+    {
+      "schoolId": "17981",
+      "companyId": "26345",
+      "schoolLinkedinUrl": "https://www.linkedin.com/company/26345/",
+      "schoolName": "Western University of Health Sciences"
+    }
+  ],
+  "profilePicture": {
+    "url": "https://media.licdn.com/dms/image/v2/C5603AQEbgBlEFwrtUg/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1567218693232?e=1767830400&v=beta&t=rbN2FcJXew4WbEhu5n0eRnE4isqRdgTtLWdLFuK--sw",
+    "sizes": [
+      {
+        "url": "https://media.licdn.com/dms/image/v2/C5603AQEbgBlEFwrtUg/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1567218693232?e=1767830400&v=beta&t=rbN2FcJXew4WbEhu5n0eRnE4isqRdgTtLWdLFuK--sw",
+        "width": 500,
+        "height": 500,
+        "expiresAt": 1767830400000
+      },
+      {
+        "url": "https://media.licdn.com/dms/image/v2/C5603AQEbgBlEFwrtUg/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1567218693200?e=1767830400&v=beta&t=D-B1AyVbSVLza8y6cA0EytOJRyRyYUA-rDXPihcMMmQ",
+        "width": 400,
+        "height": 400,
+        "expiresAt": 1767830400000
+      },
+      {
+        "url": "https://media.licdn.com/dms/image/v2/C5603AQEbgBlEFwrtUg/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1567218693128?e=1767830400&v=beta&t=DLG3E2odlTHtj7QsL8wQLbAYQy9LiQwtYK8tcGL2BuM",
+        "width": 200,
+        "height": 200,
+        "expiresAt": 1767830400000
+      },
+      {
+        "url": "https://media.licdn.com/dms/image/v2/C5603AQEbgBlEFwrtUg/profile-displayphoto-shrink_100_100/profile-displayphoto-shrink_100_100/0/1567218693156?e=1767830400&v=beta&t=9ZRr9LAV0XrUAZjlPqVBmOaI08PEAhwmx90dLuGhyf4",
+        "width": 100,
+        "height": 100,
+        "expiresAt": 1767830400000
+      }
+    ]
+  },
+  "coverPicture": {
+    "url": "https://media.licdn.com/dms/image/v2/D5616AQGOrLzCeoEc8g/profile-displaybackgroundimage-shrink_200_800/profile-displaybackgroundimage-shrink_200_800/0/1687394685188?e=1767830400&v=beta&t=o9Xi1cE5xlAgijSp0r2uy-nkKZRfJST7_qEG6kSKAfI",
+    "sizes": [
+      {
+        "url": "https://media.licdn.com/dms/image/v2/D5616AQGOrLzCeoEc8g/profile-displaybackgroundimage-shrink_200_800/profile-displaybackgroundimage-shrink_200_800/0/1687394685188?e=1767830400&v=beta&t=o9Xi1cE5xlAgijSp0r2uy-nkKZRfJST7_qEG6kSKAfI",
+        "width": 765,
+        "height": 191,
+        "expiresAt": 1767830400000
+      },
+      {
+        "url": "https://media.licdn.com/dms/image/v2/D5616AQGOrLzCeoEc8g/profile-displaybackgroundimage-shrink_350_1400/profile-displaybackgroundimage-shrink_350_1400/0/1687394685188?e=1767830400&v=beta&t=Jh5o1yTgh3i4IVH_-HdqGoHaQgVq47B0eAsBoYb_F70",
+        "width": 765,
+        "height": 191,
+        "expiresAt": 1767830400000
+      }
+    ]
+  },
+  "photo": "https://media.licdn.com/dms/image/v2/C5603AQEbgBlEFwrtUg/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1567218693232?e=1767830400&v=beta&t=rbN2FcJXew4WbEhu5n0eRnE4isqRdgTtLWdLFuK--sw",
+  "experience": [
+    {
+      "position": "Staff Pharmacist | Prescription Dispensing, Drug Utilization Review, Regulatory Compliance",
+      "location": "Thousand Oaks, California, United States",
+      "employmentType": "Full-time",
+      "workplaceType": "On-site",
+      "companyName": "CVS Health",
+      "companyLinkedinUrl": "https://www.linkedin.com/company/cvshealth/",
+      "companyId": "4680",
+      "companyUniversalName": "cvshealth",
+      "duration": "2 yrs",
+      "description": "*Exceeded daily production targets by 15% in a high-demand pharmacy environment while ensuring timely service delivery to over 1000 patients each week without compromising quality or accuracy.\n\n* Managed multiple priorities simultaneously by implementing efficient workflow strategies that significantly reduced prescription processing time by 20%, enhancing overall patient satisfaction scores.\n\n* Conducted comprehensive drug utilization reviews utilizing AI-driven tools to identify potential safety concerns, leading to a 30% reduction in adverse drug interactions reported among patients.\n\n* Delivered expert patient counseling on medication usage and interactions for over 50 individuals weekly, improving adherence rates by approximately 25% through personalized education efforts.\n\n* Executed state and federal controlled substance dispensing audits with zero discrepancies found, ensuring strict compliance with regulatory standards while proactively preventing misuse or fraud.",
+      "skills": [
+        "Scientific Liaison",
+        "Cultural Awareness",
+        "Resource Optimization",
+        "Active Listening",
+        "Certified Immunizer",
+        "Interpersonal Communication",
+        "Medication Dispensing",
+        "Regulatory Compliance"
+      ],
+      "experienceGroupId": "d23dddfcee83f0bffd26b6fc8243e1d41210ee1b",
+      "startDate": {
+        "month": "Jan",
+        "year": 2024,
+        "text": "Jan 2024"
+      },
+      "endDate": {
+        "text": "Present"
+      },
+      "companyLogo": {
+        "url": "https://media.licdn.com/dms/image/v2/C4E0BAQEhOw_KVli-CQ/company-logo_400_400/company-logo_400_400/0/1669901807779/cvs_health_logo?e=1767830400&v=beta&t=o4GPsyYKYGrOkCOU33x2urgbe97esWszBqPWenm9C9I"
+      }
+    },
+    {
+      "position": "Support Pharmacist | Patient Care Management, Medication Optimization, Healthcare Collaboration",
+      "location": "Los Angeles, California, United States",
+      "employmentType": "Full-time",
+      "workplaceType": "On-site",
+      "companyName": "CVS Health",
+      "companyLinkedinUrl": "https://www.linkedin.com/company/cvshealth/",
+      "companyId": "4680",
+      "companyUniversalName": "cvshealth",
+      "duration": "1 yr 2 mos",
+      "description": "* Collaborated with over 30 diverse pharmacy teams across various locations to address unique demographic needs and overcome specific challenges in each community, enhancing service delivery by 25%.\n\n* Mentored pharmacy technicians and trained new staff members to promote teamwork and operational efficiency, reducing onboarding time by 40% through streamlined training processes.\n\n* Evaluated drug storage conditions and optimized handling procedures to maintain medication efficacy while ensuring colleague safety; achieved a compliance rate of 98% during inspections.\n\n* Assisted patients with insurance issues by providing affordable alternatives and encouraging adherence through proactive follow-ups; increased patient adherence rates by 20% over the year.",
+      "skills": [
+        "Healthcare System Knowledge",
+        "Drug Utilization Review",
+        "Cardiopulmonary Resuscitation (CPR)",
+        "Project Management",
+        "Medication Adherence",
+        "Collaborative Problem Solving",
+        "Scientific Communications",
+        "Basic Life Support (BLS)",
+        "Medical Terminology",
+        "Drug Interactions",
+        "Professional Networking",
+        "Healthcare Compliance",
+        "Drug Therapy Optimization",
+        "Medication Safety"
+      ],
+      "experienceGroupId": "d23dddfcee83f0bffd26b6fc8243e1d41210ee1b",
+      "startDate": {
+        "month": "Nov",
+        "year": 2022,
+        "text": "Nov 2022"
+      },
+      "endDate": {
+        "month": "Dec",
+        "year": 2023,
+        "text": "Dec 2023"
+      },
+      "companyLogo": {
+        "url": "https://media.licdn.com/dms/image/v2/C4E0BAQEhOw_KVli-CQ/company-logo_400_400/company-logo_400_400/0/1669901807779/cvs_health_logo?e=1767830400&v=beta&t=o4GPsyYKYGrOkCOU33x2urgbe97esWszBqPWenm9C9I"
+      }
+    },
+    {
+      "position": "Intern Pharmacist | Immunization Administration, Patient Counseling, Medication Safety",
+      "location": "Los Angeles, California, United States",
+      "employmentType": "Part-time",
+      "workplaceType": "On-site",
+      "companyName": "CVS Health",
+      "companyLinkedinUrl": "https://www.linkedin.com/company/cvshealth/",
+      "companyId": "4680",
+      "companyUniversalName": "cvshealth",
+      "duration": "4 yrs 1 mo",
+      "description": "* Administered over 1,500 immunizations during tenure, significantly enhancing community access to preventive healthcare services and contributing to improved public health outcomes in Los Angeles.\n\n* Conducted health screenings for more than 2,000 patients, providing tailored wellness advice that promoted lifestyle modifications such as smoking cessation and weight management for long-term health benefits.\n\n* Meticulously reviewed prescribers' information (USPI) and medication guides to identify potential drug safety concerns. Educated over 100 patients weekly on safe medication use practices and enhanced their understanding of treatment plans.\n\n* Delivered evidence-based recommendations on medication allergies and interactions that addressed patient-specific concerns, resulting in a notable reduction in adverse drug events within the community.\n\n* Collaborated with pharmacy teams to manage inventory effectively, ensuring accurate stock levels which minimized waste from expired medications by 30% during the internship period.\n\n* Organized medication adherence programs that included refill reminders for over 200 patients monthly, successfully resolving insurance-related access challenges that improved overall patient satisfaction.",
+      "skills": [
+        "Retail",
+        "Patient Counseling",
+        "OTC",
+        "Immunization",
+        "Medication Safety"
+      ],
+      "experienceGroupId": "d23dddfcee83f0bffd26b6fc8243e1d41210ee1b",
+      "startDate": {
+        "month": "Nov",
+        "year": 2018,
+        "text": "Nov 2018"
+      },
+      "endDate": {
+        "month": "Nov",
+        "year": 2022,
+        "text": "Nov 2022"
+      },
+      "companyLogo": {
+        "url": "https://media.licdn.com/dms/image/v2/C4E0BAQEhOw_KVli-CQ/company-logo_400_400/company-logo_400_400/0/1669901807779/cvs_health_logo?e=1767830400&v=beta&t=o4GPsyYKYGrOkCOU33x2urgbe97esWszBqPWenm9C9I"
+      }
+    }
+  ],
+  "education": [
+    {
+      "schoolName": "Western University of Health Sciences",
+      "schoolLinkedinUrl": "https://www.linkedin.com/company/26345/",
+      "schoolId": "26345",
+      "degree": "Doctor of Pharmacy",
+      "fieldOfStudy": "Pharmacy",
+      "skills": [
+        "Healthcare System Knowledge",
+        "Relationship Building",
+        "Pharmacodynamics",
+        "Scientific Communications",
+        "Cross-functional Team Leadership",
+        "Research Skills",
+        "Professional Networking",
+        "Expense Reports",
+        "Presentation Skills",
+        "Laboratory Skills",
+        "Scientific Discussion",
+        "Medical Terminology",
+        "Collaborative Problem Solving",
+        "Public Speaking",
+        "Clinical Trials",
+        "Drug Utilization Review",
+        "Pharmacology",
+        "Data Analysis",
+        "Project Management"
+      ],
+      "startDate": {
+        "month": "Aug",
+        "year": 2018,
+        "text": "Aug 2018"
+      },
+      "endDate": {
+        "month": "May",
+        "year": 2022,
+        "text": "May 2022"
+      },
+      "period": "Aug 2018 - May 2022",
+      "schoolLogo": {
+        "url": "https://media.licdn.com/dms/image/v2/D560BAQGNYXGokw3m2A/company-logo_400_400/company-logo_400_400/0/1731697079405/western_university_of_health_sciences_logo?e=1767830400&v=beta&t=QoMnxcirrsAEnSOv_gvTGeeQYbEDgK17WaYzyt9S_Aw"
+      }
+    },
+    {
+      "schoolName": "KTH Royal Institute of Technology",
+      "schoolLinkedinUrl": "https://www.linkedin.com/company/4814/",
+      "schoolId": "4814",
+      "degree": "Master of Science",
+      "fieldOfStudy": "Biotechnology",
+      "skills": [
+        "Scientific Communications",
+        "Cross-functional Team Leadership",
+        "Research Skills",
+        "Professional Networking",
+        "Presentation Skills",
+        "Laboratory Skills",
+        "Scientific Discussion",
+        "Collaborative Problem Solving",
+        "Public Speaking",
+        "Clinical Research",
+        "Data Analysis",
+        "Project Management",
+        "Literature Reviews"
+      ],
+      "startDate": {
+        "month": "Aug",
+        "year": 2007,
+        "text": "Aug 2007"
+      },
+      "endDate": {
+        "month": "Jan",
+        "year": 2011,
+        "text": "Jan 2011"
+      },
+      "period": "Aug 2007 - Jan 2011",
+      "schoolLogo": {
+        "url": "https://media.licdn.com/dms/image/v2/D4D0BAQFDvNUYDVR6cA/company-logo_400_400/B4DZkpBLOmJkAY-/0/1757329798694/kth_logo?e=1767830400&v=beta&t=4VFaSNKu8dW9I3V0ik_txczAWwVn43nhuCas2v4e2Gs"
+      }
+    },
+    {
+      "schoolName": "Khulna University",
+      "schoolLinkedinUrl": "https://www.linkedin.com/company/9537234/",
+      "schoolId": "9537234",
+      "degree": "Bachelor of Science",
+      "fieldOfStudy": "Biotechnology and Genetic Engineering",
+      "skills": [
+        "Scientific Communications",
+        "Cross-functional Team Leadership",
+        "Professional Networking",
+        "Presentation Skills",
+        "Laboratory Skills",
+        "Scientific Discussion",
+        "Public Speaking",
+        "Data Analysis",
+        "Project Management"
+      ],
+      "startDate": {
+        "month": "Aug",
+        "year": 2001,
+        "text": "Aug 2001"
+      },
+      "endDate": {
+        "month": "May",
+        "year": 2005,
+        "text": "May 2005"
+      },
+      "period": "Aug 2001 - May 2005",
+      "schoolLogo": {
+        "url": "https://media.licdn.com/dms/image/v2/D560BAQGwSlpBCWMt1w/company-logo_400_400/company-logo_400_400/0/1688370117274/khulna_university_logo?e=1767830400&v=beta&t=Rvpr_uy81m6ZYGP3F3YgzqxTeQ2lp2N7xE7v4zaGmmU"
+      }
+    }
+  ],
+  "certifications": [
+    {
+      "title": "Excel Essential Training (Microsoft 365)",
+      "issuedAt": "Issued Sep 2023",
+      "link": "https://www.linkedin.com/learning/certificates/b708231d31543c6a0e07bc5dca9dd9224e35a05fc6aa01ec2c339de5592e01e9",
+      "issuedBy": "LinkedIn",
+      "issuedByLink": "https://www.linkedin.com/company/1337/",
+      "issuedByLogo": {
+        "url": "https://media.licdn.com/dms/image/v2/C560BAQHaVYd13rRz3A/company-logo_400_400/company-logo_400_400/0/1638831590218/linkedin_logo?e=1767830400&v=beta&t=zuvCTnwkR4jpCcxKBAVJSsLqpaqVy4XTDnNQnXB8oBI"
+      }
+    },
+    {
+      "title": "Excel Formulas and Functions Quick Tips",
+      "issuedAt": "Issued Sep 2023",
+      "link": "https://www.linkedin.com/learning/certificates/75ca892f646fd540a9ea93c6727e190d632905205f8196524beeb84bf70664d2",
+      "issuedBy": "LinkedIn",
+      "issuedByLink": "https://www.linkedin.com/company/1337/",
+      "issuedByLogo": {
+        "url": "https://media.licdn.com/dms/image/v2/C560BAQHaVYd13rRz3A/company-logo_400_400/company-logo_400_400/0/1638831590218/linkedin_logo?e=1767830400&v=beta&t=zuvCTnwkR4jpCcxKBAVJSsLqpaqVy4XTDnNQnXB8oBI"
+      }
+    },
+    {
+      "title": "Effective Listening",
+      "issuedAt": "Issued Aug 2023",
+      "link": "https://www.linkedin.com/learning/certificates/6dd59bac1722901f87c38591caef1bdddea4854c2373fd986d802412f1b60661",
+      "issuedBy": "LinkedIn",
+      "issuedByLink": "https://www.linkedin.com/company/1337/",
+      "issuedByLogo": {
+        "url": "https://media.licdn.com/dms/image/v2/C560BAQHaVYd13rRz3A/company-logo_400_400/company-logo_400_400/0/1638831590218/linkedin_logo?e=1767830400&v=beta&t=zuvCTnwkR4jpCcxKBAVJSsLqpaqVy4XTDnNQnXB8oBI"
+      }
+    }
+  ],
+  "projects": [
+    {
+      "title": "Essential and Evidence-Based Cardiovascular Disease Medicine Availability in Low-Cost Generic Drug Plans",
+      "duration": "Jan 2022 - May 2022",
+      "startDate": {
+        "month": "Jan",
+        "year": 2022,
+        "text": "Jan 2022"
+      },
+      "endDate": {
+        "month": "May",
+        "year": 2022,
+        "text": "May 2022"
+      },
+      "associatedWith": "Associated with Western University of Health Sciences",
+      "associatedWithLink": "https://www.linkedin.com/company/26345/",
+      "description": "The project estimated the availability of essential and guideline-recommended cardiovascular medicines in low-cost generic drug programs in the United States.",
+      "contributors": [
+        {
+          "linkedinUrl": "https://www.linkedin.com/in/ACoAAAFmTjIBh4LMug0dE-JyHo5yzhUFLZwFaEo"
+        },
+        {
+          "linkedinUrl": "https://www.linkedin.com/in/ACoAABtNpuMBIjanUD-4qJbN4W7P4hUOhGPXiPk"
+        },
+        {
+          "linkedinUrl": "https://www.linkedin.com/in/ACoAAB6auNkB5nDH_3guYqV_40MtLzu4kteCYTQ"
+        }
+      ]
+    },
+    {
+      "title": "Androgen Mediated Inhibition of STAT3 Phosphorylation and Lipogenesis in Liver",
+      "duration": "Apr 2009 - Nov 2009",
+      "startDate": {
+        "month": "Apr",
+        "year": 2009,
+        "text": "Apr 2009"
+      },
+      "endDate": {
+        "month": "Nov",
+        "year": 2009,
+        "text": "Nov 2009"
+      },
+      "associatedWith": "Associated with KTH Royal Institute of Technology",
+      "associatedWithLink": "https://www.linkedin.com/company/4814/",
+      "description": "The study demonstrated that testosterone-mediated inhibition of pSTAT3 may contribute to the lipogenic gene expression in the liver."
+    },
+    {
+      "title": "Regeneration of Gerbera jamesonii from Leaf Explant.",
+      "duration": "Nov 2005 - Jul 2006",
+      "startDate": {
+        "month": "Nov",
+        "year": 2005,
+        "text": "Nov 2005"
+      },
+      "endDate": {
+        "month": "Jul",
+        "year": 2006,
+        "text": "Jul 2006"
+      },
+      "associatedWith": "Associated with Khulna University",
+      "associatedWithLink": "https://www.linkedin.com/company/9537234/",
+      "description": "Developed an efficient protocol for callus induction from leaf explants, subsequent high-frequency shoot organogenesis from callus, root induction, and plant establishment."
+    }
+  ],
+  "volunteering": [
+    {
+      "role": "Patient Screening Volunteer",
+      "duration": "Mar 2019 · 1 mo",
+      "startDate": null,
+      "endDate": {
+        "month": "Mar",
+        "year": 2019,
+        "text": "Mar 2019 · 1 mo"
+      },
+      "organizationName": "Korean Student Association",
+      "organizationLinkedinUrl": null,
+      "cause": "Health"
+    },
+    {
+      "role": "Immunizer",
+      "duration": "Mar 2019 · 1 mo",
+      "startDate": null,
+      "endDate": {
+        "month": "Mar",
+        "year": 2019,
+        "text": "Mar 2019 · 1 mo"
+      },
+      "organizationName": "California Society of Health - System Pharmacists",
+      "organizationLinkedinUrl": "https://www.linkedin.com/company/57634469/",
+      "cause": "Health"
+    }
+  ],
+  "receivedRecommendations": [],
+  "skills": [
+    {
+      "name": "Drug Therapy Optimization",
+      "positions": [
+        "Support Pharmacist | Patient Care Management, Medication Optimization, Healthcare Collaboration at CVS Health"
+      ]
+    },
+    {
+      "name": "Medication Safety",
+      "positions": [
+        "2 experiences at CVS Health"
+      ]
+    },
+    {
+      "name": "Drug Particle Size Analysis"
+    }
+  ],
+  "publications": [
+    {
+      "title": "Evidence-Based Cardiovascular Disease Medicines' Availability in Low-Cost Generic Drug Programs in the United States: A Cross-Sectional Study",
+      "publishedAt": "Annals of Internal Medicine · Sep 5, 2023",
+      "link": "https://www.acpjournals.org/doi/10.7326/M23-0287"
+    }
+  ],
+  "courses": [
+    {
+      "title": "Applied Gene Technology",
+      "associatedWith": "Associated with KTH Royal Institute of Technology",
+      "associatedWithLink": "https://www.linkedin.com/company/4814/"
+    },
+    {
+      "title": "Bioinformatics",
+      "associatedWith": "Associated with KTH Royal Institute of Technology",
+      "associatedWithLink": "https://www.linkedin.com/company/4814/"
+    },
+    {
+      "title": "Biostatistics",
+      "associatedWith": "Associated with Western University of Health Sciences",
+      "associatedWithLink": "https://www.linkedin.com/company/26345/"
+    }
+  ],
+  "patents": [],
+  "honorsAndAwards": [
+    {
+      "title": "Academic Merit Scholarship",
+      "issuedBy": "Biotechnology and Genetic Engineering Discipline, Khulna University",
+      "issuedAt": "Oct 2004",
+      "description": "Scholarship awarded for outstanding academic achievements and leadership.",
+      "associatedWith": "Associated with Khulna University",
+      "associatedWithLink": "https://www.linkedin.com/company/9537234/"
+    },
+    {
+      "title": "Academic Merit Scholarship",
+      "issuedBy": "Biotechnology and Genetic Engineering Discipline, Khulna University",
+      "issuedAt": "Oct 2003",
+      "description": "Scholarship awarded for outstanding academic achievements and leadership.",
+      "associatedWith": "Associated with Khulna University",
+      "associatedWithLink": "https://www.linkedin.com/company/9537234/"
+    },
+    {
+      "title": "Academic Merit Scholarship",
+      "issuedBy": "Biotechnology and Genetic Engineering Discipline, Khulna University",
+      "issuedAt": "Oct 2002",
+      "description": "Scholarship awarded for outstanding academic achievements and leadership.",
+      "associatedWith": "Associated with Khulna University",
+      "associatedWithLink": "https://www.linkedin.com/company/9537234/"
+    }
+  ],
+  "languages": [
+    {
+      "name": "Bengali",
+      "proficiency": "Native or bilingual proficiency"
+    },
+    {
+      "name": "English",
+      "proficiency": "Full professional proficiency"
+    },
+    {
+      "name": "Hindi",
+      "proficiency": "Limited working proficiency"
+    }
+  ],
+  "causes": [
+    "Environment",
+    "Health",
+    "Science and Technology",
+    "Education"
+  ],
+  "featured": null,
+  "composeOptionType": "UPSELL",
+  "moreProfiles": [
+    {
+      "id": "ACoAAAHOrfUBJkzkbJ66VGFkQrdbPU_EraZZIsQ",
+      "firstName": "Hamid R.",
+      "lastName": "Sharif",
+      "publicIdentifier": "hamidsharif",
+      "linkedinUrl": "https://www.linkedin.com/in/hamidsharif"
+    },
+    {
+      "id": "ACoAADRRD_IBvWWIk4nSfSKZGwqKttK4NF_eNtU",
+      "firstName": "Jesus",
+      "lastName": "Rottier",
+      "publicIdentifier": "jesus-rottier",
+      "linkedinUrl": "https://www.linkedin.com/in/jesus-rottier"
+    }
+  ]
+}

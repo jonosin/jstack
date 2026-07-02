@@ -104,9 +104,21 @@ Tests passed. Ask the user:
 - **Hardening (in place):** back up the canonical skill, `rsync` the sandbox over it, then re-run the test against canonical to confirm identical-green — roll back the backup if not.
 - **Reject:** `rm -rf` the sandbox. Report: "Discarded. No change was written to disk."
 
-## Step 10 — Verify
+## Step 10 — Verify + Final Report
 
-Run the committed/updated skill once against the live source to confirm it still produces the expected output. If it diverges, surface the discrepancy. Do not silently roll back. End with: "Skill '<name>' committed at ~/jstack/skills/<name>/." (hardening: "Skill '<name>' hardened in place.")
+Run the committed/updated skill once against the live source to confirm it still produces the expected output. If it diverges, surface the discrepancy. Do not silently roll back.
+
+Then output a **plain-English final summary** — no jargon, no technical terms. Structure:
+
+1. **What this skill does** — one sentence on the skill's purpose in plain English.
+2. **What was codified / hardened** — plain description of what changed ("before, an AI had to figure out X each time; now a script handles it automatically").
+3. **Why it's better now** — how this makes the skill more consistent or reliable in plain English.
+4. **What to expect** — 2–3 sentences on what will be noticeably different or better when using the skill going forward.
+5. **Verification** — one line: which test passed and what it confirmed.
+
+**Forbidden words in this report:** `eval`, `fixture`, `scaffold`, `deterministic`, `regression`, `fuzzy`, `harden`, `codify`. Write behavior, not implementation. Translate everything into what the user will *experience*.
+
+End with: "Skill '<name>' is ready." (hardening: same — no need to distinguish modes in user-facing output.)
 
 ---
 

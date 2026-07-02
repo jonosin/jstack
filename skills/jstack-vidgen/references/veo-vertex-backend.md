@@ -27,6 +27,9 @@ GEMINI_VIDGEN_MODEL=veo-3.1-fast-generate-001 "$PY" "$SCRIPT" --json \
 ```
 
 - **t2v** (no still): omit `--first-frame`.
+- **first-and-last-frame** (interpolate a hard transition, e.g. day→night): add `--last-frame end.png`
+  alongside `--first-frame start.png`. Veo generates the transition between the two frames. Both
+  frames should share aspect ratio/composition. See `prompt-guides/veo-3.1-prompt-guide.md`.
 - `--json` emits a `{ok, model, project, cost_estimate, files_out, exit_code, ...}` envelope.
 - **Standard quality** (final/hero clip): drop the `GEMINI_VIDGEN_MODEL` override (default is
   `veo-3.1-generate-001`) or set it to that id explicitly.

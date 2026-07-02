@@ -1,6 +1,11 @@
 ---
 name: jstack-focus
-description: Tighter compression layer (~40% shorter): warm, direct, honest, no narration. Use ASCII diagrams where they help. When invoked after a long response, shortens the previous response. Triggered by "/jstack-focus", "focus", "less wordy", "stop explaining", "keep it short", "tired of reading". Turn off with "/jstack-focus off" or when asked for normal detail.
+description: >
+  Tighter compression layer (~40% shorter): warm, direct, honest, no narration.
+  Use ASCII diagrams where they help. When invoked after a long response,
+  shortens the previous response. Triggered by "/jstack-focus", "focus", "less
+  wordy", "stop explaining", "keep it short", "tired of reading". Turn off with
+  "/jstack-focus off" or when asked for normal detail.
 ---
 
 # jstack-focus — Tighter Compression Layer

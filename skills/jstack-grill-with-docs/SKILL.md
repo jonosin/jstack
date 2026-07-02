@@ -43,15 +43,21 @@ Most repos have a single context:
 /
 ├── CONTEXT.md
 ├── docs/
-│   └── adr/
-│       ├── 0001-event-sourced-orders.md
-│       └── 0002-postgres-for-write-model.md
+│   └── superpowers/
+│       └── adr/
+│           ├── 0001-event-sourced-orders.md
+│           └── 0002-postgres-for-write-model.md
 └── src/
 ```
 
+ADRs live in `docs/superpowers/adr/` — the shared umbrella where all durable planning docs land
+(brainstorming specs go to `docs/superpowers/specs/`). The glossary stays at the repo root as
+`CONTEXT.md`. See `~/.jstack/docs/superpowers/adr/0001-planning-doc-locations.md` for the full
+convention.
+
 If a `CONTEXT-MAP.md` exists at the root, the repo has multiple contexts. The map points to where each one lives.
 
-Create files lazily — only when you have something to write. If no `CONTEXT.md` exists, create one when the first term is resolved. If no `docs/adr/` exists, create it when the first ADR is needed.
+Create files lazily — only when you have something to write. If no `CONTEXT.md` exists, create one when the first term is resolved. If no `docs/superpowers/adr/` exists, create it when the first ADR is needed.
 
 ### Update CONTEXT.md inline
 

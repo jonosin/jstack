@@ -15,6 +15,7 @@ durations in Model Garden and pin via GEMINI_VIDGEN_MODEL.
 
 Usage:
   veo_gen.py --prompt "..." --first-frame still.png -o out.mp4
+  veo_gen.py --prompt "..." --first-frame start.png --last-frame end.png -o out.mp4
   veo_gen.py --prompt "..." --duration 8 --resolution 1080p --aspect-ratio 9:16
   veo_gen.py --dry-run --json --prompt "..." --first-frame still.png
 
@@ -185,11 +186,24 @@ def _dep_check():
         sys.exit(EX_DEP)
 
 
+def _to_image(types, ref, label):
+    """Build a types.Image from a local path or gs:// URI. Raises on missing local file."""
+    r = str(ref)
+    if r.startswith("gs://"):
+        mime = "image/png" if r.lower().endswith(".png") else "image/jpeg"
+        return types.Image(gcs_uri=r, mime_type=mime)
+    if not os.path.isfile(r):
+        raise FileNotFoundError(f"{label} not found: {r}")
+    return types.Image.from_file(location=r)
+
+
 def generate(project, location, model, prompt, first_frame, duration,
-             resolution, aspect_ratio, out_path):
+             resolution, aspect_ratio, out_path, last_frame=None):
     """LIVE submit path — Veo on Vertex via google-genai (vertexai=True).
 
     i2v when first_frame is a local path or GCS URI; t2v when first_frame is None.
+    When last_frame is also given, Veo interpolates the transition between the two
+    frames (first-and-last-frame mode — ideal for hard transitions like day->night).
     Long-running op: submit, then poll to completion (clips take minutes). Output is
     saved as inline bytes to out_path. Implemented per references/veo-vertex-backend.md.
     """
@@ -198,17 +212,8 @@ def generate(project, location, model, prompt, first_frame, duration,
 
     client = genai.Client(vertexai=True, project=project, location=location)
 
-    image = None
-    if first_frame:
-        ff = str(first_frame)
-        if ff.startswith("gs://"):
-            # GCS URI — infer mime from extension (png/jpg).
-            mime = "image/png" if ff.lower().endswith(".png") else "image/jpeg"
-            image = types.Image(gcs_uri=ff, mime_type=mime)
-        else:
-            if not os.path.isfile(ff):
-                raise FileNotFoundError(f"first-frame not found: {ff}")
-            image = types.Image.from_file(location=ff)
+    image = _to_image(types, first_frame, "first-frame") if first_frame else None
+    last_image = _to_image(types, last_frame, "last-frame") if last_frame else None
 
     cfg_kwargs = dict(
         aspect_ratio=aspect_ratio,
@@ -218,6 +223,8 @@ def generate(project, location, model, prompt, first_frame, duration,
     )
     if duration is not None:
         cfg_kwargs["duration_seconds"] = int(duration)
+    if last_image is not None:
+        cfg_kwargs["last_frame"] = last_image
 
     submit_kwargs = dict(model=model, prompt=prompt,
                          config=types.GenerateVideosConfig(**cfg_kwargs))
@@ -266,6 +273,8 @@ def main():
     ap.add_argument("--prompt", required=False, help="Generation prompt")
     ap.add_argument("--first-frame", default=None, type=Path,
                     help="First-frame still for i2v (local path or GCS URI). Omit for t2v.")
+    ap.add_argument("--last-frame", default=None, type=Path,
+                    help="Last-frame still — Veo interpolates first->last (first-and-last-frame mode).")
     ap.add_argument("-o", "--out", default=None, help="Output .mp4 path")
     ap.add_argument("--model", default=None,
                     help=f"Model alias (standard, fast) or full veo-... id. Default: {DEFAULT_MODEL}")
@@ -327,8 +336,11 @@ def main():
             print(f"  project:      {project or '<unset>'}  (billing pinned via GEMINI_VIDGEN_PROJECT)")
             print(f"  location:     {location}  (Veo is regional, NOT global)")
             print(f"  model:        {model}")
-            print(f"  mode:         {'i2v' if args.first_frame else 't2v'}")
+            _mode = ('i2v+last' if args.first_frame and args.last_frame
+                     else 'i2v' if args.first_frame else 't2v')
+            print(f"  mode:         {_mode}")
             print(f"  first_frame:  {args.first_frame if args.first_frame else '<none>'}")
+            print(f"  last_frame:   {args.last_frame if args.last_frame else '<none>'}")
             print(f"  duration:     {args.duration or '<unset>'}s")
             print(f"  resolution:   {args.resolution}")
             print(f"  aspect_ratio: {args.aspect_ratio}")
@@ -374,7 +386,8 @@ def main():
     out_path = Path(args.out)
     try:
         out_files = generate(project, location, model, prompt, args.first_frame,
-                             args.duration, args.resolution, args.aspect_ratio, out_path)
+                             args.duration, args.resolution, args.aspect_ratio, out_path,
+                             last_frame=args.last_frame)
     except Exception as e:
         err_str = str(e)
         err_class = classify_error(err_str)

@@ -53,11 +53,12 @@ maker ≠ checker). They differ only in whether Jono gates the eval set first.
 
 ## Principles (do not violate — they are the whole point)
 
-- **Show percentages, compute in [0,1].** Scores live in [0,1] internally. Whenever you show a score,
-  delta, target, or baseline to Jono — in chat, the dashboard, or the report — multiply by 100 and write
-  it as a percentage with 2 decimals (`0.834 → 83.40%`, delta `0.02 → +2.00%`). The S2 weights and the
-  S2/S3 decision thresholds stay decimal — they are internal math, not displayed scores. Raw-metric runs
-  (KB / ms / tokens / lint) keep their real units, not %.
+- **Show percentages — never decimals. Compute in [0,1] internally.** Scores live in [0,1] internally.
+  Whenever you show a score, delta, target, or baseline to Jono — in chat, the dashboard, or `report.md`
+  — multiply by 100 and write it as a percentage with 2 decimals (`0.834 → 83.40%`, delta `0.02 →
+  +2.00%`). **NEVER write a raw decimal like `0.83` in any user-facing output — always `83.00%`.** The
+  S2 weights and the S2/S3 decision thresholds stay decimal — they are internal math, not displayed scores.
+  Raw-metric runs (KB / ms / tokens / lint) keep their real units, not %.
 - **The eval is the ruler.** Freeze the probes + rubric BEFORE editing; never weaken/delete one to pass.
 - **One change per iteration.** Mutate → verify → keep/revert; a win must be attributable to one change.
 - **Maker ≠ checker.** A COLD judge subagent grades outputs; never the agent that mutated the skill.
@@ -181,18 +182,36 @@ NEUTRAL/REVERT (plateau) · 3 consecutive crashes (infra problem).
 On green (held-out ≥ baseline, no regression): back up canonical, `rsync` the winning snapshot over the
 canonical skill, re-run the eval against canonical to confirm identical-green (roll back the backup if
 not). Copy `evals.json` → the skill's `references/eval/` (permanent regression fixture — the skill now
-carries its own ruler). Have a **Sonnet 4.6 subagent** write `report.md` — **short, plain-English,
-least-jargon**, written for Jono to read after the sandbox is deleted. Structure it in this order:
-1. **Goal** — which skill, why it was tuned (what was off), what "better" meant. One or two sentences.
-2. **What I changed** — each kept change in one plain line ("before, it did A; now it does B").
-3. **What I tried that didn't stick** — brief, each with the reason it didn't help.
-4. **Outcome & what to expect** — `baseline X% → final Y% (+Z%)`, then in plain words what Jono will
-   notice when using the skill now.
-5. **The stats** — the mutations table (change · train% · held% · Δ% · decision) + baseline / final /
-   target. The table is the one place technical labels are fine.
-All numbers as percentages (2 decimals). Translate the jargon: *composite* → "overall score",
-*assertion pass-rate* → "the automatic checks", *held-out* → "fresh cases kept hidden so it couldn't game
-them". No ASCII chart — the table carries the detail. Lead with goal + outcome; keep it tight.
+carries its own ruler). Have a **Sonnet 4.6 subagent** write `report.md` — **short, plain English,
+zero jargon**, written for Jono to read after the sandbox is deleted.
+
+**REPORT RULES — the subagent must follow these exactly:**
+
+**❌ Forbidden words — translate every one:**
+| Instead of… | Write… |
+|---|---|
+| `eval` / `evals` | "test cases" or "checks" |
+| `dry-run` | "quick test" |
+| `composite` / `composite score` | "overall score" |
+| `assertion` / `assertion pass-rate` | "accuracy checks" or "automatic checks" |
+| `held-out` | "hidden test cases" or "fresh tests it hadn't seen" |
+| `train` / `train set` | "practice tests" (only in the stats table; omit label elsewhere) |
+| `S1` / `S2` / `S3` … `S6` | do not appear anywhere in the report |
+| `baseline_composite` | "starting score" |
+| `snapshot` | do not use |
+| `NEAR_MISS` | "NEAR MISS" (spaces, no underscores) — stats table only |
+
+**❌ Never write a decimal like `0.83`. Always write `83.00%`.** Every score, improvement, and target is written as `X.XX%` — no exceptions.
+
+**Report structure (follow this order, use these headings):**
+
+1. **What this skill does** — one sentence on what the skill is for in plain English, then one sentence on why it was tuned (what wasn't working consistently enough).
+2. **What changed** — each kept change in one plain line ("before, it did A; now it does B"). Describe behavior, not file names or code.
+3. **What was tried that didn't help** — one line each, plain reason.
+4. **Result & what to expect** — write it as: `Starting score: X% → Final score: Y% (improved by +Z%)`. Then 2–3 sentences in plain English on what Jono will notice when using the skill now compared to before.
+5. **The numbers** — a table with these columns: `Change | Score before | Score after | Improvement | Result`. Fill all score columns as `X.XX%`. "Result" column: `KEPT`, `REVERTED`, `NEAR MISS`. This is the one place technical labels are fine.
+
+No ASCII chart. Lead with skill purpose + result. Keep it tight — the goal is one short page.
 Set `history.json` `status: "done"` (or `"stopped"` if aborted)
 and run `scripts/dashboard.py <sandbox>` once more so an open dashboard freezes on the final state and stops
 auto-refreshing. **Then delete the sandbox workspace** (the ephemeral dashboard goes with it). The

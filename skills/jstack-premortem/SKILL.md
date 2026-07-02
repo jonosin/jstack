@@ -46,7 +46,7 @@ After generating the report, return the file paths and attach or link the HTML i
 
 ## Chat output
 
-After generating the files, summarize in three sentences maximum: most likely failure, hidden assumption, and the single most important revision.
+Hard rule: the chat reply is exactly three sentences, one each and in this order: (1) the single most likely failure, (2) the hidden assumption, (3) the single most important revision. Never write a fourth sentence, a preamble, a sign-off, or extra caveats. Everything else belongs in the report, not the chat.
 
 ## Next skills
 

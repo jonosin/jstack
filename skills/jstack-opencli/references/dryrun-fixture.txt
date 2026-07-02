@@ -1,0 +1,3 @@
+OPENCLI_CDP_ENDPOINT=http://localhost:9222
+CDP_PORT=9222
+CMD=node __OPENCLI_DIR__/dist/src/main.js linkedin salesnav-inbox --filter inmail-accepted --limit 5 -f json

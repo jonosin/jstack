@@ -77,6 +77,12 @@ run fails" marker for exactly this.)
 Read the chosen craft skill, build the prompt to its formula, then surface both per
 Universal Rule 2.
 
+**Baked prompt-craft references (length/detail calibration + verbatim gold examples):**
+- Veo 3.1 → `references/prompt-guides/veo-3.1-prompt-guide.md` (official five-part formula,
+  duration set {4,6,8}s, first-and-last-frame workflow for hard transitions, audio rules).
+- Seedance 2.0 → `references/prompt-guides/seedance-prompt-guide.md` (core formula, NL vs JSON
+  shapes, omni-reference syntax). Distilled from the canonical Google + top community sources.
+
 ---
 
 ## Backends
