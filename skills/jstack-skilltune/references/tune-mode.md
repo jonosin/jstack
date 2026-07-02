@@ -14,8 +14,8 @@ revert regressions, until the score plateaus. Two things you can optimize — th
 - **Accuracy** — assertion pass-rate + LLM-judge quality.
 - **Efficiency** — tokens / time / tool-calls (or a generic shell metric like bundle size, lint count).
 
-Contents: Execution modes · Principles · S0 sandbox · S1 setup · S2 score · S3 loop · S4 coverage ·
-S5 stop · S6 promote+cleanup · Overfitting protection.
+Contents: Execution modes · Principles · S0 sandbox · Resuming an interrupted run · S1 setup · S2 score ·
+S3 loop · S4 coverage · S5 stop · S6 promote+cleanup · Overfitting protection.
 
 ## Execution modes — two only
 
@@ -88,6 +88,8 @@ NEVER edit the canonical skill during the loop. Create a temp workspace and work
 ├── coverage-matrix.json  # which categories tried / kept / saturated
 ├── dashboard.html        # live dashboard shell — generated once (scripts/dashboard.py)
 ├── data.js               # dashboard data (window.DATA) — refreshed every experiment
+├── resume.json           # checkpoint written at every S-stage transition — enables resuming an interrupted run
+├── metric-explainer.md   # plain-English explanation of the composite metric, written once at S1
 └── report.md             # final summary
 ```
 
@@ -110,15 +112,56 @@ better-direction. Absent ⇒ `[0,1]`, higher-better. That one optional field is 
   `references/eval/` as a permanent regression fixture, write `report.md`, **then `rm -rf` the workspace.**
 - **Failure / abandon** → `rm -rf` the workspace entirely. No "almost shipped" state, no orphan temp dir.
 
+**Resume checkpoint (write at every S-stage transition):** at the end of every S-stage transition —
+S0 done, S1 dry-run passed, each S3 decision, S4 saturation update, S5 stop, S6 promote — write/overwrite
+`<sandbox>/resume.json`:
+
+```json
+{"stage": "<S-id>", "sandbox": "<path>", "evals_hash": "<sha256 of evals.json>",
+ "best_version": "<id>", "baseline_score": <n>, "last_composite": <n>}
+```
+
+This is deterministic bookkeeping (no subagent) — fold it into the same step that already writes
+`history.json` / `coverage-matrix.json` so it costs nothing extra.
+
+### Resuming an interrupted run
+
+A fresh session (crash, dropped connection, timeout mid-loop) reads `<sandbox>/resume.json` instead of
+requiring a hand-written re-brief: verify the sandbox dir still exists, recompute the sha256 of
+`evals.json` and confirm it matches `evals_hash` (mismatch ⇒ evals were regenerated or tampered — do not
+resume, restart at S1), then continue the loop from `stage`:
+- `S0`/`S1` → redo setup / the dry-run gate.
+- `S3` → resume the experiment loop from `best_version` with `baseline_score`/`last_composite` in hand.
+- `S4`/`S5` → re-check coverage/stop criteria against the logged state.
+- `S6` → finish promote + report; the sandbox may already be mid-teardown.
+
+This is distinct from the Show-eval mode's same-session approval hand-off (see Execution modes above,
+and `/jstack-handoff goal` for a session that hasn't started the loop yet) — resume.json recovers a run
+that already entered S3, not a pre-approval hand-off.
+
 ## S1 — Setup (the wizard)
 
 - **Goal:** accuracy, efficiency, or both — one line.
 - **Target + scope:** the skill dir; scope = its `SKILL.md` + scripts. Copy it to `snapshots/v0/`.
 - **Evals:** 6–12 realistic cases, each with **machine-checkable assertions** (+ a 1–2 line judge rubric
   for soft quality). Split **60% train / 40% held-out**; write `evals.json`. Auto-generate if none exist.
-  **Show-eval:** present them with rationale — the one approval gate. **Auto:** generate and proceed.
+  **Typed assertion taxonomy (required):** every assertion declares a type — either **program-checkable**
+  (`contains`, `regex`, `file-exists`, `script-check`, `line-count`, `structure`) or **judge-scored**
+  (`semantic`, `style`). A stylistic preference (tone, phrasing, visual polish) MUST be typed judge-scored
+  — never encoded as a hard program assertion; a program assertion on a stylistic detail fails brittle and
+  can lock in an implementation choice the skill never claimed. **Pre-lock intent sanity pass (Show-eval
+  gate, required before presenting):** for each assertion, run the check "does this assertion test
+  something the target skill's own SKILL.md claims or implies?" — any assertion that constrains an
+  unclaimed implementation detail is rewritten or downgraded to judge-scored before lock. **Show-eval:**
+  present the (now sanity-passed) evals with rationale — each eval + type + the §S4 category it targets +
+  why it is the right ruler — the one approval gate. **Auto:** generate, run the same sanity pass, and
+  proceed.
 - **Metric:** the composite score (S2) for accuracy; or, for a pure-efficiency/generic target, a shell
-  command that prints one number (e.g. `… | tail -1`).
+  command that prints one number (e.g. `… | tail -1`). Also write `<sandbox>/metric-explainer.md` the
+  first time the composite is constructed — plain-English: what each component measures (assertion
+  pass-rate, judge score, efficiency), what train/held-out means here, and the KEEP/REVERT rule in plain
+  words. Any later "explain the metric" ask is answered by reading this file, not re-deriving it. On S6
+  promote, copy it to `references/eval/` alongside `evals.json`.
 - **Dry-run gate (hard):** run ONE train eval on the baseline; confirm grading yields valid JSON with
   `passed`/`total` and a composite in [0,1]. Record the **baseline score**. The loop does not start until this passes.
 - **Launch + open the dashboard (mandatory; the agent opens it ITSELF, never defers to a human):** write
@@ -144,46 +187,77 @@ composite = 0.50 * assertion_pass_rate   # hard facts: do the assertions pass?
 
 ## S3 — The experiment loop (per iteration)
 
+**Layered mutation order:** attempt cheaper, higher-leverage layers before expensive ones —
+**description/trigger wording → body structure → references → scripts**. Stay in the current layer until
+it plateaus (**2 consecutive REVERTs within that layer**), then advance to the next; do not treat all
+mutation categories as one flat pool. This is a finer-grained signal than S5's global 3-consecutive-REVERT
+stop — a 2-REVERT plateau moves you to the next layer, it does not stop the run.
+
 1. **Hypothesis** (main orchestrator, Opus 4.8): read the last evals' raw traces (input → output →
    per-assertion pass/fail) + the coverage matrix + any near-misses; pick the weakest area or least-covered
-   category; form ONE testable hypothesis AND state how it generalizes beyond the train cases.
+   category **within the current mutation layer** (see above); form ONE testable hypothesis AND state how
+   it generalizes beyond the train cases.
 2. **Mutate** (main orchestrator, Opus 4.8): copy the current best → `vN/`; apply ONE focused change —
-   wording, an example, structure, a script, or a tightened/trimmed instruction (for efficiency). Log what + why.
-3. **Run + grade:** for each TRAIN eval, spawn a **Sonnet 4.6 subagent** (`claude-sonnet-4-6`) to execute
-   the mutated skill and run the machine assertions → outputs; then a SEPARATE **Opus 4.8 cold-judge
-   subagent** (`claude-opus-4-8`) scores soft quality → `grading.json` (maker ≠ checker). Held-out runs too,
-   but only to score — never shown to steps 1–2.
-4. **Score:** composite on train and held-out.
-5. **Decide** (both modes decide automatically here, by these thresholds):
-   - **KEEP** if `composite > baseline + 0.02` AND the held-out moved with the train set.
-   - **REVERT** if `composite < baseline − 0.05`, OR train improved but held-out did not (overfit).
-   - **NEAR_MISS** if delta ∈ [−0.05, +0.02]: revert, but mark the hypothesis promising (retry a different
-     way / combine; drop it after 2 near-misses in the same category).
+   wording, an example, structure, a script, or a tightened/trimmed instruction (for efficiency), matching
+   the current layer. Log what + why.
+3. **L1 quick gate (before spending a grading pass):** run `skills/jstack/scripts/skill-lint.sh` on the
+   mutated sandbox skill, plus a non-crash dry parse of any changed scripts (`bash -n` for shell,
+   `python3 -m py_compile` for Python). **On failure: REVERT immediately** (log as an `L1-FAIL` decision in
+   `history.json`/`experiment-log.tsv`) — do not run train/held-out grading on a mutation that fails this
+   cheap check.
+4. **Run + grade** (only reached if the L1 gate passes): for each TRAIN eval, spawn a **Sonnet 4.6
+   subagent** (`claude-sonnet-4-6`) to execute the mutated skill and run the machine assertions → outputs;
+   then a SEPARATE **Opus 4.8 cold-judge subagent** (`claude-opus-4-8`) scores soft quality →
+   `grading.json` (maker ≠ checker). Held-out runs too, but only to score — never shown to steps 1–2.
+   Record per-case pass/fail (not just the aggregate) for both train and held-out — the AND-gate in step 6
+   needs it.
+5. **Score:** composite on train and held-out.
+6. **Decide** (both modes decide automatically here — an **AND-gate**, not a single threshold):
+   - **KEEP** only if ALL THREE hold: (a) `composite > baseline + 0.02` on train; (b) **no previously-
+     passing held-out case regresses** — compare this version's per-case pass/fail against the current
+     best version's, case by case, not just the aggregate delta; (c) `efficiency_score` does not degrade
+     beyond the documented tolerance (default: no more than a 0.03 drop, or the skill's own stated budget
+     if narrower). **Fail any leg → REVERT**, even if the aggregate composite moved up — a gain that costs
+     a previously-working case or blows the efficiency budget is a trade, not an improvement.
+   - **REVERT** if `composite < baseline − 0.05`, OR train improved but held-out did not (overfit), OR any
+     AND-gate leg above fails.
+   - **NEAR_MISS** if delta ∈ [−0.05, +0.02] and no AND-gate leg failed outright: revert, but mark the
+     hypothesis promising (retry a different way / combine; drop it after 2 near-misses in the same
+     category).
    - **NEUTRAL** (tie): keep the simpler/cheaper version (efficiency tiebreak — rule 6).
-6. **Log + refresh dashboard:** append the experiment to `history.json` (in the dashboard schema) +
+7. **Log + refresh dashboard:** append the experiment to `history.json` (in the dashboard schema) +
    `experiment-log.tsv` (timestamp, hypothesis, before, after, delta, decision, category); update the
-   coverage matrix and `best`; then run `python3 scripts/dashboard.py <sandbox>` to refresh `data.js` (the
-   open dashboard picks it up on its next 5s tick). Deterministic — no subagent.
+   coverage matrix and `best`; write `resume.json` (see S0); then run `python3 scripts/dashboard.py
+   <sandbox>` to refresh `data.js` (the open dashboard picks it up on its next 5s tick). Deterministic — no
+   subagent.
 
 ## S4 — Coverage matrix (steer exploration → exploitation)
 
 Categories: `formatting · content_quality · examples · workflow · edge_cases · efficiency · scripts ·
 structure`. Track per category: experiments, kept, best_delta, saturated. **Saturated** = ≥3 experiments,
 none > +0.01. The hypothesis step prefers untouched categories early (explore), re-tries high-success
-categories late (exploit), and avoids saturated ones.
+categories late (exploit), and avoids saturated ones — **within whichever mutation layer (S3) is currently
+active**; a category belonging to a later layer (e.g. `scripts`) is not eligible until that layer is reached.
 
 ## S5 — Stop criteria
 
 composite ≥ target (e.g. 0.95, shown as 95%) on the held-out set · `max_experiments` (default 10) · 3 consecutive
-NEUTRAL/REVERT (plateau) · 3 consecutive crashes (infra problem).
+NEUTRAL/REVERT (plateau) · 3 consecutive crashes (infra problem). Write `resume.json` with `stage: "S5"`
+before moving to S6.
 
 ## S6 — Promote + clean up
 
 On green (held-out ≥ baseline, no regression): back up canonical, `rsync` the winning snapshot over the
 canonical skill, re-run the eval against canonical to confirm identical-green (roll back the backup if
 not). Copy `evals.json` → the skill's `references/eval/` (permanent regression fixture — the skill now
-carries its own ruler). Have a **Sonnet 4.6 subagent** write `report.md` — **short, plain English,
-zero jargon**, written for Jono to read after the sandbox is deleted.
+carries its own ruler). **Also copy `metric-explainer.md`** into `references/eval/` alongside it (written
+at S1 — see above). **Static dashboard snapshot (before sandbox deletion):** run `python3
+scripts/dashboard.py <sandbox> --static` — a self-contained variant with `history.json`'s data inlined
+directly into the HTML (no external `data.js` fetch, no auto-reload/auto-stop script) — and copy that
+file into `references/eval/dashboard-snapshot.html`. This is what survives after the sandbox (and its live
+tab) are gone; the already-open live tab is a convenience during the run, not the durable record. Have a
+**Sonnet 4.6 subagent** write `report.md` — **short, plain English, zero jargon**, written for Jono to
+read after the sandbox is deleted.
 
 **REPORT RULES — the subagent must follow these exactly:**
 
@@ -214,12 +288,15 @@ zero jargon**, written for Jono to read after the sandbox is deleted.
 No ASCII chart. Lead with skill purpose + result. Keep it tight — the goal is one short page.
 Set `history.json` `status: "done"` (or `"stopped"` if aborted)
 and run `scripts/dashboard.py <sandbox>` once more so an open dashboard freezes on the final state and stops
-auto-refreshing. **Then delete the sandbox workspace** (the ephemeral dashboard goes with it). The
-orchestrator reports baseline vs final score per held-out probe. The dashboard tab the agent opened at S1
-stays open in the browser, now **frozen on the final state** (status `done`/`stopped` stops the
-auto-refresh) — it **survives this teardown** because it was opened live at S1. **Persist `report.md`
-BEFORE deleting the sandbox** so the run's results outlive the ephemeral dashboard file. (All scores the
-orchestrator reports here — baseline vs final per probe — are shown as percentages, per the Principles.)
+auto-refreshing. Write a final `resume.json` with `stage: "S6"` (harmless after teardown; only matters if
+teardown itself is interrupted). **Then delete the sandbox workspace** (the ephemeral dashboard goes with
+it). The orchestrator reports baseline vs final score per held-out probe. The dashboard tab the agent
+opened at S1 stays open in the browser, now **frozen on the final state** (status `done`/`stopped` stops
+the auto-refresh) — it **survives this teardown** because it was opened live at S1. **Persist `report.md`,
+`evals.json`, `metric-explainer.md`, and the static `dashboard-snapshot.html` to `references/eval/` BEFORE
+deleting the sandbox** so the run's results outlive both the ephemeral dashboard file and the live tab.
+(All scores the orchestrator reports here — baseline vs final per probe — are shown as percentages, per
+the Principles.)
 
 ## Overfitting protection (carried from skill-forge)
 

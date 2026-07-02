@@ -1,6 +1,6 @@
 ---
 name: jstack-skillify
-description: "Produce deterministic code for a jstack skill — two modes. (1) CODIFY a successful interactive session into a NEW deterministic skill ('skillify this', 'codify this', 'save this as a skill', 'make this permanent', 'turn this into a skill'). (2) HARDEN an EXISTING skill by pushing its fuzzy, judgment-driven steps into deterministic scripts ('make this skill more deterministic', 'harden this skill', 'extract the code from this skill', 'turn these steps into a script', 'codify part of this skill'). Eval-gated so behavior can't silently change. NOT for metric-driven accuracy/efficiency tuning of an existing skill — that is /jstack-skilltune."
+description: "Use when you want to turn working, judgment-driven work into deterministic code — two modes. (1) CODIFY: invoke after a successful interactive session to save it as a NEW deterministic skill ('skillify this', 'codify this', 'save this as a skill', 'make this permanent', 'turn this into a skill'). (2) HARDEN: invoke on an EXISTING skill to push its fuzzy, judgment-driven steps into deterministic scripts ('make this skill more deterministic', 'harden this skill', 'extract the code from this skill', 'turn these steps into a script', 'codify part of this skill'). Eval-gated so behavior can't silently change. NOT for metric-driven accuracy/efficiency tuning of an existing skill — that is /jstack-skilltune."
 ---
 
 # jstack-skillify
@@ -23,6 +23,29 @@ Both modes run the same flow (Steps 1–10); Step 1 branches on the mode.
 consistent / efficient" is **tuning, not hardening → `/jstack-skilltune`** (a metric eval loop, not a
 refactor). Ambiguous → ask one line: "Harden `<x>` into code, or tune its consistency
 (`/jstack-skilltune`)?"
+
+### Routing self-check (credit: skill-creator trigger optimization)
+
+Run this table once, whenever this skill's or jstack-skilltune's `description:` changes, to confirm the
+boundary still discriminates cleanly:
+
+| Phrasing | Routes to |
+|---|---|
+| "skillify this" | Codify |
+| "codify this" | Codify |
+| "save this as a skill" | Codify |
+| "make this permanent" | Codify |
+| "turn this into a skill" | Codify |
+| "make this skill more deterministic" | Harden |
+| "harden this skill" | Harden |
+| "extract the code from this skill" | Harden |
+| "turn these steps into a script" | Harden |
+| "codify part of this skill" | Harden |
+| "make this skill more accurate" | Tune → `/jstack-skilltune` |
+| "make this skill's output more consistent/reliable" | Tune → `/jstack-skilltune` |
+
+If any phrasing lands ambiguously across two routes, tighten the two descriptions' trigger language until
+each phrasing has exactly one home.
 
 ## Iron contract
 
@@ -68,6 +91,11 @@ You ran the prototype (or you can read the existing skill's fuzzy steps). Decide
 
 The only constraint: the codified path must run deterministically without human judgment — no interactive prompts, no "figure it out" steps, no re-discovery. A future agent (or cron job) should invoke it and get the same shape of output. Beyond that, you decide everything: a shell pipeline, a Python script, a sequence of API calls. Use whatever matches what actually worked. For hardening, the route is the script(s) that replace the identified fuzzy steps.
 
+**Repeated-work signal** (credit: anthropics skill-creator). Determinism follows observed repetition, not
+vague preference: if the same helper logic was written or re-derived in **≥2** of the session's runs or
+fixtures, that logic MUST be bundled as a `scripts/` file rather than left as inline, re-typed-each-time
+reasoning. Seeing it once is a judgment call; seeing it twice is a mandate.
+
 ## Step 4 — Capture a fixture
 
 Save a snapshot of the input data the code operates on; Step 5's test replays against this snapshot so the parse/transform logic is verified independently of live calls. For hardening, the behavioral fixtures captured by Step 1's eval-gate serve here.
@@ -90,6 +118,12 @@ skill-creator owns the authoring conventions. jstack-skillify owns the codificat
 
 Run the test inside the staging/sandbox dir. For hardening, also confirm **no behavioral regression** vs the Step 1 fixtures. If it fails and the failure is a fixable logic bug, fix it and retry — at most twice; show the diff before each retry. If still failing after two retries, or the failure is environmental, remove the sandbox and report the failure. No on-disk artifact.
 
+**Blind-comparison check (harden mode only, credit: skill-creator comparator).** Alongside the fixture-match
+check above, judge the old-skill output vs the hardened-script output **blind** on the same fixture — strip
+which-is-which labels before judging. The hardened output must be judged equal-or-better to pass. A fixture
+that technically matches but reads worse blind is still a hardening regression; fix before proceeding to
+Step 8.
+
 ## Step 8 — Approval gate
 
 Tests passed. Ask the user:
@@ -99,6 +133,18 @@ Tests passed. Ask the user:
 - **Discard.** Remove the sandbox. Nothing changes on disk.
 
 ## Step 9 — Commit or discard
+
+**Description=when rule (both modes, credit: obra/superpowers writing-skills).** Before committing, check
+the skill's `description:` field: it must state WHEN to invoke the skill, never a summary of its internal
+workflow steps. Documented failure mode: an agent reads a workflow-summary description, believes it already
+knows what to do, and skips reading the body — so the description's only job is triggering, not explaining.
+Rewrite it if it drifted into a summary.
+
+**Lint gate (both modes, mandatory).** Run `bash skills/jstack/scripts/skill-lint.sh <target-skill-dir>`
+against the staged/sandboxed skill and require `LINT-PASS` before moving on to the commit actions below. A
+`LINT-FAIL` blocks commit exactly like a failed test in Step 7 — fix the listed violations (frontmatter,
+trigger-style description, `## Next skills` table, no absolute paths, size budget) and re-run before
+proceeding. This does not replace the eval-gate; it is a structural check on top of it.
 
 - **New skill:** move the staging dir into `~/jstack/skills/<name>/`, then symlink it into `.agents`, `.claude`, `.codex`, and `.hermes/skills/jstack/` per the jstack convention.
 - **Hardening (in place):** back up the canonical skill, `rsync` the sandbox over it, then re-run the test against canonical to confirm identical-green — roll back the backup if not.
@@ -137,7 +183,7 @@ End with: "Skill '<name>' is ready." (hardening: same — no need to distinguish
 - **Metric-driven accuracy/efficiency tuning** of an existing skill — that is **`/jstack-skilltune`**.
 - Remove or tombstone skills.
 
-## Next steps
+## Next skills
 
 | Next | When |
 |------|------|

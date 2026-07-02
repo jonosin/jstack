@@ -64,6 +64,8 @@ patterns, and exits non-zero on a hit. Keep personal values in `~/.jstack/config
 (gitignored), never in a committed skill. Skills read config at runtime via
 **env var → `~/.jstack/config.env` → default**.
 
+Run `scripts/skill-lint.sh <skill-dir>` on any skill you changed — it enforces frontmatter, trigger-style description, the Next-skills table, no absolute paths, and the SKILL.md size budget.
+
 ## Discord `/skill` autocomplete and symlinks
 
 Hermes' Discord gateway resolves skill symlinks to their real paths with
