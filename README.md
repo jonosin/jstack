@@ -41,7 +41,8 @@ then `cp .env.example ~/.jstack/config.env` and edit it.
 | `jstack-handoff-from-claude` | Builds a handoff from a Claude Code session by ID. | Claude Code |
 | `jstack-challenge` | Spawns a cold-briefed advisor subagent to pressure-test your position. | — |
 | `jstack-claude-find` | Natural-language BM25 search over past Claude Code sessions. | Claude Code, Python 3 |
-| `jstack-msgdraft` | Drafts outbound messages in your configured voice. | set `JSTACK_PERSONA_NAME` |
+| `jstack-myvoice` | Drafts outbound in your voice (mode × channel) and keeps the voice canon current. | set `JSTACK_PERSONA_NAME` |
+| `jstack-git-guardrails` | Installs a PreToolUse hook that mechanically blocks destructive git commands (force push, reset --hard, clean -f, branch -D, checkout .) before they execute. | one-time setup |
 | `jstack-vision` | Multimodal analysis (image/audio/video/PDF) via Gemini on Vertex AI. | GCP project + `gemini` CLI |
 | `jstack-brainwork` | Processes/ingests/lints a second-brain (llm-wiki) vault. | a second-brain vault |
 | `jstack-savetobrain` | Captures a durable unit from a conversation as raw vault source. | a second-brain vault |
@@ -56,7 +57,7 @@ per-call with an env var. See [`.env.example`](.env.example) for the full list. 
 
 | Key | Used by | Default |
 |-----|---------|---------|
-| `JSTACK_PERSONA_NAME` | jstack-msgdraft, voice | `the user` |
+| `JSTACK_PERSONA_NAME` | jstack-myvoice, voice | `the user` |
 | `SECOND_BRAIN_PATH` | brainwork, savetobrain* | `~/second-brain` |
 | `GOOGLE_CLOUD_PROJECT` | jstack-vision | *(required for vision)* |
 | `CLAUDE_PROJECTS_DIR` | claude-find, *-from-claude | `~/.claude/projects` |
