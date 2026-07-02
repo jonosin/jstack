@@ -114,3 +114,10 @@ Decide how many threads to fetch based on current context and need (one for a qu
 - No search tab: tell the user to open the Sales Navigator people search results tab, then rerun.
 - Auth/Sales Nav failure: tell the user to log into LinkedIn/Sales Navigator in the controlled browser.
 - Partial profile gaps: keep the row. Sales Nav does not expose every public-profile field; do not invent missing follower counts, email addresses, or parsed country fields.
+
+## Next skills
+
+| Next | When |
+|------|------|
+| `jstack-linkedin-send` | Extracted leads are ready to become a `prospects.csv` and get sent. |
+| `brave-cdp` | CDP preflight fails and the recovery/relaunch path is needed. |

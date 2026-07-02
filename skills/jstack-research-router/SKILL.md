@@ -1,6 +1,11 @@
 ---
 name: jstack-research-router
-description: "Route research requests through Exa, Tavily, Jina, GitHub, xAI, and Apify lanes with local credential loading."
+description: >-
+  Route research requests through Exa, Tavily, Jina, GitHub, xAI, and Apify lanes with local
+  credential loading. Use when the user asks to research, look something up, discover or compare
+  options, find sources, search repos/code, or check current facts — invoke at the START of any
+  research, discovery, comparison, current-facts lookup, repo-finding, or source-collection
+  request, before choosing a search tool.
 ---
 
 # jstack Research Router

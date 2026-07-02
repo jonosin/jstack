@@ -1,6 +1,6 @@
 ---
 name: jstack-grill-with-docs
-description: A relentless interview to sharpen a plan or design, which also creates docs (ADRs and glossary) as we go.
+description: A relentless interview to sharpen a plan or design, which also creates docs (ADRs and glossary) as we go. Use when the user wants a plan/design grilled AND wants the resulting domain terms and decisions captured to CONTEXT.md/ADRs as the interview happens — "grill this with docs", "grill and document this", "interview me and write the ADRs/glossary as we go". If they just want the interview with no docs, use jstack-grillme instead.
 ---
 
 # jstack-grill-with-docs

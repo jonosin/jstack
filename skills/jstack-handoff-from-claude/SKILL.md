@@ -1,6 +1,6 @@
 ---
 name: jstack-handoff-from-claude
-description: Only when the user explicitly provides a Claude Code session ID to extract its transcript and turn it into a jstack handoff artifact. Intended to be run from a NON-Claude harness (OpenCode, Codex, Hermes) that needs to pull a Claude session out. Do NOT invoke this for reading, opening, or continuing an existing handoff file (e.g. "read this handoff and continue" is a normal file read, not this skill), and do NOT invoke it inside Claude Code on its own session. Requires an explicit session ID; without one, this skill does not apply.
+description: Use ONLY when the user explicitly provides a Claude Code session ID for a DIFFERENT/PAST session to extract its transcript and turn it into a jstack handoff artifact. Intended to be run from a NON-Claude harness (OpenCode, Codex, Hermes) that needs to pull a Claude session out. Boundary vs /jstack-handoff: ending or handing off the CURRENT conversation — even from inside Claude Code, even if a session ID is known — is always /jstack-handoff, never this skill. Do NOT invoke this for reading, opening, or continuing an existing handoff file (e.g. "read this handoff and continue" is a normal file read, not this skill). Requires an explicit past-session ID; without one, this skill does not apply — route to /jstack-handoff instead.
 ---
 
 Require an explicit Claude Code session ID. If the user didn't provide one, stop and ask:

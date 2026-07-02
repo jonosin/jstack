@@ -11,7 +11,7 @@ Build and send a personalized InMail batch through LinkedIn Sales Navigator, the
 
 ### 1. Source leads
 
-Get leads from `jstack-linkedin-apify` (HarvestAPI, no login needed) or `jstack-linkedin-salesnav` (open Sales Nav tab). Or use the router: `jstack-linkedin`.
+Get leads from `jstack-linkedin-leads` (HarvestAPI, no login needed) or `jstack-linkedin-salesnav` (open Sales Nav tab). Or use the router: `jstack-linkedin`.
 
 ### 2. Build prospects.csv
 
@@ -20,7 +20,7 @@ Follow the schema in `references/csv-schema.md`. Every row needs:
 - `Subject` and `Message`: per-lead, personalized
 
 Composing the message:
-- Use `jstack-coldmsg` for the framework and `jstack-msgdraft` for voice (no em dashes).
+- Use `jstack-coldmsg` for the framework and `jstack-myvoice` for voice (no em dashes).
 - Opener ~25-40 words (do not overrun). Pin one real, specific detail about the lead/company.
 - Assign A/B ~50/50 across the lead order.
 
@@ -80,3 +80,10 @@ python3 scripts/track_reply.py stats --dir <DIR>
 ```
 
 Outcomes update `prospects.csv` status columns (Reply, DemoSent, Call, Deposit, Notes) and append to `replies.jsonl`. `stats` shows per-variant reply rates and conversions so you can tell whether A or B is winning.
+
+## Next skills
+
+| Next | When |
+|------|------|
+| `jstack-linkedin-leads` / `jstack-linkedin-salesnav` | Need more leads before building the next batch. |
+| Otherwise | Standalone — repeat steps 6-7 as replies come in; no required next step. |

@@ -6,7 +6,7 @@ description: >-
   drafting, reviewing, optimizing, or A/B-testing cold outreach: first-touch messages, opener lines,
   subject lines, follow-up sequences, or whenever reply rates are low and the copy needs fixing.
   Encodes the reply psychology and quantified levers from field-tested sources (ColdIQ playbooks,
-  cold-outreach psychology) plus the GTM executing-sales phase. Always compose with jstack-msgdraft to
+  cold-outreach psychology) plus the GTM executing-sales phase. Always compose with jstack-myvoice to
   render the draft in the user's own voice (no em dashes). Pairs with jstack-gtm (outbound/sales).
 ---
 
@@ -41,7 +41,7 @@ specific is the single biggest reply lever (+54.7% in ColdIQ's data). Everything
    - Single-person test: could this exact message have gone to 1,000 people unchanged? If yes, fail.
    - Specificity: contains one real, checkable detail about *them*.
    - Length: first touch lean; no "what we do" preamble.
-   - Voice: run it through **jstack-msgdraft**, natural, human, **no em dashes**.
+   - Voice: run it through **jstack-myvoice**, natural, human, **no em dashes**.
    - Payoff: the body delivers on whatever the opener implied (an opened curiosity gap that resolves to
      a generic pitch is worse than no gap).
 
@@ -85,6 +85,14 @@ second-brain-agency burn, both the win and the failure; see framework.md §9.)
   offer/fit. Subject lines gate the open but **won't rescue a body that doesn't earn the reply.**
 
 ## Always finish in the user's voice
-After drafting structure with this framework, **run the copy through `jstack-msgdraft`** to render it
+After drafting structure with this framework, **run the copy through `jstack-myvoice`** to render it
 in the user's voice and enforce punctuation rules (no em dashes). This skill owns the *strategy*;
-jstack-msgdraft owns the *voice*.
+jstack-myvoice owns the *voice*.
+
+## Next skills
+
+| Next | When |
+|------|------|
+| `/jstack-myvoice` | Draft is structurally ready — always the last step, to render it in the user's own voice (no em dashes). |
+| `/jstack-gtm` | The cold-message need is part of a broader outbound/sales-motion question, not just the copy itself. |
+| `/jstack-linkedin-send` | The drafted message is a LinkedIn DM/InMail ready to actually send. |

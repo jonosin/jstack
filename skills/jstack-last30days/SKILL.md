@@ -1,7 +1,7 @@
 ---
 name: jstack-last30days
 version: "3.3.2"
-description: "Research what people actually say about any topic in the last 30 days. Pulls posts and engagement from Reddit, X, YouTube, TikTok, Hacker News, Polymarket, GitHub, and the web."
+description: "Research what people actually say about any topic in the last 30 days. Pulls posts and engagement from Reddit, X, YouTube, TikTok, Hacker News, Polymarket, GitHub, and the web. Use when the user wants a recency scan, a community-sentiment check, or a 'what is everyone saying about X' report."
 argument-hint: "jstack-last30days TOPIC"
 allowed-tools: Bash, Read, Write, AskUserQuestion, WebSearch
 homepage: https://github.com/mvanhorn/last30days-skill

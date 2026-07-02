@@ -94,3 +94,11 @@ to the CDP bypass too**. Full procedure: **`references/authoring-new-tool.md`**.
   Brave onto :9222).
 - **Specialized sibling:** `jstack-linkedin-salesnav` already wraps the LinkedIn Sales Navigator
   reply-checking / lead flows on top of OpenCLI — prefer it for those.
+
+## Next skills
+
+| Next | When |
+|---|---|
+| `brave-cdp` | The :9222 preflight fails (exit 69) — Brave isn't exposing CDP yet; get it onto the right port before retrying. |
+| `jstack-linkedin-salesnav` | The task is LinkedIn Sales Navigator reply-checking or lead flows — use the specialized sibling instead of raw OpenCLI commands. |
+| `opencli-adapter-author` (repo skill, `~/builds/OpenCLI/skills/`) | Converting a brand-new site into a CLI — the recon → API-discovery → implement → verify workflow. |

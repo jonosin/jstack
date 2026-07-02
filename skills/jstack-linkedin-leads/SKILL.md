@@ -73,3 +73,10 @@ python3 scripts/linkedin_apify.py posts \
 - Never print `APIFY_API_TOKEN`.
 - `startPage` means a HarvestAPI Lead Search result page, not the user's logged-in Sales Navigator browser page.
 - "No cookies" means no customer-supplied LinkedIn cookies; HarvestAPI does not disclose the full backend mechanism.
+
+## Next skills
+
+| Next | When |
+|------|------|
+| `jstack-linkedin-send` | A final `prospects.csv` exists and needs validation/sending. |
+| `jstack-linkedin` | Unsure whether leads should come from here vs Sales Navigator. |

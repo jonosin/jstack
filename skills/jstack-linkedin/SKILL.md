@@ -1,6 +1,6 @@
 ---
 name: jstack-linkedin
-description: Front door / router for LinkedIn prospecting and outreach automation; routes to the right sub-skill (lead-list builder, Sales Navigator lead extractor, or the auto-send pipeline). Use for any LinkedIn lead-gen, Sales Navigator, cold InMail automation, scrape/find prospects, or automate-LinkedIn-outreach request, especially when unsure which LinkedIn sub-skill applies.
+description: Front door / router for LinkedIn prospecting and outreach automation; routes to the right sub-skill (lead-list builder, Sales Navigator lead extractor, or the auto-send pipeline). Use when the user wants LinkedIn lead-gen, Sales Navigator work, cold InMail automation, to scrape/find prospects, or to automate LinkedIn outreach and is unsure which LinkedIn sub-skill applies.
 ---
 
 # jstack-linkedin
@@ -21,3 +21,11 @@ Front door for LinkedIn prospecting and outreach. State what you want to do and 
 2. Message and send: `jstack-linkedin-send` (builds CSV, validates, sends, tracks)
 
 Load the chosen sub-skill by name to get full instructions.
+
+## Next skills
+
+| Next | When |
+|------|------|
+| `jstack-linkedin-leads` | Building/searching/enriching/deduping a prospect list from filters. |
+| `jstack-linkedin-salesnav` | Extracting/enriching leads from an already-open Sales Navigator tab. |
+| `jstack-linkedin-send` | A `prospects.csv` is ready to validate and send as InMails. |

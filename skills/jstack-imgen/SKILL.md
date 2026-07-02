@@ -1,6 +1,6 @@
 ---
 name: jstack-imgen
-description: "Gemini image generation CLI wrapper. General-purpose: generate images with Gemini image models (3-pro-image, 3.1-flash-image, 2.5-flash-image) via Vertex AI. Supports reference images, chroma-key post-processing, and batch generation. Triggers: generate an image, create a sprite, image generation, gemini image, imgen."
+description: "Gemini image generation CLI wrapper. General-purpose: generate images with Gemini image models (3-pro-image, 3.1-flash-image, 2.5-flash-image) via Vertex AI. Supports reference images, chroma-key post-processing, and batch generation. Use when the user says: generate an image, create a sprite, image generation, gemini image, imgen, or otherwise asks to produce a new image with Gemini."
 ---
 
 # jstack-imgen — generic Gemini image generation wrapper

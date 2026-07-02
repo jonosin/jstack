@@ -64,7 +64,7 @@ phase the user asked for.
 **Writing the actual cold messages?** When a phase (8 comms engine, 11 marketing email, 12 outbound)
 reaches drafting real cold emails, InMails, DMs, connection notes, or their openers/subject lines, load
 **`/jstack-coldmsg`** — a battle-tested reply-psychology framework (pinned specificity, opener shapes,
-the filter, cadence) — then run the copy through **`/jstack-msgdraft`** for the user's voice (no em
+the filter, cadence) — then run the copy through **`/jstack-myvoice`** for the user's voice (no em
 dashes). jstack-coldmsg is a standalone jstack skill, not a pack phase, so it survives a pack re-clone.
 
 ## Stress-test / compare mode
@@ -99,4 +99,4 @@ this proven methodology and find gaps. Procedure:
 | `/jstack-savetobrain` | A durable GTM decision came out of a phase and should persist to the brain. |
 | `/jstack-vidgen` | A phase (launch assets / marketing) reaches "generate a video/clip". |
 | `/jstack-coldmsg` | Drafting/optimizing cold emails, InMails, DMs, connection notes, or their openers/subject lines. |
-| `/jstack-msgdraft` | Rendering any drafted outreach in the user's own voice (enforces no em dashes). |
+| `/jstack-myvoice` | Rendering any drafted outreach in the user's own voice (enforces no em dashes). |

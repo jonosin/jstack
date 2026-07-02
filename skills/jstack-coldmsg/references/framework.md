@@ -135,7 +135,7 @@ posts/triggers → assumption-pinned fallback (§3), single-touch InMail (§5, p
   written somewhere your team could query, or all in heads?", anchored to real numbers, ends on a
   binary question, confident frame preserved. Subject carries the specific: "the NECANN playbook in
   your head." Body then adds one sentence of offer + the 90-second-video ask. No em dashes (voice via
-  jstack-msgdraft).
+  jstack-myvoice).
 
 **Field result + correction (the Paul block, ~18 sends in).** The pinned-question approach above is
 *well-formed copy*, but ~18 sends in it produced a sharp negative: Paul (30-yr mail-handling operator)
