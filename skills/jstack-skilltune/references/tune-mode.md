@@ -81,6 +81,8 @@ NEVER edit the canonical skill during the loop. Create a temp workspace and work
 
 ```
 /tmp/skilltune-<name>-<ts>/
+├── .git/                 # per-iteration commit history — see "Git-native sandbox" below
+├── .gitignore             # excludes dashboard.html + data.js (derived, regenerated every call)
 ├── snapshots/v0/         # exact copy of the target skill = baseline; vN/ = each kept version
 ├── evals.json            # probes + assertions + train/held-out split
 ├── history.json          # structured per-experiment record AND the dashboard's data source
@@ -92,6 +94,16 @@ NEVER edit the canonical skill during the loop. Create a temp workspace and work
 ├── metric-explainer.md   # plain-English explanation of the composite metric, written once at S1
 └── report.md             # final summary
 ```
+
+**Git-native sandbox (deterministic, no subagent).** Right after the workspace + `snapshots/v0/` are
+created: `git init`, write the `.gitignore` above, then `git add -A && git commit -m "v0: baseline
+snapshot"`. From here on, git is the source of truth for *file state*; `resume.json` stays the
+source of truth for *loop state* (stage, evals hash, scores) — see S3's commit protocol and
+"Resuming an interrupted run" below for how the two stay in sync. This adapts `skill-evolver`'s
+commit-before-verify workspace (see the design note at the bottom of this file): every mutation is a
+real commit taken *before* it's graded, so a crash mid-verification leaves a clean, checked-out
+commit behind instead of a half-written file — resuming is "read the last commit," not a
+hand-written re-brief.
 
 The **live dashboard** is `scripts/dashboard.py <sandbox>` (committed, deterministic, dependency-free,
 `file://`-safe). It reads `history.json` → writes `data.js` (every call) + `dashboard.html` (once). Keep
@@ -126,14 +138,36 @@ This is deterministic bookkeeping (no subagent) — fold it into the same step t
 
 ### Resuming an interrupted run
 
-A fresh session (crash, dropped connection, timeout mid-loop) reads `<sandbox>/resume.json` instead of
-requiring a hand-written re-brief: verify the sandbox dir still exists, recompute the sha256 of
-`evals.json` and confirm it matches `evals_hash` (mismatch ⇒ evals were regenerated or tampered — do not
-resume, restart at S1), then continue the loop from `stage`:
-- `S0`/`S1` → redo setup / the dry-run gate.
-- `S3` → resume the experiment loop from `best_version` with `baseline_score`/`last_composite` in hand.
-- `S4`/`S5` → re-check coverage/stop criteria against the logged state.
-- `S6` → finish promote + report; the sandbox may already be mid-teardown.
+A fresh session (crash, dropped connection, timeout mid-loop) reconciles **git first, then
+`resume.json`** — git is the source of truth for what's on disk, `resume.json` is the source of
+truth for what stage the loop was in:
+
+1. Verify the sandbox dir still exists. If `.git/` is missing (a run predating this mechanism, or
+   S0 never finished), fall back to the file-only reconciliation below with no git step.
+2. `git status --porcelain` inside the sandbox. **Dirty tree ⇒ discard**: a mutation was being
+   applied when the crash hit, *before* its commit — `git checkout -- .` (or `git clean -fd` for new
+   untracked files) to drop it and treat that iteration as never started. A clean tree needs no
+   action; git already holds the last completed step.
+3. Read the last commit message (`git log -1 --format=%s`). If it ends `[score-pending]`, the
+   mutation committed but grading never finished — resume at S3 step 3 (L1 gate) for that same
+   mutation; the working tree is already the one to grade, do not re-mutate. Otherwise the last
+   commit is a settled score/revert commit — resume at S3 step 1 (next hypothesis) from the
+   current tree.
+4. Recompute the sha256 of `evals.json` and confirm it matches `resume.json`'s `evals_hash`
+   (mismatch ⇒ evals were regenerated or tampered — do not resume, restart at S1).
+5. Cross-check `resume.json`'s `last_commit` against actual `git log -1 --format=%H`. They should
+   match after step 2's cleanup; if they don't (an even earlier interruption in the
+   commit-then-checkpoint order), trust git for file state and `resume.json` only for `stage` /
+   `baseline_score` / `best_version` / `target` — those aren't derivable from git alone.
+6. Continue the loop from `resume.json`'s `stage`, refined by steps 2–3 above:
+   - `S0`/`S1` → redo setup / the dry-run gate.
+   - `S3` → resume the experiment loop per steps 2–3 above, with `best_version` / `baseline_score` /
+     `last_composite` from `resume.json` in hand.
+   - `S4`/`S5` → re-check coverage/stop criteria against the logged state.
+   - `S6` → finish promote + report; the sandbox may already be mid-teardown.
+
+`resume.json`'s schema (S0) gains one field, written at the same step as the rest: `"last_commit":
+"<sha of HEAD after the write>"`.
 
 This is distinct from the Show-eval mode's same-session approval hand-off (see Execution modes above,
 and `/jstack-handoff goal` for a session that hasn't started the loop yet) — resume.json recovers a run
@@ -199,12 +233,14 @@ stop — a 2-REVERT plateau moves you to the next layer, it does not stop the ru
    it generalizes beyond the train cases.
 2. **Mutate** (main orchestrator, Opus 4.8): copy the current best → `vN/`; apply ONE focused change —
    wording, an example, structure, a script, or a tightened/trimmed instruction (for efficiency), matching
-   the current layer. Log what + why.
+   the current layer. Log what + why. **Commit before verifying:** `git add -A && git commit -m
+   "iter-N: <one-line mutation summary> [score-pending]"`. This happens before step 3, not after — the
+   commit is the audit record of the attempt regardless of what the grading step does next.
 3. **L1 quick gate (before spending a grading pass):** run `skills/jstack/scripts/skill-lint.sh` on the
    mutated sandbox skill, plus a non-crash dry parse of any changed scripts (`bash -n` for shell,
    `python3 -m py_compile` for Python). **On failure: REVERT immediately** (log as an `L1-FAIL` decision in
-   `history.json`/`experiment-log.tsv`) — do not run train/held-out grading on a mutation that fails this
-   cheap check.
+   `history.json`/`experiment-log.tsv`, then apply the git revert step under "Decide" below) — do not run
+   train/held-out grading on a mutation that fails this cheap check.
 4. **Run + grade** (only reached if the L1 gate passes): for each TRAIN eval, spawn a **Sonnet 4.6
    subagent** (`claude-sonnet-4-6`) to execute the mutated skill and run the machine assertions → outputs;
    then a SEPARATE **Opus 4.8 cold-judge subagent** (`claude-opus-4-8`) scores soft quality →
@@ -225,11 +261,22 @@ stop — a 2-REVERT plateau moves you to the next layer, it does not stop the ru
      hypothesis promising (retry a different way / combine; drop it after 2 near-misses in the same
      category).
    - **NEUTRAL** (tie): keep the simpler/cheaper version (efficiency tiebreak — rule 6).
+
+   **Git for the decision (deterministic, right after the call above, before step 7):**
+   - **KEEP / NEUTRAL:** `git commit --allow-empty -m "iter-N: score train=<t> heldout=<h>
+     decision=KEEP"` — a follow-up commit that replaces the `[score-pending]` marker with the
+     result; the mutation commit's tree is what's kept. `best_version` becomes this commit's sha.
+   - **REVERT / NEAR_MISS / L1-FAIL:** restore the tree to the last good state, `git checkout
+     <best_version sha> -- .`, then `git commit -m "iter-N: REVERT to <best_version sha> after score
+     train=<t> heldout=<h> decision=<REVERT|NEAR_MISS|L1-FAIL>"`. This is a *new* commit whose tree
+     equals the previous best — the failed mutation commit stays reachable in history for the audit
+     trail (nothing is force-reset or rebased away); `best_version` is unchanged.
 7. **Log + refresh dashboard:** append the experiment to `history.json` (in the dashboard schema) +
    `experiment-log.tsv` (timestamp, hypothesis, before, after, delta, decision, category); update the
-   coverage matrix and `best`; write `resume.json` (see S0); then run `python3 scripts/dashboard.py
-   <sandbox>` to refresh `data.js` (the open dashboard picks it up on its next 5s tick). Deterministic — no
-   subagent.
+   coverage matrix and `best`; write `resume.json` (see S0), including `last_commit` = the sha the
+   Decide step above just produced; then run `python3 scripts/dashboard.py <sandbox>` to refresh
+   `data.js` (the open dashboard picks it up on its next 5s tick; `dashboard.html`/`data.js` stay
+   gitignored, they're regenerated, not source of truth). Deterministic — no subagent.
 
 ## S4 — Coverage matrix (steer exploration → exploitation)
 
@@ -290,7 +337,9 @@ Set `history.json` `status: "done"` (or `"stopped"` if aborted)
 and run `scripts/dashboard.py <sandbox>` once more so an open dashboard freezes on the final state and stops
 auto-refreshing. Write a final `resume.json` with `stage: "S6"` (harmless after teardown; only matters if
 teardown itself is interrupted). **Then delete the sandbox workspace** (the ephemeral dashboard goes with
-it). The orchestrator reports baseline vs final score per held-out probe. The dashboard tab the agent
+it, and so does the entire per-iteration `.git/` history built during S3 — no experiment commit, revert
+commit, or intermediate mutation ever leaves the sandbox; only the files named in the "Persist" sentence
+below survive). The orchestrator reports baseline vs final score per held-out probe. The dashboard tab the agent
 opened at S1 stays open in the browser, now **frozen on the final state** (status `done`/`stopped` stops
 the auto-refresh) — it **survives this teardown** because it was opened live at S1. **Persist `report.md`,
 `evals.json`, `metric-explainer.md`, and the static `dashboard-snapshot.html` to `references/eval/` BEFORE
@@ -305,5 +354,7 @@ generalizes; coverage-matrix diversity + saturation prevents tunnel-vision; refr
 every 5 experiments; a 3-consecutive-crash circuit breaker stops an infra loop instead of spinning.
 
 > Provenance: Karpathy `autoresearch` (one metric · constrained scope · fast verify · auto-rollback · git
-> memory) → `skill-forge` Skill Mode (composite score on a SKILL.md) → this. Generic loop mechanics live in
-> `/jstack-autoresearch`. More prior art: `justinwetch/Skill-RSI` + `SkillEval`, `stancsz/skills-flow`.
+> memory) → `skill-forge` Skill Mode (composite score on a SKILL.md) → this. The S0/S3 git-native sandbox
+> (commit-before-verify, resume = read the last commit) is adapted from `FishSerrie/skill-evolver`'s
+> workspace. Generic loop mechanics live in `/jstack-autoresearch`. More prior art: `justinwetch/Skill-RSI`
+> + `SkillEval`, `stancsz/skills-flow`.

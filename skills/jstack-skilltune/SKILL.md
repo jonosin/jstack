@@ -28,9 +28,10 @@ rely on a human to open it; this is identical in BOTH Auto and Show-eval modes**
 human to tell, so a deferred "tell Jono to open it" guarantees the live tab never appears). The already-open
 tab survives S6 teardown frozen on the final state, so it stays viewable after the sandbox is deleted —
 S6 also copies a static, self-contained snapshot of it plus `metric-explainer.md` into the target skill's
-`references/eval/`, so the result survives even a closed tab. An interrupted run resumes from
+`references/eval/`, so the result survives even a closed tab. The sandbox is also a git repo: every S3
+mutation commits before it's graded, so an interrupted run resumes by reading the last commit +
 `<sandbox>/resume.json` (written at every stage transition) instead of a hand-written re-brief — see
-"Resuming an interrupted run" in `references/tune-mode.md`.
+"Git-native sandbox" (S0) and "Resuming an interrupted run" in `references/tune-mode.md`.
 
 **Scores are shown as percentages — no exceptions.** The loop computes in [0,1] internally, but every
 score / delta / target / baseline shown to Jono — the dashboard, the chat summary, and `report.md` — is
