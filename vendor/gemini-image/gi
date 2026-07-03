@@ -55,7 +55,7 @@ EX_INPUT = 6
 EX_DEP = 7
 EX_UNKNOWN = 10
 
-# Short aliases -> full model ID (all verified reachable on project-a4713060...)
+# Short aliases -> full model ID (all verified reachable on the configured GCP project)
 MODEL_ALIASES = {
     "flash":  "gemini-3.1-flash-image",
     "pro":    "gemini-3-pro-image",

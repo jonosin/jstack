@@ -137,7 +137,7 @@ Durable knowledge (decisions, the *why*, research) lives in the second brain, no
 
 BRAIN_TMPL = """# BRAIN.md — second-brain pointer
 
-This repo is a **satellite** of Thanadol's second brain. Knowledge (decisions, research, durable
+This repo is a **satellite** of the owner's second brain. Knowledge (decisions, research, durable
 facts) lives in the brain; this repo holds the code. Link, don't duplicate.
 
 - brain_path: ~/second-brain

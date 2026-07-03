@@ -11,8 +11,8 @@ Preserve the external source as a raw clip in `raw/clips/` with minimal editoria
 1. Load the second-brain contract before writing:
 
 ```bash
-Read /Users/thanadolsinthubodee/second-brain/AGENTS.md
-Read /Users/thanadolsinthubodee/second-brain/SKILL.md
+Read ~/second-brain/AGENTS.md
+Read ~/second-brain/SKILL.md
 ```
 
 2. Extract the tweet/status ID and handle from the URL.
@@ -35,7 +35,7 @@ status_id=2071246711222055363
 Search both the status ID and handle under `raw/`:
 
 ```text
-search_files(pattern="2071246711222055363|monokern", path="/Users/thanadolsinthubodee/second-brain/raw", target="content")
+search_files(pattern="2071246711222055363|monokern", path="~/second-brain/raw", target="content")
 ```
 
 If a raw file already contains the status ID, do not create a duplicate. Report the existing path and run `python3 tools/sb.py pending` for the final backlog count.
@@ -81,7 +81,7 @@ Never invent missing sections. If the thread is truncated, say it is truncated i
 Path format:
 
 ```text
-/Users/thanadolsinthubodee/second-brain/raw/clips/YYYY-MM-DD-<handle>-<short-topic-slug>.md
+~/second-brain/raw/clips/YYYY-MM-DD-<handle>-<short-topic-slug>.md
 ```
 
 Frontmatter minimum:

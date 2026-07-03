@@ -135,7 +135,7 @@ gi --dry-run -p "test" -o /dev/null
 {
   "ok": true,
   "model": "gemini-3.1-flash-image",
-  "project": "project-a4713060-b0c1-4796-8a5",
+  "project": "your-gcp-project-id",
   "location": "global",
   "prompt": "a pixel art cat",
   "files_in": ["ref.png"],

@@ -11,7 +11,7 @@
   },
   "split": { "train_pct": 0.6, "heldout_pct": 0.4, "note": "held-out probes (E3,E5,E8) are NEVER shown to the hypothesis/mutation steps; scoring only." },
   "fixtures_dir": "fixtures/",
-  "long_anchor": "/Users/thanadolsinthubodee/second-brain/raw/clips/2026-06-20-huberman-peptides-bakri-readable-transcript.md",
+  "long_anchor": "$SECOND_BRAIN_PATH/raw/clips/2026-06-20-huberman-peptides-bakri-readable-transcript.md (resolved by harness.py via SAVETOBRAIN_EVAL_ANCHOR / SECOND_BRAIN_PATH in ~/.jstack/config.env)",
   "probes": [
     {
       "id": "E1",

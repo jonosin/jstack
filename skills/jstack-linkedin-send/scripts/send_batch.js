@@ -5,11 +5,36 @@
 // us safely instead of failing silently). Progress is saved after EVERY send, so a
 // timeout or halt is fully resumable.
 const fs = require('fs');
+const os = require('os');
+const path = require('path');
 const cp = require('child_process');
+
+// Resolve playwright-core: env var -> ~/.jstack/config.env -> require.resolve
+// -> `find` fallback over the npx cache. Config resolution order matches the
+// rest of jstack (env var > ~/.jstack/config.env > built-in default).
+function readJstackConfig(key) {
+  try {
+    const cfgPath = path.join(os.homedir(), '.jstack', 'config.env');
+    if (!fs.existsSync(cfgPath)) return null;
+    const lines = fs.readFileSync(cfgPath, 'utf8').split('\n');
+    for (const line of lines) {
+      const t = line.trim();
+      if (!t || t.startsWith('#') || !t.includes('=')) continue;
+      const [k, ...rest] = t.split('=');
+      if (k.trim() === key) return rest.join('=').trim().replace(/^['"]|['"]$/g, '');
+    }
+  } catch (e) { /* ignore, fall through */ }
+  return null;
+}
 function findPW() {
-  const hard = '/Users/thanadolsinthubodee/.npm/_npx/2fcde7aa8aa1538c/node_modules/playwright-core';
-  if (fs.existsSync(hard)) return hard;
-  try { return cp.execSync('find ~/.npm/_npx -maxdepth 4 -type d -name playwright-core 2>/dev/null | head -1', {shell: '/bin/zsh'}).toString().trim(); } catch (e) { return hard; }
+  const fromEnv = process.env.JSTACK_PLAYWRIGHT_CORE || readJstackConfig('JSTACK_PLAYWRIGHT_CORE');
+  if (fromEnv && fs.existsSync(fromEnv)) return fromEnv;
+  try { return require.resolve('playwright-core'); } catch (e) { /* not on the module path */ }
+  try {
+    const found = cp.execSync('find ~/.npm/_npx -maxdepth 4 -type d -name playwright-core 2>/dev/null | head -1', {shell: '/bin/zsh'}).toString().trim();
+    if (found) return found;
+  } catch (e) { /* ignore */ }
+  throw new Error('playwright-core not found. Set JSTACK_PLAYWRIGHT_CORE in ~/.jstack/config.env or install playwright-core.');
 }
 const PW = findPW();
 const { chromium } = require(PW);

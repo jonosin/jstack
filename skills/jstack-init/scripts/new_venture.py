@@ -106,7 +106,7 @@ deterministically so this table stays in sync — **never hand-edit the table**:
 
 BRAIN_TMPL = """# BRAIN.md — second-brain pointer
 
-This repo is a **satellite** of Thanadol's second brain. Knowledge (decisions, research, durable
+This repo is a **satellite** of the owner's second brain. Knowledge (decisions, research, durable
 facts) lives in the brain; this repo holds the work product. Link, don't duplicate.
 
 - brain_path: ~/second-brain

@@ -12,7 +12,32 @@ from pathlib import Path
 
 SB = Path(__file__).resolve().parent
 FIX = SB / "fixtures"
-ANCHOR = Path("/Users/thanadolsinthubodee/second-brain/raw/clips/2026-06-20-huberman-peptides-bakri-readable-transcript.md")
+
+
+def _jstack_cfg(key: str, default: str = "") -> str:
+    """Resolve a config value: env var > ~/.jstack/config.env > default."""
+    val = os.environ.get(key)
+    if val:
+        return val
+    cfg = Path.home() / ".jstack" / "config.env"
+    if cfg.exists():
+        for line in cfg.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            k, v = line.split("=", 1)
+            if k.strip() == key:
+                return v.strip().strip('"').strip("'")
+    return default
+
+
+# Real ~200KB transcript clip used for the E5 efficiency probe. Resolve via
+# env var / ~/.jstack/config.env (SAVETOBRAIN_EVAL_ANCHOR), falling back to
+# the conventional path under SECOND_BRAIN_PATH so this still works out of
+# the box on any machine with the second brain checked out.
+_second_brain = Path(_jstack_cfg("SECOND_BRAIN_PATH", "~/second-brain")).expanduser()
+_default_anchor = _second_brain / "raw/clips/2026-06-20-huberman-peptides-bakri-readable-transcript.md"
+ANCHOR = Path(_jstack_cfg("SAVETOBRAIN_EVAL_ANCHOR", str(_default_anchor))).expanduser()
 
 def load_script(version):
     p = SB / "snapshots" / version / "scripts" / "youtube-capture.py"
