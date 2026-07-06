@@ -20,7 +20,7 @@ Follow the schema in `references/csv-schema.md`. Every row needs:
 - `Subject` and `Message`: per-lead, personalized
 
 Composing the message:
-- Use `jstack-coldmsg` for the framework and `jstack-myvoice` for voice (no em dashes).
+- Use `jstack-gtmarketing` (references/cold-outreach.md) for the framework and `jstack-myvoice` for voice (no em dashes).
 - Opener ~25-40 words (do not overrun). Pin one real, specific detail about the lead/company.
 - Assign A/B ~50/50 across the lead order.
 

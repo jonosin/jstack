@@ -50,5 +50,5 @@ later / standalone). Details live in `references/new-build.md`; format/lint refe
 | Next | When |
 |------|------|
 | `/jstack-savetobrain` | A durable decision/fact surfaced and should persist to the brain hub. |
-| `/jstack-gtm` | A new venture needs go-to-market strategy (the usual next move after scaffolding). |
+| `/jstack-gtmarketing` | A new venture needs go-to-market strategy (the usual next move after scaffolding). |
 | `/jstack-brainwork` | Pending raw captured for this venture/build needs compiling into the wiki. |

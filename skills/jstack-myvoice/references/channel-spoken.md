@@ -51,6 +51,15 @@ Ground-truth from a real Loom vs the drafted VO. Draft *toward* these; don't pol
    relationships held perfectly; contractions everywhere; no em dashes; warm-not-salesy; one idea per beat
    with a concrete example carrying the point.
 
+## No colon splices — thread with connectives (2026-07-04)
+Written drafts love the shape "Statement A: statement B." ${JSTACK_PERSONA_NAME} never speaks that
+way — two standalone sentences joined by a colon with no filler or connective words is a written
+construction, not talking. Fold the two ideas into one flowing spoken sentence instead.
+- Draft: "And here's the part that actually matters most: how it all gets in there in the first place."
+- His: "How all this information is gathered is the part that actually matters most."
+Rule: a spoken script contains no colon-spliced sentence pairs; thread beats with "So," / "And," /
+"Because," / "Now," and let the sentence carry both halves.
+
 ## Personalize early
 Open with a warm, **specific guess about their world**, not a generic pitch. Lead with what's probably
 true for *them*: "My guess is that a lot of what runs {{COMPANY}} ... is scattered across tools and

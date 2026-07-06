@@ -48,7 +48,7 @@ confident voice"), honor it. When genuinely torn between modes on a real send, a
 ### Step 3: cold overlay (only if it's a first-touch to a stranger)
 A **cold** first-touch (cold DM/email/InMail, connection-request note, cold opener/subject line) also
 loads `references/cold-message-voice.md` on top of the chosen mode + channel. The cold *strategy* (levers,
-metrics, opener shapes, cadence) lives in `jstack-coldmsg`, not here.
+metrics, opener shapes, cadence) lives in `jstack-gtmarketing` → `references/cold-outreach.md`, not here.
 
 ### Step 4: compose + QA
 Compose the loaded files: **mode** supplies posture/tone, **channel** supplies formatting/rhythm, the
@@ -93,5 +93,13 @@ deduped), then confirm the diff back to him. This is how the voice canon compoun
 - `references/channel-spoken.md`: spoken-delivery mechanics (Loom/VO/call: pronouns, cadence, read-aloud).
 
 **Overlay + procedure:**
-- `references/cold-message-voice.md`: cold first-touch overlay (cold STRATEGY lives in `jstack-coldmsg`).
+- `references/cold-message-voice.md`: cold first-touch overlay (cold STRATEGY lives in `jstack-gtmarketing` → `references/cold-outreach.md`).
 - `references/learn-voice.md`: the update-the-canon procedure for LEARN mode.
+
+## Next skills
+
+| Next | When |
+|------|------|
+| `/jstack-linkedin-send` | The voiced draft is a LinkedIn InMail/DM ready to actually send. |
+| `/jstack-gtmarketing` | The draft needs cold-outbound STRATEGY first (references/cold-outreach.md) or sits inside a broader GTM motion. |
+| `/jstack-savetobrain` | A voice correction/decision emerged that should persist beyond the canon files. |

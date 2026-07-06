@@ -170,7 +170,7 @@ TODO — capture the thesis/why via `/jstack-savetobrain` (do not hand-write ven
 
 ## Status
 - {today}: scaffolded as a [[../../maps/satellites|satellite repo]] `~/ventures/{slug}/` (lean venture standard).
-- GTM strategy is open work (route via `/jstack-gtm`).
+- GTM strategy is open work (route via `/jstack-gtmarketing`).
 
 ## Satellite
 Work product repo `~/ventures/{slug}/` (`BRAIN.md` points back here). Registry:
@@ -363,7 +363,7 @@ def main() -> None:
     print("  - Capture durable decisions (offer, pricing, the why) via /jstack-savetobrain")
     print("    (then /jstack-brainwork to compile). NEVER hand-write venture canon into the brain.")
     print("  - Planning docs (specs/designs/ADRs) → docs/superpowers/ in the venture repo.")
-    print("  - Work the GTM via /jstack-gtm.")
+    print("  - Work the GTM via /jstack-gtmarketing.")
 
 
 if __name__ == "__main__":

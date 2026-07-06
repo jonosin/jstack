@@ -4,11 +4,11 @@
 > connection-request notes, cold openers and subject lines. Persona is `${JSTACK_PERSONA_NAME}` (set
 > in `~/.jstack/config.env`).
 >
-> **Division of labour:** this file owns the cold *voice* (how it should sound). `jstack-coldmsg` owns
+> **Division of labour:** this file owns the cold *voice* (how it should sound). `jstack-gtmarketing` (references/cold-outreach.md) owns
 > the cold *strategy* (the reply psychology, the quantified levers, opener shapes with measured lift,
 > personalization tiers, cadence, the metrics scoreboard, and the worked second-brain-agency example).
-> When drafting a real cold batch, work the structure with `jstack-coldmsg`
-> (`~/jstack/skills/jstack-coldmsg/references/framework.md` is the deep playbook) and render the voice
+> When drafting a real cold batch, work the structure with `jstack-gtmarketing`
+> (`~/jstack/skills/jstack-gtmarketing/references/cold-outreach-framework.md` is the deep playbook) and render the voice
 > here. Do not duplicate the framework; cross-reference it.
 
 ## The reflex you're writing against
@@ -36,7 +36,7 @@ that's equally true of every competitor in their vertical. Everything below serv
   "believe me" step.
 - **No diagnosis frame for someone who doesn't feel the pain.** Telling a stranger their know-how is
   "stuck in heads, is it queryable?" is a verdict on their competence. To someone who lives the pain
-  it lands; to someone who doesn't it reads as an insult (the Paul block, `jstack-coldmsg` framework
+  it lands; to someone who doesn't it reads as an insult (the Paul block, cold-outreach-framework
   §9). When in doubt, switch from a *diagnosis* frame to an *offer* frame ("I clean it up / I do the
   work") and state the pain as a peer observation, not an accusation.
 
@@ -60,4 +60,4 @@ that's equally true of every competitor in their vertical. Everything below serv
   to a generic pitch is worse than no gap.
 
 When a cold message is screened on felt pain and built on a real specific, the voice above carries it.
-For everything about *which* shape, *which* tier, cadence, and channel mechanics, go to `jstack-coldmsg`.
+For everything about *which* shape, *which* tier, cadence, and channel mechanics, go to `jstack-gtmarketing` → `references/cold-outreach.md`.

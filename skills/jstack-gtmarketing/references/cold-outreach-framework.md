@@ -1,7 +1,7 @@
 # Cold outbound framework, full playbook
 
-Consolidated from field-tested sources (see sources.md). SKILL.md is the lean operating layer; this is
-the reasoning and the detail behind each rule. Table of contents:
+Consolidated from field-tested sources (see cold-outreach-sources.md). [cold-outreach.md](cold-outreach.md)
+is the lean operating layer; this is the reasoning and the detail behind each rule. Table of contents:
 1. The reply psychology (why the rules work)
 2. Quantified levers, ranked
 3. Opener shapes in detail

@@ -4,6 +4,11 @@ This framework is consolidated from field-tested material, not invented. Provena
 
 ## Cold-outreach clips (second-brain raw sources)
 Located in `~/second-brain/raw/clips/` (raw, immutable, read for the underlying claims):
+- **"how to book 60+ calls/mo with bait-and-switch outreach funnels"** (Dimitar Angg, X, 2026-07-05),
+  the reactance response, the 3-step front-end-offer funnel (offer → deliver → earned transition),
+  the three bars (low activation energy / situation-specific / genuinely valuable), commitment &
+  consistency + IKEA effect + demonstration-beats-claims, claimed 3-4x reply lift (self-reported —
+  the post is itself a lead magnet; treat numbers as directional, not audited).
 - **"the dark psychology behind getting cold outreach replies"** (Dimitar Angg, X, 2026-06-27), the
   0.3-0.5s pattern-match gate, curiosity gap, specificity heuristic, structural pattern-interrupt,
   deliberate imperfection, one-liner reply lift, real-vs-fake loss framing, subject diagnostics.

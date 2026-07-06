@@ -107,4 +107,4 @@ this skill to write venture canon; use it only to scaffold.
 
 - Capture durable decisions (offer, pricing, the *why*) via `/jstack-savetobrain`.
 - Planning docs (specs / designs / ADRs) → `docs/superpowers/` in the venture repo.
-- Work the go-to-market via `/jstack-gtm`.
+- Work the go-to-market via `/jstack-gtmarketing`.

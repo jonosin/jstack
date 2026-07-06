@@ -28,7 +28,7 @@ update my voice / harmonize my voice" (match on intent, not exact words).
    - **`cold-message-voice.md`** if it's about the cold first-touch *voice* specifically.
    - Ask: is this *who he's being* (mode), *how it's delivered* (channel), or *always true* (universal)?
    If the lesson is about cold *strategy* (a lever, a metric, an opener shape) rather than *voice*, note
-   that it belongs in `jstack-coldmsg`, not here, and say so instead of forcing it into a voice file.
+   that it belongs in `jstack-gtmarketing` (references/cold-outreach.md), not here, and say so instead of forcing it into a voice file.
 
 3. **Edit that file to fold the lesson in.** Do exactly one of:
    - **Add** a new rule, in the file's existing voice and structure.
