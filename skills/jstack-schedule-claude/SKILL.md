@@ -108,6 +108,25 @@ milliseconds. That means:
 - **Watch a run live** by tailing the detached log printed at schedule time:
   `tail -f ~/.hermes/logs/jstack-schedule-claude/jsc-<slug>.detached.log`.
 
+### Background-task wait ceiling (why runs can die "incomplete")
+
+Headless `claude -p` has a shutdown guard interactive sessions don't: once the model's final
+turn ends, it waits at most `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS` for still-running
+**background tasks** (background subagents, background bash), then **kills them and exits** —
+stock default 600 s. A run that delegates a long task to a background subagent and ends its
+turn to wait (the normal `/goal` + `/loop` pattern) gets truncated at +10 min, exits 0 with no
+result text, and looks "done" while the real work was killed mid-flight.
+
+`run_claude.sh` therefore raises the ceiling to **2 h** for every launch. Tune it with
+`JSTACK_SC_BG_WAIT_MS` (env → `~/.jstack/config.env` → default `7200000`); `0` = wait forever
+(avoid: a leftover dev server then keeps the run alive indefinitely and the result never posts).
+
+- A result report of **"⚠️ bg-capped (incomplete)"** means the ceiling still fired: background
+  work was terminated and the session has pending task notifications queued. `claude --resume
+  <session-id>` delivers them and the session picks up where it was killed.
+- This is a `claude -p` behavior, **not** a `--resume` limitation — resuming a bg-capped
+  session and watching it continue is the recovery working as designed.
+
 ## Monitoring vs `/resume` while a run is in progress
 
 If a session is **still running** and you want to check on it, **tail the log — do not `/resume`.**
@@ -133,6 +152,11 @@ If a session is **still running** and you want to check on it, **tail the log �
   appended unconditionally by `run_claude.sh`. Only point runs at directories Jono owns.
 - `--session` (resume) and `--fresh` are mutually exclusive; the launcher rejects both.
 - Cost follows the model — confirm before scheduling a long `/goal` loop on Opus.
+- **Goal prompts must clean up their background processes.** The headless process cannot exit
+  while a tracked background task (dev server, watcher) is still alive — it idles until the
+  wait ceiling (2 h) before reporting. Prompts that start servers should say "kill any
+  background processes you started before finishing" (verify with a curl/log check instead of
+  leaving the server running as a stop condition).
 - Scheduled runs fire from the always-on Hermes gateway, so they don't depend on the macOS crontab
   (no Full Disk Access wall) and survive sleep/restart.
 

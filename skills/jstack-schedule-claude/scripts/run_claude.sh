@@ -21,6 +21,11 @@
 #
 # Always-on flags: -p (headless) and --dangerously-skip-permissions.
 # Override the binary with CLAUDE_BIN; defaults to ~/.local/bin/claude.
+# Background-task wait ceiling: claude -p kills background tasks that are still
+# running N ms after the final turn ends (stock default 600000 = 10 min — too short
+# for runs that delegate to background subagents). This launcher raises it to 2 h;
+# tune via JSTACK_SC_BG_WAIT_MS (env or ~/.jstack/config.env) or export
+# CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS directly. 0 = wait indefinitely.
 set -uo pipefail
 
 CLAUDE="${CLAUDE_BIN:-$HOME/.local/bin/claude}"
@@ -80,6 +85,24 @@ fi
 [ -n "$PROMPT" ] || die "a prompt is required (--prompt \"...\" or --prompt-file <path>)"
 [ -n "$MODEL" ]  || die "--model is required"
 
+# --- background-task wait ceiling (print mode) --------------------------------
+# After the final turn ends, `claude -p` waits for still-running background tasks
+# (background subagents, background bash) at most CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS,
+# then KILLS them and exits. The stock default (600000 = 10 min) truncates long
+# autonomous runs that delegate work to background subagents — a subagent that needs
+# >10 min after the orchestrator's turn ends gets terminated mid-flight.
+# Resolution: caller-exported env var > JSTACK_SC_BG_WAIT_MS (env or
+# ~/.jstack/config.env) > 7200000 (2 h). 0 = wait indefinitely (risky: a leftover
+# dev server keeps the run alive forever, so the completion notify never fires).
+if [ -z "${CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS:-}" ]; then
+  BGW="${JSTACK_SC_BG_WAIT_MS:-}"
+  if [ -z "$BGW" ] && [ -f "$HOME/.jstack/config.env" ]; then
+    BGW="$(sed -n 's/^JSTACK_SC_BG_WAIT_MS=//p' "$HOME/.jstack/config.env" | tail -1)"
+  fi
+  CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS="${BGW:-7200000}"
+fi
+export CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS
+
 # --- resolve session ---------------------------------------------------------
 if [ -n "$SESSION" ] && [ -n "$FRESH" ]; then
   die "choose ONE: --session <id> (resume existing) or --fresh (new). Not both."
@@ -107,6 +130,7 @@ LOG="$LOGDIR/$SID.log"
   echo "  mode    : $MODE"
   echo "  session : $SID"
   echo "  flags   : -p --dangerously-skip-permissions --model $MODEL ${SESSION_ARGS[*]}"
+  echo "  bg-wait : ${CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS}ms ceiling for background tasks after final turn (0 = forever)"
   echo "=================================================================="
 } | tee -a "$LOG"
 
@@ -132,15 +156,19 @@ human_elapsed() {
 notify_home() {
   [ -n "$NOTIFY" ] || return 0
   [ -x "$HERMES_PY" ] || { echo "(notify skipped: hermes python not found at $HERMES_PY)" >>"$LOG"; return 0; }
-  local rc="$1" out="$2" status subj elapsed
+  local rc="$1" out="$2" status subj elapsed capped=""
   elapsed="$(human_elapsed "$(( $(date +%s) - ${RUN_START:-$(date +%s)} ))")"
-  if [ "$rc" -eq 0 ]; then status="✅ done"; else status="❌ exit $rc"; fi
+  grep -q 'Background tasks still running after' "$out" 2>/dev/null && capped=1
+  if [ "$rc" -ne 0 ]; then status="❌ exit $rc"
+  elif [ -n "$capped" ]; then status="⚠️ bg-capped (incomplete)"
+  else status="✅ done"; fi
   subj="$status · ${LABEL:-claude run} · ${elapsed} · $(date '+%Y-%m-%d %H:%M %Z')"
   {
     echo "model: $MODEL · dir: $DIR"
     echo "session: $SID"
     echo "resume:  cd \"$DIR\" && claude --resume $SID"
     echo "exit: $rc · elapsed: $elapsed · log: $LOG"
+    [ -n "$capped" ] && echo "⚠️ hit the background-task wait ceiling (${CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS}ms): background work was killed mid-flight and the run is INCOMPLETE. Resume the session to continue it — pending task notifications are still queued."
     echo
     echo "----- result (tail) -----"
     tail -c 1500 "$out" 2>/dev/null
