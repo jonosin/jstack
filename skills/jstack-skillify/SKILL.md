@@ -57,7 +57,8 @@ The main session is the **orchestrator on Opus 4.8** and does the *important, no
 deciding the deterministic route, writing the code, and every keep/ship decision — the smart model on the
 high-leverage steps. Delegate only **grunt / repetitive / token-heavy** work — running tests, capturing
 fixtures, scaffolding, bookkeeping — to **Sonnet 4.6 subagents** (`claude-sonnet-4-6`), spawned aggressively,
-one job each, so their bulky output never enters the main context. When an *important* task must run as a
+one job each, so their bulky output never enters the main context. Launch independent subagents in a
+single message so they run in parallel. When an *important* task must run as a
 **separate** subagent (e.g. a cold checker that verifies the hardened skill reproduces the captured
 behavior, to keep maker ≠ checker), use an **Opus 4.8 subagent** (`claude-opus-4-8`). Rule of thumb: smart /
 creative / judgment → Opus; repetitive / mechanical / verbose → Sonnet 4.6 subagent.
