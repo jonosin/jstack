@@ -143,6 +143,9 @@ original Reddit thread URLs in the final answer.
 ## Rules
 
 - Prefer explicit CLI tools over generic web tools when available.
+- Multi-lane requests (e.g. web + GitHub + X/Reddit): run independent lanes in parallel —
+  send the independent calls (or subagent launches) in one message, covering every lane the
+  request needs, not just the first.
 - Use Exa first for semantic discovery.
 - Use Tavily first for ordinary lookup, source collection, pricing checks, and extraction.
 - Use Jina as the clean extraction fallback.
