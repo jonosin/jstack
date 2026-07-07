@@ -55,7 +55,7 @@ Compose the loaded files: **mode** supplies posture/tone, **channel** supplies f
 **cold overlay** (if any) supplies first-touch situational rules. Then run the Universal block below.
 
 `mode-warm-founder.md` + `channel-text.md` together reproduce the old `jstack-msgdraft` warm-email
-behavior with no regression; `jstack-msgdraft` is a thin alias into this router.
+behavior with no regression; `jstack-msgdraft` is retired (this mode+channel pair replaces it).
 
 ## Universal rules (every MODE × CHANNEL)
 These hold regardless of mode or channel. The reference files don't repeat them; enforce them here.
