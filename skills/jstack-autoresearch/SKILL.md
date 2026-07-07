@@ -28,6 +28,8 @@ Bare `/jstack-autoresearch` = the core loop. A leading command word routes to th
 - Chain handoff via `handoff.json`; `evals` reads `*-results.tsv`.
 - **Verify-command safety screen** before first run: block `rm -rf`, fork bombs, `curl|sh`, embedded
   credentials, outbound writes.
+- **Unattended runs execute at xhigh effort.** Headless loops (`/goal`, overnight) run agentic/coding
+  work at xhigh effort — no human is watching to catch a shallow pass.
 
 ## The 8 rules (the battle-tested core — do not weaken)
 
