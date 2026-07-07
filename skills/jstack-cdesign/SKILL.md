@@ -83,6 +83,9 @@ In both modes, mechanics live in `designsync-mechanics.md`. The `edit` use case 
   to skip).
 - **Constrain the guardrails, free the composition** — lock only brand/honesty/mandatory changes; let CD
   own placement, scale, layering, motion. (`prompt-authoring.md`)
+- **No house-default aesthetics.** When authoring aesthetic direction yourself (no existing system, no
+  brand/reference from Jono), do not default to one house look (cream/serif/terracotta drift) — propose
+  3–4 distinct visual directions and let Jono pick before packaging.
 - **Editing a live build: `get_file` first, diff intent vs reality, re-assert critical rules** — never
   assume a prior edit message was applied. (`uc-edit-build.md`)
 - Never fabricate assets. Mark real vs placeholder; describe placeholders, generate real ones via
