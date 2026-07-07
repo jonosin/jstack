@@ -51,7 +51,8 @@ maker ≠ checker). They differ only in whether Jono gates the eval set first.
   `/goal` (`/goal /jstack-skilltune <name>`, or `/loop 30m /goal /jstack-skilltune <name>` for runs past
   ~20 turns) **or** with an explicit `auto` arg (`/jstack-skilltune <name> auto`). It generates the evals
   (S1) and **surfaces them + the reasoning in its thinking/output** so Jono can watch and abort — but it
-  does **NOT** wait for confirmation; it continues automatically.
+  does **NOT** wait for confirmation; it continues automatically. Auto runs are unattended: execute
+  agentic/coding work at xhigh effort — there is no human to catch a shallow pass.
 - **Show-eval** (default — a bare `/jstack-skilltune <name>` with no `/goal`/`auto`) — the ONE attended
   gate. Infer the optimization target, generate the 6–12 evals + record the baseline (S1 incl. dry-run
   gate), **show them with the "why"**, and wait for Jono to approve/edit. On approval, do NOT run the loop
@@ -72,7 +73,8 @@ The main session is the **orchestrator on Opus 4.8** and does the *important, no
 forming hypotheses, mutating the skill/files, and every keep/revert · stop/promote decision. Delegate only
 **grunt / repetitive / token-heavy** work — running eval cases, machine assertion checks, writing the
 report, bookkeeping — to **Sonnet 4.6 subagents** (`claude-sonnet-4-6`), spawned aggressively, one job
-each, so their bulky output never enters the main context. When an *important* task must run as a
+each, so their bulky output never enters the main context. Launch independent subagents (e.g. the
+per-eval runners) in a single message so they run in parallel. When an *important* task must run as a
 **separate** subagent (the cold quality-judge, to keep maker ≠ checker), use an **Opus 4.8 subagent**
 (`claude-opus-4-8`). Smart / creative / judgment → Opus; repetitive / mechanical / verbose → Sonnet 4.6.
 
