@@ -85,6 +85,10 @@ gi -p "a pixel art cat" -o /tmp/cat.png
 gi -p "a pixel art cat"
 ```
 
+**Style neutrality:** when composing the image prompt yourself and the user gave no
+visual direction, do not default to a single house aesthetic (e.g. cream/serif/terracotta
+drift) — ask, or propose 3–4 distinct visual directions before spending credits.
+
 ## Model selection
 
 | Alias for `-m` | Model | Price/im (1K) | Best for |
