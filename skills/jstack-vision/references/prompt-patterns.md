@@ -159,7 +159,7 @@ gv -p "Rate @<file> on a 1-10 scale for <criterion>. Reply with just the number.
 
 **Step-by-step reasoning**:
 ```bash
-gv -p "Analyze @<file> step by step. Show your reasoning, then give a final answer."
+gv -p "Analyze @<file> step by step, then give a final answer."
 ```
 
 ## Rules of thumb
