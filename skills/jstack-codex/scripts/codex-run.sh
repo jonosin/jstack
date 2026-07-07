@@ -68,7 +68,7 @@ case "${1:-}" in
     if ! _available; then echo "__CODEX_UNAVAILABLE__" >&2; exit 3; fi
 
     prompt=$(cat "$promptfile")
-    tmperr=$(mktemp "${TMPDIR:-/tmp}/codex-run-err-XXXXXX.txt")
+    tmperr=$(mktemp "${TMPDIR:-/tmp}/codex-run-err-XXXXXX")
     workdir=""
     args=( -s "$sandbox" -m gpt-5.5 --json --skip-git-repo-check
            -c "model_reasoning_effort=\"$effort\"" -c 'mcp_servers={}' )
