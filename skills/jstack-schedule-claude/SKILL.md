@@ -56,8 +56,9 @@ items**. Never guess the prompt, the schedule, or the model.
 | Schedule | one-shot-or-recurring · when · prompt · model | dir = current dir · session = fresh · deliver = home channel |
 
 Always ask the model explicitly (don't silently accept the script's sonnet default). Common ids:
-`claude-opus-4-8` (most capable, priciest), `claude-sonnet-4-6` (balanced), `claude-haiku-4-5`
-(cheap/fast). For long or pasted prompts, write the text to a temp file and pass `--prompt-file`.
+`claude-opus-4-8` (most capable, priciest), `claude-sonnet-4-6` (balanced legwork). Never schedule a
+haiku model for agentic work. For long or pasted prompts, write the text to a temp file and pass
+`--prompt-file`.
 
 ## Mode A — Run now
 
@@ -152,6 +153,8 @@ If a session is **still running** and you want to check on it, **tail the log �
   appended unconditionally by `run_claude.sh`. Only point runs at directories Jono owns.
 - `--session` (resume) and `--fresh` are mutually exclusive; the launcher rejects both.
 - Cost follows the model — confirm before scheduling a long `/goal` loop on Opus.
+- Headless runs are unattended: have the prompt state that agentic/coding work runs at xhigh
+  effort — there is no human to catch a shallow pass.
 - **Goal prompts must clean up their background processes.** The headless process cannot exit
   while a tracked background task (dev server, watcher) is still alive — it idles until the
   wait ceiling (2 h) before reporting. Prompts that start servers should say "kill any
