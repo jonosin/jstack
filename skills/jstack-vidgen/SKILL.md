@@ -94,6 +94,10 @@ Both checks happen BEFORE Universal Rule 4 (cost estimate + confirm).
 Read the chosen craft skill, build the prompt to its formula, then surface both per
 Universal Rule 2.
 
+**Visual-direction gate:** if the user gave no aesthetic/look direction, do not fall back to
+a default house aesthetic (cream/serif/terracotta drift) — ask, or propose 3–4 distinct
+visual directions before crafting the prompt.
+
 **Baked prompt-craft references (length/detail calibration + verbatim gold examples):**
 - Veo 3.1 → `references/prompt-guides/veo-3.1-prompt-guide.md` (official five-part formula,
   duration set {4,6,8}s, first-and-last-frame workflow for hard transitions, audio rules).
