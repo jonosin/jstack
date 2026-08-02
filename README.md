@@ -16,14 +16,14 @@ the genericized, shareable version.
 ```bash
 git clone <your-fork-url> ~/jstack
 cd ~/jstack
-bash skills/jstack-setup/scripts/setup.sh
+bash skills/jstack/scripts/setup.sh
 ```
 
-`jstack-setup` copies the skills into your harness skill dir (auto-detects `~/.claude/skills`,
-`~/.agents/skills`, or `~/.hermes/skills`), writes `~/.jstack/config.env`, and probes optional
-tooling. Then reload your agent so it sees the `jstack-*` skills.
+The `jstack` skill's setup routine copies the skills into your harness skill dir (auto-detects
+`~/.claude/skills`, `~/.agents/skills`, or `~/.hermes/skills`), writes `~/.jstack/config.env`, and
+probes optional tooling. Then reload your agent so it sees the `jstack-*` skills.
 
-Prefer symlinks (so edits track the repo)? `bash skills/jstack-setup/scripts/setup.sh --link`.
+Prefer symlinks (so edits track the repo)? `bash skills/jstack/scripts/setup.sh --link`.
 
 Manual install: copy each `skills/<name>/` directory into your harness skill directory yourself,
 then `cp .env.example ~/.jstack/config.env` and edit it.
@@ -32,21 +32,20 @@ then `cp .env.example ~/.jstack/config.env` and edit it.
 
 | Skill | What it does | Extra setup |
 |-------|--------------|-------------|
-| `jstack` | Packaging convention for the suite: scaffolds a new `jstack-*` skill (`/jstack`). | — |
-| `jstack-setup` | Installs the suite and writes config. | — |
+| `jstack` | Suite front door: packaging convention + scaffolder (`/jstack`), and setup/install that writes config (`skills/jstack/scripts/setup.sh`). | — |
 | `jstack-premortem` | Assumes a plan already failed and works backward to expose failure modes. | — |
 | `jstack-voice` | Warm, direct, concise communication voice. Toggle on/off. | — |
 | `jstack-focus` | Compresses the previous response (~40%). | — |
 | `jstack-handoff` | Compacts a session into a handoff doc for a fresh agent. | — |
-| `jstack-handoff-from-claude` | Builds a handoff from a Claude Code session by ID. | Claude Code |
+| `jstack-handoff-from-cc` | Builds a handoff from a Claude Code session by ID. | Claude Code |
 | `jstack-challenge` | Spawns a cold-briefed advisor subagent to pressure-test your position. | — |
-| `jstack-claude-find` | Natural-language BM25 search over past Claude Code sessions. | Claude Code, Python 3 |
+| `jstack-cc-find` | Natural-language BM25 search over past Claude Code sessions. | Claude Code, Python 3 |
 | `jstack-myvoice` | Drafts outbound in your voice (mode × channel) and keeps the voice canon current. | set `JSTACK_PERSONA_NAME` |
 | `jstack-git-guardrails` | Installs a PreToolUse hook that mechanically blocks destructive git commands (force push, reset --hard, clean -f, branch -D, checkout .) before they execute. | one-time setup |
 | `jstack-vision` | Multimodal analysis (image/audio/video/PDF) via Gemini on Vertex AI. | GCP project + `gemini` CLI |
 | `jstack-brainwork` | Processes/ingests/lints a second-brain (llm-wiki) vault. | a second-brain vault |
-| `jstack-savetobrain` | Captures a durable unit from a conversation as raw vault source. | a second-brain vault |
-| `jstack-savetobrain-from-claude` | Saves a Claude session transcript into the vault. | a second-brain vault |
+| `jstack-savetobrain` | Captures conversation, YouTube, X/Twitter, or GitHub repository sources as raw vault material. | a second-brain vault; `gh auth login` for GitHub repositories |
+| `jstack-savetobrain-from-cc` | Saves a Claude session transcript into the vault. | a second-brain vault |
 | `jstack-adscan` | Pulls Meta Ad Library creative for advertisers. | separate `adscan` repo, `ffmpeg` |
 
 ## Configuration

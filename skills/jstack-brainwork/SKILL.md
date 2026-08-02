@@ -25,7 +25,7 @@ The router in `references/decision-router.md` chooses one of:
 
 | Route | When | Local reference | Canonical references to load only after choosing |
 |---|---|---|---|
-| Batch Ingest (default) | Pending raw exists and the user did not ask for maintenance — bare `/jstack-brainwork` or `all pending`. Drains **all** pending newest-first; the next fresh session resumes if budget runs out | `references/ingest-runbook.md` | `skills/llm-wiki/references/ingest-operation.md` |
+| Batch Ingest (default) | Pending raw exists and the user did not ask for maintenance — bare `/jstack-brainwork` or `all pending`. Main session (Opus 4.8 / Fable 5) **clusters all pending raw into related-subject groups**, then spawns **one Sonnet 5 subagent per group, sequentially** (runbook → "Batch ingest mode"); the next fresh session resumes if budget runs out | `references/ingest-runbook.md` | `skills/llm-wiki/references/ingest-operation.md` |
 | Ingest (single) | A specific raw path is given, or the user said `just the newest`/`one` | `references/ingest-runbook.md` | `skills/llm-wiki/references/ingest-operation.md`, optionally `capture-operation.md` Step 2/3 |
 | Maintenance | User asked for `lint`, `check`, `graph`, `health`, `maintenance`, or `fix links`; or no pending raw exists | `references/maintenance-runbook.md` | `skills/llm-wiki/references/lint-operation.md`, optionally `maintenance-operation.md` |
 | Dry run | User asked for `dry run` | `references/decision-router.md` (no writes) | none |

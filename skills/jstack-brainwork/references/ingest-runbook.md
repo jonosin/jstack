@@ -58,16 +58,58 @@ Refresh `wiki/hot.md` (LLM judgment) only when current state actually changed: a
 
 ## Batch ingest mode (`all pending`)
 
-Get the worklist from `python3 tools/sb.py pending` and iterate newest-first. After each ingest, run
-`python3 tools/sb.py check`; if it fails, stop and report.
+Get the worklist from `python3 tools/sb.py pending`. This is a two-stage flow: the **main session
+groups**, then **one subagent ingests each group**.
+
+**Model split.** The main orchestrator session runs on **Opus 4.8** or **Fable 5** (grouping and
+coordination is the judgment-heavy part). Each ingest subagent is spawned on **Sonnet 5** — pass
+`model: sonnet` (Sonnet 5) when spawning the Task/Agent subagent. Ingest-per-group is well-scoped
+execution, so Sonnet 5 is the right cost/speed tier there; the expensive model stays on orchestration.
+
+### Stage 1 — Main session: cluster pending raw into related-subject groups
+
+Do NOT ingest inline. First, in the main context, read enough of each pending raw file (frontmatter
+`title`/`tags`/`source`, and skim the body if needed) to cluster the worklist into **related-subject
+groups** — sources that will land in the same or overlapping wiki pages/topics belong in one group.
+Examples of a group: three clips on the same concept, a venture's session drop plus its follow-up
+notes, several sources that all supersede or extend one existing page. A source with no relatives is
+its own group of one. Every pending path lands in exactly one group (no source appears twice, none
+dropped). Order groups newest-first by their most recent member.
+
+### Stage 2 — One subagent per group, sequential
+
+For each group, spawn **one** dedicated subagent (Task/Agent tool, `subagent_type: general-purpose`,
+`model: sonnet` = Sonnet 5) that ingests **all raw sources in that group together**, then wait for it
+to finish and read its
+report before spawning the next group's subagent. Run them **one at a time, never in parallel** —
+each ingest writes shared state (`wiki/index.md`, `raw/.ingest-cache.json`, `wiki/log.md`,
+`wiki/hot.md`) via `tools/sb.py`, and concurrent subagents would collide on those files and corrupt
+the index/cache. Grouping is what makes one-subagent-per-group correct: related sources hit the same
+wiki page, so a single owner writes a coherent, unified page instead of fragmenting it across
+subagents that would fight over the same file.
+
+Brief each group subagent with:
+- the exact list of raw paths in its group (and nothing outside the group);
+- the subject/theme that ties the group together, so it composes unified pages rather than one card
+  per source in isolation;
+- the instruction to load this runbook + `skills/llm-wiki/references/ingest-operation.md` and follow
+  Personal (`raw/drops/**`) vs Standard (`raw/clips/**`) ingest routing per path;
+- the requirement to run `python3 tools/sb.py check` after its writes and **stop + report** if not clean;
+- a short structured report back: raw paths ingested, wiki pages created/updated, supersession chains
+  applied, `check` result, and whether any of its sources still show in `sb.py pending`.
+
+After each subagent returns: if its `check` failed or any of its sources still appear in
+`sb.py pending`, stop the batch and report — do not launch the next subagent on a broken vault.
 
 **Drain-to-zero post-condition:** when the batch is done (or the user's scope is satisfied), run
 `python3 tools/sb.py pending` again and confirm it reports `0`. If it does not, the batch is not
 complete — report the exact remaining paths. A "successful" batch ingest that leaves `pending > 0` is
 the failure mode this loop exists to prevent.
 
-If token budget is low, ingest one source and report the remaining `sb.py pending` count for the next
-invocation rather than attempting a multi-source ingest that may truncate.
+If token budget is low, dispatch subagents for as many groups as fit, then report the remaining
+`sb.py pending` count so the next fresh `/jstack-brainwork` resumes — rather than cramming more
+groups into one context that may truncate. (Subagent contexts are separate, so the constraint is the
+orchestrator's budget for grouping + coordination, not the ingest work itself.)
 
 ## After a single ingest
 

@@ -80,6 +80,30 @@ For asks, make the next step specific and easy to answer. Prefer a concrete read
 transcript, meeting time, or workflow question over a broad "pick your brain" ask. The persona is
 polite, but usually clear about what they want the other person's read on. Do not bury the ask.
 
+## Sending unsolicited work and the soft exit
+
+Two rules for when you send a prospect something they did not ask for, or make a low-pressure offer.
+
+- **Downplay self-initiated work.** Frame unasked work as light and quick ("a quick storyboard", "I
+  sketched out"), and never mark the effort or the elapsed time ("since we last spoke", "I spent the
+  week on this", "the full 30-day plan"). Signaling large unasked work makes the recipient wonder
+  about the arrangement or feel they now owe you something. Make it sound like a small piece of
+  initiative you are glad to share, not a project.
+- **Offer the exit, never name the commitment.** For a take-it-or-leave-it, give two genuinely
+  distinct options (act on it now, or hold it for later) and let that framing carry the low pressure.
+  Do not say "no commitment", "no obligation", "start with me", or name the sale directly. Stating it
+  out loud reintroduces the pressure you are trying to remove. Check the two options are actually
+  different: "run with it or keep it in your back pocket" collapses into one (both mean keep); "run
+  with it now, or keep it for later" separates cleanly.
+- **Show, don't send, with a real reason or none.** When protecting an idea or wanting the reaction
+  live, prefer showing over sending ("I'd rather walk you through it than send it over"), but justify
+  it plainly or not at all. A thin reason like "it's very visual" reads as an excuse.
+- **Close a decline with a well-wish + an explicit reapproach path.** When the other person has said
+  no, never end on a limp availability line ("I'm around", "I'm here if you need me"). End with a warm
+  well-wish tied to their thing ("best of luck with the roadmap", "all the best with [their venture]")
+  plus a concrete invitation to come back ("message me anytime", "if that ever sounds useful down the
+  line, message me anytime"). The well-wish closes gracefully; the reapproach line keeps the door open.
+
 ## Brevity vs warmth (do not trade one for the other)
 
 Tighten by cutting filler, not by cutting humanity. Word count comes down by removing hedges,

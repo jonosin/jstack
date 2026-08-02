@@ -79,6 +79,10 @@ accusation about them.
 ## 5. Message body architecture
 - **First touch is short.** Under ~150 words (ideally far less). No "what we do" preamble. The opener
   earns attention; the body delivers one unit of value or one clear, low-friction ask.
+- **Visual pacing carries meaning.** For a competitive recommendation-gap email, use one thought per
+  line with a blank line between thoughts: test → named winners → observed gap → solvability → offer
+  to show where the winners keep winning. Do not compress those beats into prose paragraphs. This
+  makes the evidence legible in an inbox preview and keeps each claim independently scannable.
 - **Give-first (highest-trust move).** Lead with or attach a finished micro-artifact (a scraped list,
   a rewritten section, a 3-bullet "what we'd find") or one specific finding ("your booking page lists
   6 services, your FAQ covers 2, that gap is exactly the tribal knowledge to capture"). It removes the
@@ -89,6 +93,10 @@ accusation about them.
   sentence of offer + a low-friction ask. (This is the second-brain-agency pattern, §9.)
 - **CTA.** Lower the activation energy to reply: a yes/no, "worth a quick look?", "open to it?", not a
   calendar block. Ask for the *reply*, not the meeting.
+- **Show, don't assign homework.** Prefer "I can show you where {competitors} keep winning the
+  recommendation and what could close the gap" over "I can send a complete audit." The former
+  promises a concrete explanation; the latter sounds like a large deliverable the prospect must
+  review. Do not imply a call already exists.
 
 ## 6. Channel mechanics
 **LinkedIn**

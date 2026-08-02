@@ -1,0 +1,6 @@
+{
+  "required": ["property", "website", "status", "contact_name", "contact_role", "email", "email_type", "email_source_url", "mail_domain_status", "confidence", "checked_at", "search_notes"],
+  "status_values": ["contact_ready", "contact_held", "published_unverified", "contact_missing", "blocked"],
+  "email_type_values": ["named", "role", "general", null],
+  "confidence_values": ["high", "medium", "low"]
+}

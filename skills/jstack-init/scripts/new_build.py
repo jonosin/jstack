@@ -13,10 +13,11 @@ it ALWAYS happens:
     BRAIN.md              # satellite pointer back to the brain
     .gitignore
     docs/
+      AGENTS.md            # docs router: naming/frontmatter rules (CLAUDE.md symlink)
+      index.md             # GENERATED file registry (read first; brain-visible by symlink)
       decisions.md         # append-only operational log (seeded header)
-      scratch/.gitkeep
-      superpowers/specs/.gitkeep
-      superpowers/adr/.gitkeep
+      strategy/.gitkeep
+    .scratch/              # local tracker workspace when Matt's local tracker is selected
 
 Brain side:
   - create wiki/personal/builds/<slug>.md hub stub (warn-not-overwrite)
@@ -52,8 +53,8 @@ AGENTS_TMPL = """# {name}
 
 > Built for agents working in this build repo. `CLAUDE.md` symlinks here. Terse + imperative.
 > **Purpose:** this is a software **build** (code). The behavioral guidelines below are the standard;
-> project-specific instructions go under "## Project". Durable knowledge about this build (the *why*,
-> decisions, research) lives in the **second brain** — see "## Brain". Keep this file under ~200 lines
+> project-specific instructions go under "## Project". Canonical strategy and architecture decisions
+> live in `docs/strategy/` — see "## Docs". Keep this file under ~200 lines
 > (`python3 ~/jstack/skills/jstack-init/scripts/lint_agents.py`).
 
 Coding-specific guidelines. The general behavioral pillars (think before acting,
@@ -92,24 +93,31 @@ standard (`~/.claude/CLAUDE.md`); this file carries only the coding-specific bar
      from defaults, non-obvious gotchas. Add only what an agent CANNOT infer from the repo; link long
      material out. Keep it lean. -->
 
-## Brain
+## Docs
 
-Durable knowledge (decisions, the *why*, research) lives in the second brain, not this repo:
-- knowledge_home: {knowledge_home}    # this build's hub page in the brain
-- Capture a durable decision/fact -> `/jstack-savetobrain` (compiled by `/jstack-brainwork`).
-  **Never hand-write `~/second-brain/wiki/` from here.** Link, don't duplicate.
-- Cold start: read `BRAIN.md` -> `knowledge_home`.
+`docs/index.md` is the generated router for every durable decision artifact. Read it first; do not
+walk `docs/` blind. Strategy, architecture, and durable build rationale live in `docs/strategy/`.
+Specs and tickets live in the configured tracker (root `.scratch/` when using Matt's local tracker).
+After editing `docs/strategy/`, regenerate + lint the index:
+
+    python3 ~/jstack/skills/jstack-init/scripts/docs_index.py index --write --repo . --satellite-kind build
+    python3 ~/jstack/skills/jstack-init/scripts/docs_index.py lint --repo . --satellite-kind build
+
+The second brain sees only the generated docs-index symlink. Do not capture or duplicate repo
+artifacts there. Cross-project/personal context, when relevant, is routed through `BRAIN.md`.
 """
 
 BRAIN_TMPL = """# BRAIN.md — second-brain pointer
 
-This repo is a **satellite** of the owner's second brain. Knowledge (decisions, research, durable
-facts) lives in the brain; this repo holds the code. Link, don't duplicate.
+This repo is a **satellite** of the owner's second brain. Canonical strategy and architecture rationale
+live in this repo's `docs/`; the brain sees only its generated docs-index
+symlink. Link, don't duplicate.
 
 - brain_path: ~/second-brain
 - knowledge_home: wiki/personal/builds/{slug}.md   # this build's hub page in the brain
-- read_order: ~/second-brain/AGENTS.md → wiki/hot.md → wiki/index.md → knowledge_home → [[wikilinks]]
-- capture_rule: durable decision/fact here → /jstack-savetobrain (never write ~/second-brain/wiki/ from here)
+- read_order: docs/index.md → ~/second-brain/AGENTS.md → wiki/hot.md → wiki/index.md → knowledge_home → [[wikilinks]]
+- docs_index: wiki/personal/builds/{slug}.docs-index   # symlink to this repo's docs/index.md
+- capture_rule: update canonical docs artifact + regenerate index; never write/capture repo artifacts to ~/second-brain/wiki/
 - link_rule: cite brain pages by path; the brain page may point back here via a `workspace:` field
 
 A cold agent in this repo that needs a brain-resident fact: read `knowledge_home` (and what it links)
@@ -119,13 +127,36 @@ every sibling repo.
 
 DECISIONS_TMPL = """# Operational decision log — {name}
 
-Append-only. One line per operational decision (tooling, process, repo mechanics). **Durable strategic
-or design decisions (the *why*, architecture rationale) do NOT live here — capture them to the brain via
-`/jstack-savetobrain`.** This log is for repo/execution choices, newest at top.
+Append-only. One line per operational decision (tooling, process, repo mechanics). **Durable strategy
+and architecture rationale live in `docs/strategy/`; delivery specs and tickets live in the configured tracker.**
+This log is for repo/execution choices, newest at top.
 
 | Date | Decision | Why |
 |---|---|---|
 | {today} | Scaffolded `{name}` as a build repo (jstack-init/new_build). | New build spun up; standard build tree + brain coupling (hub page + satellite registry). |
+"""
+
+DOCS_ROUTER_TMPL = """# docs/ — durable decisions (router)
+
+> Built for agents. **Entry point:** [`index.md`](index.md), the GENERATED file registry. Read it
+> first; it says what every durable artifact is about and its status.
+
+## Rules
+
+- Never hand-edit `index.md`. After add/edit under `strategy/`, run:
+
+      python3 ~/jstack/skills/jstack-init/scripts/docs_index.py index --write --repo . --satellite-kind build
+      python3 ~/jstack/skills/jstack-init/scripts/docs_index.py lint --repo . --satellite-kind build
+      python3 ~/jstack/skills/jstack-init/scripts/docs_index.py brain-link-lint --repo . --satellite-kind build
+
+- `strategy/` holds durable product, business, architecture, and technical decisions.
+- Name durable artifacts `YYYY-MM-DD-kebab-topic.md`; include frontmatter: `title`, `summary`,
+  and `status` (`active`, `accepted`, `proposed`, `draft`, `superseded`, `deprecated`, `archived`).
+- `build/`, `scratch/`, and `superpowers/`, if present in an older repo, are legacy material:
+  indexed where applicable but never destinations for new docs. The root `.scratch/` is the local
+  tracker workspace when configured; its specs and tickets are not docs artifacts.
+- The second brain exposes only `wiki/personal/builds/{slug}.docs-index`, a symlink to this exact
+  `index.md`. Do not copy or capture repo artifacts into the brain.
 """
 
 GITIGNORE_TMPL = """.DS_Store
@@ -140,7 +171,7 @@ __pycache__/
 HUB_TMPL = """---
 type: personal-build
 title: "{name}"
-summary: "{one_liner} Code build: ~/builds/{slug}/. Hub stub created {today} via jstack-init/new_build; durable decisions land here via /jstack-savetobrain → /jstack-brainwork."
+summary: "Workspace router for ~/builds/{slug}/. Canonical durable decisions are discoverable through its linked docs/index.md."
 created: {today}
 updated: {today}
 tags: [build, {slug}]
@@ -148,28 +179,22 @@ workspace: ~/builds/{slug}/
 ---
 # {name} — build hub
 
-> **Knowledge home** for the {name} build. This page is the brain-side context the satellite repo's
-> `AGENTS.md` routes to. Hub stub created {today} on scaffold; durable decisions land here via
-> `/jstack-savetobrain` → `/jstack-brainwork`.
-
-## What it is
-{one_liner}
-
-## Why it exists (the bet)
-TODO — capture the thesis/why via `/jstack-savetobrain` (do not hand-write build canon here).
-
-## Status
-- {today}: scaffolded as a [[../../maps/satellites|satellite repo]] `~/builds/{slug}/` (build standard).
+> **Workspace router** for the {name} build. Canonical durable decisions live in the satellite
+> repository; this page carries only cross-project pointers.
 
 ## Satellite
-Code repo `~/builds/{slug}/` (`BRAIN.md` points back here). Registry:
+Canonical repository `~/builds/{slug}/` (`BRAIN.md` points back here). Registry:
 [[../../maps/satellites|Satellite Registry]].
+
+## Documentation registry
+The generated satellite registry is available without a copy at
+`wiki/personal/builds/{slug}.docs-index` (a symlink to `~/builds/{slug}/docs/index.md`).
 """
 
 # satellites.md row (added to the registry table)
 SAT_ROW_TMPL = (
     "| `~/builds/{slug}` (**{name}** — {short}) "
-    "| `wiki/personal/builds/{slug}.md` | yes |\n"
+    "| `wiki/personal/builds/{slug}.md` | yes | `wiki/personal/builds/{slug}.docs-index` |\n"
 )
 
 
@@ -218,15 +243,27 @@ def scaffold_repo(repo: Path, name: str, slug: str, one_liner: str,
     write_file(repo / ".gitignore", GITIGNORE_TMPL)
     write_file(repo / "docs" / "decisions.md",
                DECISIONS_TMPL.format(name=name, today=today))
+    write_file(repo / "docs" / "AGENTS.md", DOCS_ROUTER_TMPL.format(slug=slug))
 
-    gitkeep(repo / "docs" / "scratch")
-    gitkeep(repo / "docs" / "superpowers" / "specs")
-    gitkeep(repo / "docs" / "superpowers" / "adr")
+    gitkeep(repo / "docs" / "strategy")
+    gitkeep(repo / ".scratch")
+
+    docs_claude = repo / "docs" / "CLAUDE.md"
+    if not docs_claude.exists():
+        docs_claude.symlink_to("AGENTS.md")
 
     # CLAUDE.md -> AGENTS.md symlink
     claude = repo / "CLAUDE.md"
     if not claude.exists():
         claude.symlink_to("AGENTS.md")
+
+    # Generate the empty registry before any cold agent lands in the repository.
+    docs_index = Path(__file__).resolve().parent / "docs_index.py"
+    r = run([sys.executable, str(docs_index), "index", "--write", "--repo", str(repo),
+             "--satellite-kind", "build"])
+    info(f"docs index: {'ok' if r.returncode == 0 else 'FAILED'}")
+    if r.returncode != 0:
+        info(r.stderr.strip() or r.stdout.strip())
 
     info(f"scaffolded repo: {repo}")
 
@@ -357,6 +394,17 @@ def main() -> None:
     scaffold_repo(repo, args.name, slug, args.desc, knowledge_home, today,
                   do_git=not args.no_git)
     wire_brain_build(brain, args.name, slug, args.desc, args.short, today)
+    docs_index = Path(__file__).resolve().parent / "docs_index.py"
+    r = run([sys.executable, str(docs_index), "brain-link", "--write", "--repo", str(repo),
+             "--brain", str(brain), "--satellite-kind", "build"])
+    info(f"brain docs index link: {'ok' if r.returncode == 0 else 'FAILED'}")
+    if r.returncode != 0:
+        info(r.stderr.strip() or r.stdout.strip())
+    r = run([sys.executable, str(docs_index), "brain-link-lint", "--repo", str(repo),
+             "--brain", str(brain), "--satellite-kind", "build"])
+    info(f"brain docs index link lint: {'GREEN' if r.returncode == 0 else 'NOT GREEN'}")
+    if r.returncode != 0:
+        info(r.stderr.strip() or r.stdout.strip())
     run_sb_build(brain, args.name, slug)
 
     if args.with_design:
@@ -368,9 +416,16 @@ def main() -> None:
     print(f"  brain: {brain}/wiki/personal/builds/{slug}.md")
     print()
     print("What next:")
-    print("  - Capture durable decisions (architecture, the why) via /jstack-savetobrain")
-    print("    (then /jstack-brainwork to compile). NEVER hand-write build canon into the brain.")
-    print("  - Planning docs (specs/designs/ADRs) → docs/superpowers/ in the build repo.")
+    print("  - Durable strategy and architecture rationale → docs/strategy/; specs/tickets → configured tracker (.scratch/ for local tracker).")
+    print("    Regenerate docs/index.md after edits; the brain sees only its symlink.")
+    print("  - BUILD-only engineering workflow (run from this repo; project-local, never global):")
+    print("      npx skills add mattpocock/skills --skill setup-matt-pocock-skills --skill implement \\")
+    print("        --skill prototype --skill to-spec --skill to-tickets --skill code-review --skill wayfinder --skill triage \\")
+    print("        --agent codex claude-code --yes")
+    print("    Then invoke /setup-matt-pocock-skills (tracker + triage + CONTEXT.md; asks before writing).")
+    print("  - Optional website/frontend workflow: ask whether to set up Impeccable for this project.")
+    print("      npx impeccable install")
+    print("    On confirmation, run it from this repo, then invoke /init from the installed skill.")
     if not args.with_design:
         print("  - UI build with no design yet? Lay down DESIGN.md:")
         print(f"      python3 {Path(__file__).parent / 'init_design.py'} --repo {repo}")

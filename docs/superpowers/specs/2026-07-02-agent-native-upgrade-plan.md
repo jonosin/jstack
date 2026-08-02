@@ -369,12 +369,12 @@ Every skill dir under `skills/` EXCEPT `jstack-myvoice`. Skills already handled 
 
 **Batches (5 per batch, alphabetical; batch 8 short):**
 - Batch 1: `jstack`, `jstack-adscan`, `jstack-asciiexplain`, `jstack-autoresearch`, `jstack-brainwork`
-- Batch 2: `jstack-cdesign`, `jstack-challenge`, `jstack-claude-find`, `jstack-coldmsg`, `jstack-excalidraw`
+- Batch 2: `jstack-cdesign`, `jstack-challenge`, `jstack-cc-find`, `jstack-coldmsg`, `jstack-excalidraw`
 - Batch 3: `jstack-focus`, `jstack-ggdesign-init`, `jstack-grill-with-docs`, `jstack-grillme`, `jstack-gtm`
-- Batch 4: `jstack-handoff`, `jstack-handoff-from-claude`, `jstack-html`, `jstack-imgen`, `jstack-init`
+- Batch 4: `jstack-handoff`, `jstack-handoff-from-cc`, `jstack-html`, `jstack-imgen`, `jstack-init`
 - Batch 5: `jstack-last30days`, `jstack-linkedin`, `jstack-linkedin-leads`, `jstack-linkedin-salesnav`, `jstack-linkedin-send`
 - Batch 6: `jstack-opencli`, `jstack-otagallery`, `jstack-premortem`, `jstack-research-router`, `jstack-savetobrain`
-- Batch 7: `jstack-savetobrain-from-claude`, `jstack-schedule-claude`, `jstack-setup`, `jstack-skillify`, `jstack-skilltune`
+- Batch 7: `jstack-savetobrain-from-cc`, `jstack-schedule-cc`, `jstack-setup`, `jstack-skillify`, `jstack-skilltune`
 - Batch 8: `jstack-teach`, `jstack-vercel-debug`, `jstack-vidgen`, `jstack-vision`, `jstack-git-guardrails`
 
 ### Task 17 (repeat per batch): sweep batch N

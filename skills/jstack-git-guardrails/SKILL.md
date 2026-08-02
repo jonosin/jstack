@@ -125,6 +125,6 @@ rm ~/.jstack/hooks/git-guardrails-hook.sh   # or the project .claude/hooks/ copy
 
 | Next | When |
 |------|------|
-| `/jstack-setup` | Standalone one-time setup — jstack-setup is the natural place to check "is the git guardrail installed?" alongside other suite-wide config. |
+| `/jstack` | Standalone one-time setup — jstack's setup routine is the natural place to check "is the git guardrail installed?" alongside other suite-wide config. |
 
 Otherwise standalone — no required next step once installed.

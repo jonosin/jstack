@@ -1,97 +1,88 @@
 ---
 name: jstack
-description: Owns the packaging convention for the jstack skill family. Use when creating, authoring, scaffolding, or packaging a new jstack skill ("make a jstack skill", "new jstack skill", "add a jstack skill").
+description: Owns the jstack skill family — packaging convention AND suite setup. Use when creating, authoring, scaffolding, or packaging a jstack skill ("make a jstack skill", "new jstack skill", "add a jstack skill"), and when installing or configuring the suite ("set up jstack", "install jstack", "configure jstack", "/jstack-setup", or just cloned the repo and want it wired into Claude Code, Codex, or Hermes).
+user_invocable: true
 ---
 
-# Authoring jstack skills
+# jstack — author, package, and set up the skill family
 
-## Naming convention (decided 2026-06-12)
+This skill owns three jobs for the jstack suite. Pick the one that matches the request and load only
+its reference:
 
-- `jstack-<skill>` — daily productivity, venture-agnostic (`jstack-savetobrain`,
-  `jstack-vision`, `jstack-handoff`).
-- `jstack-<venture-code>-<skill>` — venture-specific (`jstack-sf-new`; `sf` =
-  StayFrame). Venture skills sort together in every picker and stay under the jstack
-  umbrella. NEVER use a colon in a skill directory name — `name:thing` is the harness's
-  plugin namespace (`superpowers:brainstorming`) and a colon in a plain skill name breaks
-  resolution and Discord's `/skill` picker.
+| Job | When | Reference |
+|-----|------|-----------|
+| **Set up / install** | "set up jstack", "install jstack", "configure jstack", "/jstack-setup", or the repo was just cloned and needs wiring into a harness | `references/setup.md` |
+| **Author / package** | "make a jstack skill", "new jstack skill", "scaffold a skill", naming/frontmatter/plugin-convention questions | `references/packaging.md` |
+| **Build the `.plugin`** | "build the plugin", "repackage jstack", "rebuild the .plugin", "package for Cowork", or a skill changed and the Cowork bundle needs regenerating | run `scripts/build-plugin.sh` (see below + `references/packaging.md` → "Build the .plugin") |
+| **Build ChatGPT uploads** | "package JStack for ChatGPT", "build ChatGPT skills", or "make installable ChatGPT skills" | run `scripts/build-chatgpt-skills.sh` |
 
-All jstack skills are **canonical in the jstack repo** (`skills/<name>/`, wherever
-you cloned jstack) and symlinked into every harness. **Every link points directly
-at the repo dir — no transitive hop through `.agents`:** `~/.agents/skills/<name>`
-(the discovery hub), `~/.claude/skills/<name>`, and `~/.codex/skills/<name>` each
-resolve straight to `<clone>/skills/<name>`. Hermes entries live inside the package
-dir `~/.hermes/skills/jstack/<name>`, also pointing straight at the repo. There is
-no second forked copy — edit the file in the repo and every harness sees it through
-its own direct symlink.
+Do not load more than one reference at once — route first, then read the one you need.
 
-Discord `/skill` discovery does not depend on this layout: it is handled by adding
-`~/jstack/skills` to Hermes `external_dirs` (see the Discord section below), which
-scans the canonical repo directly.
+## Build the `.plugin` (quick start)
 
-When asked to create a new jstack skill, do not hand-create directories or symlinks. Run:
+Deterministic. One command regenerates the Cowork bundle — it auto-discovers every skill, so new or
+updated skills are picked up with no edits to the build:
 
 ```bash
-<your-clone>/skills/jstack/scripts/new-jstack-skill.sh <skill-name> --desc "one-line description"
+bash skills/jstack/scripts/build-plugin.sh --bump patch
 ```
 
-It creates the canonical dir + a starter `SKILL.md` in the repo's `skills/`, then
-symlinks it (direct to the repo) into `.agents`, `.claude`, `.codex`, and the
-`.hermes/skills/jstack/` package — skipping any harness not installed. The script
-resolves the repo from its own location, so it works wherever you cloned jstack. It
-is idempotent: re-running it on an existing skill repairs or retargets symlinks
-without touching the canonical `SKILL.md`.
-After running it, edit the canonical `SKILL.md` in the repo to fill in the body.
+It reads the manifest at `.claude-plugin/plugin.json`, discovers every `skills/<name>/` that has a
+`SKILL.md` (skipping husk dirs), validates each skill's frontmatter against the Cowork `.plugin` rules
+(fails fast on any violation), scrubs non-shippable junk (`.git`, `.venv`, `node_modules`,
+`__pycache__`, `*.pyc/.orig/.bak/.DS_Store`, dangling symlinks), and zips with stable file ordering to
+`dist/<plugin-name>.plugin`. Flags: `--bump patch|minor|major` or `--version X.Y.Z` (bump so Cowork
+treats the reinstall as an update), `--out PATH`, `--print-only` (discover + validate, write nothing).
+In a Cowork session, pass `--out` pointing at the outputs dir, then present the file.
 
-## Next skills table (required on every skill)
+## Build ChatGPT uploads
 
-Every jstack skill ENDS with a `## Next skills` table — the recommended skill(s) to invoke
-after this one, so an agent (or Jono) always knows the next hop in a workflow. Two columns:
-the skill (an invocable `/jstack-…` or, for craft, `video-prod-skills:…`) and **when** to go
-there. List only real next hops, not a catalog. A standalone skill with no natural successor
-still includes the table — name companion/related skills or state "standalone — no required
-next step." The scaffolder seeds an empty version; fill it when you write the body.
+ChatGPT installs portable Agent Skills individually. Build the four upload-ready ZIPs (grilling,
+focus, voice, and handoff) with:
 
-> **Video generation is always routed through `/jstack-vidgen`** — any skill whose workflow
-> reaches "generate a video / clip" points its Next-skills row at `/jstack-vidgen` (the
-> universal router that enforces ask-duration+resolution, show-the-exact-prompt-and-craft-skill,
-> and no dup-frame), never directly at a backend.
-
-## Before pushing
-
-The repo is shareable. Before any `git push`, run `tools/secrets-gate.sh` from the
-repo root — it scans for personal identity, machine paths, GCP project ids, and key
-patterns, and exits non-zero on a hit. Keep personal values in `~/.jstack/config.env`
-(gitignored), never in a committed skill. Skills read config at runtime via
-**env var → `~/.jstack/config.env` → default**.
-
-Run `scripts/skill-lint.sh <skill-dir>` on any skill you changed — it enforces frontmatter, trigger-style description, the Next-skills table, no absolute paths, and the SKILL.md size budget.
-
-## Discord `/skill` autocomplete and symlinks
-
-Hermes' Discord gateway resolves skill symlinks to their real paths with
-`Path.resolve()` and drops any skill whose resolved path falls outside a configured
-scan root. Since jstack skills are canonical in `~/jstack/skills/` and only symlinked
-into harness directories, the resolved path lands outside both `~/.hermes/skills/` and
-`~/.agents/skills/`, causing the skill to be silently absent from Discord's `/skill`
-picker.
-
-The fix is to add `~/jstack/skills` as an external skills directory in Hermes config:
-
-```yaml
-skills:
-  external_dirs:
-    - ~/.agents/skills
-    - ~/jstack/skills
+```bash
+bash skills/jstack/scripts/build-chatgpt-skills.sh
 ```
 
-After updating config, restart the gateway or run `/restart` on Discord. Without this,
-`hermes skills list` and `skill_view` will see the skills but `/skill` on Discord won't.
+This writes `dist/chatgpt-skills/`. In ChatGPT, open **Plugins → Skills → Create → Upload** and upload
+each ZIP. The included `jstack-handoff` detects ChatGPT's no-filesystem host and emits a complete,
+copy-ready Markdown handoff instead of claiming to save a local file.
 
-## Adapting external skills
+## Set up / install (quick start)
 
-When adapting a skill from an external source (gstack, skills.sh, another agent's repo), do not copy it verbatim. External skills are often deeply coupled to their host infrastructure. The gstack `skillify` skill, for example, is 1,200 lines where 60% is gstack-specific preamble, onboarding state machines, telemetry, the `$B` browser harness, `browse-client.ts` SDK, and atomic write helpers. None of that ports.
+From the cloned repo:
 
-The right approach: read the full source, extract the core workflow (steps that describe the actual transformation, not the host plumbing), map every host-specific tool reference to its Hermes equivalent, and drop anything that assumes a different agent runtime. Scaffold with `new-jstack-skill.sh` and write the SKILL.md body from the extracted workflow, not from the source file.
+```bash
+bash skills/jstack/scripts/setup.sh
+```
+
+It copies (or `--link` symlinks) the `jstack-*` skills into the harness skill dir, writes
+`~/.jstack/config.env`, probes optional tooling, and prints next steps. It is idempotent — safe to
+re-run. Full flags, config keys, "what it does NOT do", and the Discord symlink pitfall live in
+`references/setup.md`. When you (the agent) run it, it goes non-interactive and writes default config;
+afterward, offer to fill in the real values.
+
+## Author / package (quick start)
+
+First classify the requested family:
+
+- **Suite-global / venture-agnostic:** use the global scaffolder below. It is canonical in this repo
+  and intentionally links the skill into installed harnesses.
+- **New venture or project family:** default to **repo-local only**. Read the target repo's `AGENTS.md`,
+  then follow the `Repo-local family` procedure in `references/packaging.md`. Do not run the global
+  scaffolder, add it to this repo, package it in the jstack `.plugin`, or create links under
+  `~/.agents`, `~/.claude`, `~/.codex`, or `~/.hermes` unless the user explicitly asks to promote
+  that family globally.
+
+For a suite-global skill only, never hand-create its directories or symlinks. Scaffold with:
+
+```bash
+skills/jstack/scripts/new-jstack-skill.sh <skill-name> --desc "one-line description"
+```
+
+Then fill in the canonical `SKILL.md` body in the repo. The naming convention, the Cowork `.plugin`
+frontmatter rules, the required `## Next skills` table, the pre-push secrets gate, the Discord
+`external_dirs` fix, and how to adapt external skills are all in `references/packaging.md`.
 
 ## Next skills
 
@@ -100,4 +91,4 @@ The right approach: read the full source, extract the core workflow (steps that 
 | `skill-creator` | A skill has been scaffolded — use skill-creator to author/restructure its SKILL.md body against the AgentSkills spec. |
 | `/jstack-vidgen` | The skill being authored has a workflow that reaches "generate a video/clip" — route that step through the video router. |
 
-Otherwise standalone — this is the authoring convention reference; no required next step.
+Otherwise standalone — this is the suite's authoring + setup reference; no required next step.

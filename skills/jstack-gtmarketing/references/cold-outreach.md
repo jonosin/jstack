@@ -70,6 +70,85 @@ is personalized by the same specific that opens the message.
    - Payoff: the body delivers on whatever the opener implied; the front-end offer is one you can
      actually deliver cheaply and congruently.
 
+## Competitive recommendation-gap pattern
+
+Use this when a real search, AI answer, comparison, shortlist, or category test names competitors
+but omits the prospect or fails to route to the prospect's owned destination. The result itself is
+the personalized finding.
+
+**Pacing is part of the copy:**
+- Write one thought per line; separate every line with a blank line.
+- Do not combine the test, winners, gap, interpretation, and CTA into prose paragraphs.
+- Keep most lines to one sentence. The final promise may use two short sentences.
+- Make the sequence visually scannable: `asked → winners → prospect result → simple next step → offer to show why`.
+- Name the relevant competitors. Do not say only "other businesses."
+
+**Plain-language gate is mandatory:**
+- Write for roughly a third-grade reading level. If a busy owner may pause to decode a word, replace it.
+- Use concrete verbs: `was recommended`, `wasn't included`, `didn't link to your website`, and `get
+  recommended more consistently`.
+- Do not say `winning the recommendation`, `close the gap`, `recommendation gap`, `visibility gap`,
+  `optimize`, `audit`, or other specialist language in the first touch.
+- Every line must say one observable fact or one simple next step. Read it aloud before approval.
+
+**Reference structure:**
+
+```text
+Hi {Prospect} team,
+
+I asked ChatGPT which {short natural-language category} it would recommend in {market}.
+
+It recommended {one or more competitors named in that response}.
+
+In the response I received, {Prospect} wasn’t included.
+
+We may be able to fix this.
+
+I can show you why ChatGPT recommended {the named competitor or competitors}, and what could help
+{Prospect} get recommended more consistently.
+
+Want me to send that over?
+```
+
+The structure is canonical; unsupported claims are not. Apply these truth gates:
+- Prefer **"In the response I received, {prospect} wasn't included"** over "was nowhere in the
+  results" unless repeated evidence supports the stronger claim.
+- If the prospect appeared but its official site was not cited, say that exactly.
+- Never invent client logos, prior results, or an upcoming call.
+- Do not call the front-end offer a **"complete audit"** by default. That sounds like a heavy
+  deliverable and raises perceived commitment for both sides.
+
+**Default low-commitment CTA:**
+
+```text
+We may be able to fix this.
+
+I can show you why ChatGPT recommended {competitor 1} and {competitor 2}, and what could help
+{prospect} get recommended more consistently.
+
+Want me to send that over?
+```
+
+If the evidence names only one comparison property, use that one name throughout. If the prospect was
+mentioned but its official site was not linked and the evidence names no comparison property, do not
+invent one. Use this CTA instead:
+
+```text
+I can show you why ChatGPT didn’t link to your website, and what may help it link there next time.
+
+Want me to send that over?
+```
+
+For a generic business inbox, add one warm routing line after the greeting:
+
+```text
+I'm not sure if this is the right inbox, but if not, would you mind passing this along to the owner or
+general manager?
+```
+
+Do not let the routing line turn into a paragraph. The email should still read as short stacked
+lines, not a conventional letter.
+
 ## Opener shapes (pick by what signal exists), with measured lift
 | Shape | Use when | Pattern | Lift |
 |---|---|---|---|

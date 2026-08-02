@@ -20,25 +20,32 @@ A venture that needs an app spawns its own build (e.g. `~/ventures/stayframe` wo
 
 ```
 AGENTS.md               Karpathy "good CLAUDE.md" coding guidelines (verbatim base)
-                        + a one-line brain pointer + an empty project-specific stub
+                        + docs/index.md routing + an empty project-specific stub
 CLAUDE.md -> AGENTS.md   symlink
 BRAIN.md                satellite pointer back to the brain
 .gitignore
+docs/AGENTS.md          docs router: naming/frontmatter + index regeneration rules
+docs/CLAUDE.md -> docs/AGENTS.md
+docs/index.md           generated registry — read first, brain-visible by symlink
+docs/strategy/.gitkeep  canonical strategy, research, and architecture rationale
+.scratch/.gitkeep       local tracker workspace when Matt's Markdown tracker is selected
 ```
 Then `git init` + an initial commit. (Source layout is the build's own concern — the scaffold seeds
 the contract, not the app skeleton.)
 
 **Brain** (`~/second-brain/`) — wired as a **full satellite**, same coupling as ventures:
 - `wiki/personal/builds/<slug>.md` — hub stub (frontmatter `type: personal-build`, title, summary,
-  created/updated, tags, `workspace:`; body: What it is / Why / Status / Satellite).
+  created/updated, tags, `workspace:`; body: satellite and documentation-registry pointers only).
 - a row in `wiki/maps/satellites.md` (the registry).
+- `wiki/personal/builds/<slug>.docs-index` — symlink to the exact generated `docs/index.md`, never
+  a copied catalog.
 - runs `sb.py index --write`, appends `sb.py log` (`init-build` op), runs `sb.py check` → reports
   GREEN. The new page is referenced by the index + the registry row, so it is **not orphaned**.
 
 ## AGENTS.md = Karpathy coding guidelines base
 
 The build's `AGENTS.md` base is Karpathy's "good CLAUDE.md" behavioral coding guidelines, written
-**verbatim** by `new_build.py`, then a one-line brain pointer and an empty project-specific stub for
+**verbatim** by `new_build.py`, then `docs/index.md` routing and an empty project-specific stub for
 build-local conventions. The four load-bearing pillars (the verbatim text expands each):
 
 - **Think before coding** — restate the goal, surface unknowns, plan before editing; no coding from
@@ -50,8 +57,10 @@ build-local conventions. The four load-bearing pillars (the verbatim text expand
 - **Goal-driven execution** — define done, verify against it, stop when the contract is satisfied or
   a real blocker is hit.
 
-Project-specific conventions (stack, entrypoints, deploy identity, gotchas) go in the stub, never in
-the brain. Strategy/decisions/knowledge go in the brain hub, never in `AGENTS.md`.
+Project-specific conventions (stack, entrypoints, deploy identity, gotchas) go in the stub. Durable
+strategy and architecture rationale live in `docs/strategy/`. Specs and tickets live in the configured
+tracker—repository-root `.scratch/` when Matt's local Markdown tracker is selected. The brain sees
+only the generated `docs/index.md` symlink, never a duplicated artifact.
 
 ## Run it
 
@@ -102,16 +111,73 @@ project-specific context than venture routers). Enforce with:
 python3 ~/jstack/skills/jstack-init/scripts/lint_agents.py
 ```
 
-## The brain gate (important)
+## Workspace docs + brain gate (important)
 
 Same rule as ventures: agents never write `wiki/` from conversation without an explicit save/ingest.
 **This structural init is the authorized exception** — the hub stub + registry row are the build's
-birth certificate, written once by this skill. From then on, **all ongoing build knowledge flows
-through `/jstack-savetobrain` → `/jstack-brainwork`**, never hand-edited into the brain. Use this
-skill to scaffold, not to write build canon.
+birth certificate, written once by this skill. From then on, build and strategy canon stays in its
+`docs/` tree; the brain sees only its generated index symlink. Use this skill to scaffold, not to
+write build canon.
+
+## BUILD-only engineering workflow phase (required after scaffold)
+
+Stay in the new BUILD repo. Install the Matt engineering workflow **locally to this project** — never
+globally and never in `~/jstack` — then invoke `/setup-matt-pocock-skills` in the same session:
+
+```bash
+cd ~/builds/<slug>
+npx skills add mattpocock/skills \
+  --skill setup-matt-pocock-skills --skill implement --skill prototype \
+  --skill to-spec --skill to-tickets --skill code-review --skill wayfinder --skill triage \
+  --agent codex claude-code --yes
+```
+
+`setup-matt-pocock-skills` remains interactive: investigate first, then ask for tracker and triage
+choices and confirmation before writing. Its domain-document outcome is adapted here: retain
+`CONTEXT.md` at the BUILD root, keep its engineering routing in the repo's root instructions, and
+treat `docs/strategy/` (not `docs/adr/`) as the canonical home for ADR-like technical decisions.
+`docs/index.md` remains the mandatory router and brain-visible artifact.
+
+## BUILD-only Impeccable workflow (optional, project-local)
+
+During interactive initialization, ask: **"Set up Impeccable for this project?"** Only after the
+user confirms, remain in the new BUILD repo and install Impeccable locally:
+
+```bash
+cd ~/builds/<slug>
+npx impeccable install
+```
+
+Then invoke `/init` from the installed Impeccable skill in the same session. It configures the
+website design and build workflow for this repository. Never install it globally and never add it
+to `~/jstack`.
+
+For Matt's multi-session flow, `/to-spec` creates the detailed destination in the configured tracker
+(repository-root `.scratch/` for Matt's local Markdown tracker, or GitHub Issues if configured there);
+`/to-tickets` creates the vertical execution slices beneath it. Do not duplicate tracker specs or
+tickets into `docs/`; `docs/index.md` routes durable decisions, not execution records.
+
+## Fresh execution policy
+
+Keep Matt's full tracker spec and ticket flow. Before an agent executes a spec directly (when no
+tickets are needed), or executes any selected implementation ticket, first run `/jstack-handoff goal`.
+The resulting fresh task receives an outcome-led contract with: Outcome; Why this matters;
+Success/acceptance; Constraints and non-goals; Decisions already made; Risks and unknowns; Validation;
+and Supporting docs and context. It links the authoritative tracker spec/ticket instead of copying it.
+
+For every spec/ticket execution handoff, ask: `Spawn a fresh execution task for <spec-or-ticket title>
+now?` Wait for the user's confirmation. Only then launch it when the task tool is available; otherwise
+return the completed paste-ready `/goal` prompt. The executor reads the full spec or ticket on demand,
+implements within that scope, and reviews against the original tracker spec and repository standards.
+Do not create tracker records automatically.
 
 ## After it runs (tell Jono)
 
-- Capture durable decisions (architecture, the *why*) via `/jstack-savetobrain`.
-- Planning docs (specs / designs / ADRs) → `docs/superpowers/` in the build repo.
+- Keep durable strategy and architecture rationale in `docs/strategy/`; regenerate `docs/index.md`
+  after each edit. Keep specs/tickets in the configured tracker (`.scratch/` for the local Markdown
+  tracker). The brain exposes only the generated index by symlink.
+- Complete the BUILD-only engineering workflow phase above: project-local Matt skills, then
+  `/setup-matt-pocock-skills`.
+- If the user opts in, install Impeccable locally with `npx impeccable install`, then invoke `/init`
+  in the same session.
 - If it has UI and you skipped `--with-design`, run `init_design.py` before building screens.

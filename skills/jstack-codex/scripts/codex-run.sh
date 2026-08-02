@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# codex-run.sh: canonical deterministic entrypoint for running GPT-5.5 via the
+# codex-run.sh: canonical deterministic entrypoint for running GPT-5.6 via the
 # OpenAI Codex CLI from any Claude session. Generalizes jstack-challenge's
 # codex-advisor.sh to all lanes (advisor, review, implement, investigate).
+# Requires Codex CLI >= 0.144.0 (GPT-5.6 gate).
 #
 # Subcommands:
 #   probe                     CODEX_OK (exit 0) if codex installed AND authed,
@@ -10,8 +11,9 @@
 #                             stream, print ONLY the final agent message to
 #                             stdout. Diagnostics -> stderr.
 # Options for run:
+#   --model M         gpt-5.6-terra (default) | gpt-5.6-sol | gpt-5.6-luna
 #   --write           workspace-write sandbox (default: read-only)
-#   --effort E        low|medium|high|xhigh   (default: medium)
+#   --effort E        low|medium|high|xhigh|max|ultra   (default: medium)
 #   --search          enable web search (-c tools.web_search=true)
 #   --schema F        validate final answer against JSON schema F
 #   --isolated        run in an empty temp dir (advisor mode: nothing to read,
@@ -47,14 +49,15 @@ case "${1:-}" in
     shift
     promptfile="${1:-}"; shift || true
     if [ -z "$promptfile" ] || [ ! -f "$promptfile" ]; then
-      echo "usage: codex-run.sh run <prompt_file> [--write] [--effort E] [--search] [--schema F] [--isolated] [--timeout S] [--out F]" >&2
+      echo "usage: codex-run.sh run <prompt_file> [--model M] [--write] [--effort E] [--search] [--schema F] [--isolated] [--timeout S] [--out F]" >&2
       exit 2
     fi
     sandbox="read-only"; effort="medium"; search=""; schema=""; isolated=""
-    timeout_s=900; outfile=""
+    timeout_s=900; outfile=""; model="gpt-5.6-terra"
     while [ $# -gt 0 ]; do
       case "$1" in
         --write)    sandbox="workspace-write" ;;
+        --model)    model="$2"; shift ;;
         --effort)   effort="$2"; shift ;;
         --search)   search="1" ;;
         --schema)   schema="$2"; shift ;;
@@ -70,7 +73,7 @@ case "${1:-}" in
     prompt=$(cat "$promptfile")
     tmperr=$(mktemp "${TMPDIR:-/tmp}/codex-run-err-XXXXXX")
     workdir=""
-    args=( -s "$sandbox" -m gpt-5.5 --json --skip-git-repo-check
+    args=( -s "$sandbox" -m "$model" --json --skip-git-repo-check
            -c "model_reasoning_effort=\"$effort\"" -c 'mcp_servers={}' )
     if [ -n "$isolated" ]; then
       workdir=$(mktemp -d "${TMPDIR:-/tmp}/codex-run-XXXXXX")

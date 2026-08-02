@@ -1,0 +1,27 @@
+{
+  "format": "tileforge-contract-v1",
+  "name": "<package-name>",
+  "style_profile": "<named-style-profile>",
+  "tile_size": 24,
+  "source": {
+    "cell_width": 96,
+    "cell_height": 96,
+    "columns": 4,
+    "rows": 4,
+    "chroma_key": "#ff00ff"
+  },
+  "required_orientation_sets": [],
+  "assets": [
+    {
+      "id": "<stable-id>",
+      "family": "<source-family>",
+      "cell": [0, 0],
+      "size": [24, 24],
+      "anchor": [12, 23],
+      "collision": [0, 0, 0, 0],
+      "layer": "object",
+      "transparent": true,
+      "visual_semantics": null
+    }
+  ]
+}

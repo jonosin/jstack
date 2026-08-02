@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenBrain Sync"
+  short_description: "Sync approved brain and satellite documents to OpenBrain."
+  default_prompt: "Sync OpenBrain now, then report the ingestion and acceptance results."

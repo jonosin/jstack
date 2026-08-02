@@ -56,7 +56,7 @@ OPENCLI_CDP_ENDPOINT=http://localhost:9222 OPENCLI_CDP_TARGET='sales/search' \
   node ~/builds/OpenCLI/dist/src/main.js linkedin salesnav-current-search --limit 100 --delay-ms 250 -f json
 ```
 
-The OpenCLI command reads the `query=` payload from the open Sales Navigator tab, pages through `salesApiLeadSearch` with `start` offsets, and enriches each row through `salesApiProfiles`. It does not click the Sales Navigator UI pagination controls.
+The OpenCLI command reads either the `query=` payload or the `savedSearchId=` from the open Sales Navigator tab, pages through `salesApiLeadSearch` with `start` offsets, and enriches each row through `salesApiProfiles`. It does not click the Sales Navigator UI pagination controls. Saved-search tabs use LinkedIn's `q=savedSearchId&savedSearchId=...` API form; treat them as first-class current-search tabs.
 
 Output rows include:
 

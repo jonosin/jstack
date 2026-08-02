@@ -1,37 +1,25 @@
 # Goal-mode prompt template
 
-The recurring `/goal` preamble is generated from this template, not hand-typed each session. Fill
-the `{SLOTS}`; everything else ships verbatim into the handoff.
+Fill the `{SLOTS}`; the result is the fresh task's initial prompt.
 
 ```
 /goal {ONE-SENTENCE GOAL with a single verifiable stop condition: command + expected output}
-You have NO memory of the planning session — read {HANDOFF-FILE-PATH} first; it is the
-self-contained state file. Run from {REPO-PATH}; all relative paths resolve against it.
-Execute autonomously, milestone by milestone: spawn subagents for each milestone's heavy
-work, each returning a short summary; then a SEPARATE checker subagent verifies the
-milestone's done-condition by running its stated command and matching the stated output
-(maker ≠ checker). Keep the main context lean: orchestrate and review; never do heavy work
-inline. Re-read the plan's constraints at the start of every milestone. After each
-milestone update the plan's Progress/Decision Log so you can recover from compaction.
-Resolve ambiguities yourself and log them. Commit only as the plan directs. Never stop to
-ask. Stop only when: {STOP CONDITION}.
+You have NO memory of the planning session — read {HANDOFF-FILE-PATH} first; it is the outcome-led
+execution contract. Run from {REPO-PATH}; all relative paths resolve against it. Read its linked
+spec/ticket on demand; it owns detailed implementation scope. Re-read the contract's constraints and
+AGENTS.md before changing work. Update Progress/Decision Log after material work so you can recover
+from compaction. Resolve reversible ambiguity and log it. Use an independent checker for consequential
+or ambiguous validation. Never echo secrets or widen scope. Stop only for missing authority, an
+irreversible unapproved external action, an interactive credential/login, or a decision that cannot
+safely be resolved. State the smallest unblock and exact resume point. Stop when: {STOP CONDITION}.
 ```
 
-## Slots
-
 | Slot | Fill with |
-|------|-----------|
-| `{ONE-SENTENCE GOAL...}` | The measurable objective from `references/goal.md` Step 1 — one sentence, one verifiable stop condition. |
-| `{HANDOFF-FILE-PATH}` | The absolute path the plan was saved to (`~/.jstack/handoffs/session-YYYY-MM-DD-<slug>-goal.md`). |
-| `{REPO-PATH}` | The repo the executor must run from — never assume it's inferable; state it explicitly. |
-| `{STOP CONDITION}` | The same stop condition as the goal sentence, restated as the exact command + expected output. |
+|---|---|
+| `{ONE-SENTENCE GOAL...}` | One measurable objective and stop condition. |
+| `{HANDOFF-FILE-PATH}` | Absolute path to the saved handoff. |
+| `{REPO-PATH}` | Explicit repo working directory. |
+| `{STOP CONDITION}` | The same exact command and expected output. |
 
-Count the filled result with `wc -c` and keep it under 1500 characters (per `references/goal.md`
-Step 3); tighten prose before dropping a verifiable condition.
-
-## The rule this template encodes
-
-Every goal handoff document MUST open with:
-- A **repo + working-directory block** — `Run from `{REPO-PATH}`; all relative paths resolve against
-  it.` — cross-repo continuations break silently without this.
-- The **stop-condition command and its exact expected output**, not a subjective description of done.
+Keep the filled prompt below 1500 characters. Every handoff opens with its repo working directory and
+the Outcome stop-condition command plus expected output.

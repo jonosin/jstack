@@ -65,8 +65,7 @@ jstack/
   README.md             # human-facing skill catalog + setup
   .env.example          # all config keys (copy → ~/.jstack/config.env)
   skills/               # the canonical jstack-* skills (symlinked into every harness)
-    jstack/             #   the authoring convention + scaffolder (new-jstack-skill.sh)
-    jstack-setup/       #   installs the suite + writes config
+    jstack/             #   suite front door: packaging convention + scaffolder (new-jstack-skill.sh) + setup/install (scripts/setup.sh, references/setup.md)
     …                   #   one dir per skill — the single source of truth
   vendor/               # bundled helpers (e.g. gemini-vision `gv` wrapper for jstack-vision)
   tools/secrets-gate.sh # pre-push scan for identity/paths/keys — RUN BEFORE EVERY PUSH

@@ -17,18 +17,23 @@ AGENTS.md               pure router: generic persona + the ritual + identical op
 CLAUDE.md -> AGENTS.md   symlink
 BRAIN.md                satellite pointer back to the brain
 .gitignore
+docs/AGENTS.md          docs router: file-naming + frontmatter convention
+docs/CLAUDE.md -> AGENTS.md   symlink
+docs/index.md           GENERATED file registry (docs_index.py) — read first, never hand-edit
 docs/decisions.md       append-only operational log (seeded header)
-docs/scratch/.gitkeep
-docs/superpowers/specs/.gitkeep
-docs/superpowers/adr/.gitkeep
+docs/strategy/.gitkeep
 clients/.gitkeep
 assets/.gitkeep
 ```
-Then `git init` + an initial commit.
+Then `git init` + an initial commit. Scaffold also runs `docs_index.py index --write` so the fresh
+repo ships with a (near-empty) `docs/index.md` entry point.
 
 **Brain** (`~/second-brain/`) — always wired, this is the coupling:
 - `wiki/personal/ventures/<slug>.md` — lean hub stub (frontmatter `type: personal-venture`, title,
   summary, created/updated, tags, `workspace:`; body: What it is / Why / Status / Satellite).
+- `wiki/personal/ventures/<slug>.docs-index` — non-`.md` relative symlink to the satellite's canonical
+  `docs/index.md`; it makes the generated registry discoverable in the brain without turning it into a
+  second wiki page or copied catalog.
 - a row in `wiki/maps/satellites.md` (the registry).
 - runs `sb.py index --write`, appends `sb.py log` (`init-venture` op), runs `sb.py check` → reports
   GREEN. The new page is referenced by the index + the registry row, so it is **not orphaned**.
@@ -36,16 +41,17 @@ Then `git init` + an initial commit.
 ## AGENTS.md is a PURE ROUTER — no venture strategy
 
 AGENTS.md carries **only** generic pointers + operating rules. It never states what the venture *is
-or does* (that is strategy, and strategy lives in the brain). Sections 1–3 (where-context-lives,
-folder map, operating principles) are byte-identical boilerplate across every venture.
+or does*. Canonical workspace strategy and durable rationale live
+in the satellite's generated docs registry and are linked from the brain; Sections 1–3
+(where-context-lives, folder map, operating principles) are byte-identical boilerplate across every venture.
 
 - **Persona (§0) is GENERIC** — an operating *disposition* (e.g. "a lean strategic partner;
   decisive, honest about tradeoffs, a thinking partner not a yes-machine"), the same kind of thing
   for any venture. It is **not** the offer/pricing/wedge. `--persona` is optional and defaults to a
   generic partner persona; only override it with another *disposition*, never with strategy.
 - **The ritual (§0)** is baked into every venture: when a strategic decision reshapes the venture,
-  write a two-sentence "what this venture has become" summary and capture it to the brain hub via
-  `/jstack-savetobrain`. The reshaping lives in the brain, never in AGENTS.md.
+  update its canonical workspace artifact and regenerate `docs/index.md`. Capture only a personal or
+  cross-project consequence to the brain; AGENTS.md remains a router.
 
 If you find yourself wanting to write a fact about the business into AGENTS.md, that is the signal it
 belongs in the brain hub (`wiki/personal/ventures/<slug>.md`) instead.
@@ -86,6 +92,42 @@ python3 ~/jstack/skills/jstack-init/scripts/register_folder.py \
   --venture <slug> --path <name> --desc "<one line>"
 ```
 
+## Docs registry (generated) — the docs/ mirror of the brain's `sb.py`
+
+The venture's `docs/` tree is navigated through a GENERATED registry, `docs/index.md`, the same way the
+brain is navigated through `wiki/index.md`. It is produced deterministically from each doc's
+frontmatter by `scripts/docs_index.py` — a cold agent reads `docs/index.md` first and learns what
+every durable decision artifact is about (title, one-line summary, status) without walking the
+tree or opening files.
+
+The contract (also written into `docs/CLAUDE.md` at scaffold time):
+
+- **Canonical durable zone indexed:** `strategy/*.md`, named `YYYY-MM-DD-kebab-topic.md`, including
+  strategy, research, and architecture rationale. `build/*.md` and `superpowers/**` are legacy indexed
+  material: preserve them, do not add new artifacts there. `docs/scratch/` is also legacy and unindexed.
+- **Frontmatter is the source of truth** (the index reads it, never the body). Required keys:
+  `title`, `summary`, `status`. Optional: `type`, `created`, `updated`, `supersedes`, `superseded_by`.
+- **After ANY add/edit under `docs/`, regenerate + lint** (a stale index is a lint error):
+
+```bash
+python3 ~/jstack/skills/jstack-init/scripts/docs_index.py index --write --venture <slug>
+python3 ~/jstack/skills/jstack-init/scripts/docs_index.py lint          --venture <slug>
+python3 ~/jstack/skills/jstack-init/scripts/docs_index.py brain-link-lint --venture <slug>
+```
+
+The scaffold creates the link with `docs_index.py brain-link --write`; it is a relative symlink, not a
+copy. `brain-link-lint` is the deterministic no-drift check. Use `--repo <path> --brain <path>` for a
+non-standard or test layout.
+
+- `backfill --write` seeds frontmatter on docs that have none (title←H1, summary←first prose,
+  status←parsed); add `--refresh` to recompute title/summary/status from the body after a big edit.
+  Use it to migrate a pre-existing venture whose docs predate the convention.
+- Lint is GREEN at **0 errors**; warnings (empty summary, unresolved supersedes) are advisory.
+- Target with `--venture <slug>` (under `~/ventures`) or `--repo <path>` (testing / non-standard root).
+
+Naming is deliberately self-describing so the filename alone tells the topic; the index layers the
+verdict/state on top. Full convention lives in the scaffolded `docs/CLAUDE.md`.
+
 ## Size cap + lint
 
 Venture routers are capped at **~120 lines** (the router stays thin; detail lives in the brain).
@@ -99,12 +141,12 @@ python3 ~/jstack/skills/jstack-init/scripts/lint_agents.py
 
 The brain contract says agents never write `wiki/` from conversation without an explicit save/ingest.
 **This structural init is the authorized exception** — the hub stub + registry row are the venture's
-birth certificate, written once by this skill. From then on, **all ongoing venture knowledge flows
-through `/jstack-savetobrain` → `/jstack-brainwork`**, never hand-edited into the brain. Do not use
-this skill to write venture canon; use it only to scaffold.
+birth certificate, written once by this skill. From then on, ongoing venture canon stays in the
+satellite's `docs/` tree; the brain sees only its generated index symlink. Do not use this skill to
+write venture canon; use it only to scaffold.
 
 ## After it runs (tell Jono)
 
-- Capture durable decisions (offer, pricing, the *why*) via `/jstack-savetobrain`.
-- Planning docs (specs / designs / ADRs) → `docs/superpowers/` in the venture repo.
+- Keep all durable venture strategy and rationale in `docs/strategy/`; regenerate the index after each
+  edit. The brain receives only the `docs/index.md` symlink, never a copied artifact.
 - Work the go-to-market via `/jstack-gtmarketing`.

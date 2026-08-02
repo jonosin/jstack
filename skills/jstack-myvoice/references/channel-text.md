@@ -36,6 +36,10 @@
   over 2x by words. If their message is ~70 words, stay at or under ~140. When in doubt, shorter. If
   content must be cut to fit, drop secondary points (e.g. a de-risk aside) before the one core point and
   the close.
+- **Tease, don't over-explain.** In short outreach, name the thing and the ask but leave the substance
+  for the call. Unexplained specifics ("a business idea I've started building", "a service that does
+  what your setup does for other owners") create the pull to talk; a message that answers everything
+  gives no reason to reply. Leave blanks the reader wants filled.
 
 ## Style rules
 

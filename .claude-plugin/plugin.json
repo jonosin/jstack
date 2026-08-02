@@ -1,0 +1,8 @@
+{
+  "name": "jstack-skills",
+  "version": "0.1.2",
+  "description": "All jstack skills bundled for Claude Cowork.",
+  "author": {
+    "name": "jonosin"
+  }
+}

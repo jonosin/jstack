@@ -3,10 +3,11 @@ name: jstack-savetobrain
 description: >
   Save durable output to the second brain. Routes: (1) YouTube URL → deterministic
   transcript capture via references/youtube-route.md; (2) X/Twitter URL →
-  deterministic raw clip capture via references/x-link-route.md; (3) conversation
+  deterministic raw clip capture via references/x-link-route.md; (3) GitHub repository URL
+  or owner/repo → deterministic compact repository-guide-v2 capture via references/github-route.md; (4) conversation
   content → curated raw drop from session. Use when the user says /jstack-savetobrain,
   save to brain, save this to the second brain, capture this, remember this in the
-  second brain, or provides a YouTube/X link to save in the brain.
+  second brain, or provides a YouTube/X/GitHub link to save in the brain.
 user_invocable: true
 ---
 
@@ -18,7 +19,8 @@ Before any other action, check the user's input:
 
 1. **YouTube URL detected** (`youtube.com/watch`, `youtu.be/`, `youtube.com/shorts`, `youtube.com/live`) → load `references/youtube-route.md` and follow it exactly. Do not read the rest of this SKILL.md — the YouTube route is self-contained and deterministic.
 2. **X/Twitter URL detected** (`x.com/<handle>/status/<id>`, `twitter.com/<handle>/status/<id>`) → load `references/x-link-route.md` and follow it exactly. Do not read the rest of this SKILL.md — the X route is self-contained and deterministic for raw clip capture.
-3. **Conversation content** (decisions, facts, synthesis, links, external non-YouTube/X content) → continue below.
+3. **GitHub repository URL or slug detected** (`github.com/<owner>/<repo>` or `<owner>/<repo>`, including private repositories the current `gh` identity can read) → load `references/github-route.md` and follow it exactly. Do not read the rest of this SKILL.md — the GitHub route is self-contained and deterministic.
+4. **Conversation content** (decisions, facts, synthesis, links, external non-YouTube/X/GitHub content) → continue below.
 
 ## What you are writing into
 
@@ -115,10 +117,15 @@ transcript you saw.
 6. **Reuse, don't duplicate.** Check `raw/.ingest-cache.json` and the target directory first. If an
    artifact for this content already exists, reuse or extend the record via a new dated drop —
    `raw/` is immutable, never edit an existing raw file.
-7. **Raw only.** No `wiki/` writes, no `tools/sb.py` write subcommands, no ingest. The single
+7. **Canonical workspace artifacts are not captures.** When a venture/build repo owns the full
+   decision, strategy, spec, or other artifact, keep the session record in that repository's
+   `docs/` tree and regenerate its `docs/index.md`. The registered index symlink is the sole
+   second-brain connection: write no raw drop or pointer for that session. A distinct, explicitly
+   requested brain-owned fact is a separate capture; it must not restate the workspace artifact.
+8. **Raw only.** No `wiki/` writes, no `tools/sb.py` write subcommands, no ingest. The single
    allowed call is read-only `python3 tools/sb.py pending` for the final report. Brainwork is a
    separate, later invocation.
-8. **Confirmation gate** (`AGENTS.md` §2): an explicit "save this" / "/jstack-savetobrain" /
+9. **Confirmation gate** (`AGENTS.md` §2): an explicit "save this" / "/jstack-savetobrain" /
    "capture" counts as the yes. Otherwise offer first; writing needs a yes.
 
 ## Downstream contract — who reads your file

@@ -1,6 +1,6 @@
 ---
 name: jstack-skilltune
-description: "Tune an EXISTING jstack skill to improve its ACCURACY or EFFICIENCY — a metric-driven autoresearch loop (adapted from GodModeAI2025/skill-forge) that, in a temp sandbox, mutates the SKILL.md one change at a time, scores each against a held-out eval set (assertions + cold judge + efficiency), keeps wins / reverts regressions, promotes on green, then deletes the sandbox. Use when Jono names an existing skill and says 'tune this skill', 'make this skill more accurate', 'make this skill's output consistent / reliable', 'improve/iterate/optimize this skill', 'make the skill more efficient', 'eval this skill', or '/jstack-skilltune <name>'. NOT for creating a new skill or restructuring one into deterministic code — that is /jstack-skillify."
+description: "Tune an EXISTING jstack skill to improve its ACCURACY or EFFICIENCY — a metric-driven autoresearch loop (adapted from GodModeAI2025/skill-forge) that, in a temp sandbox, mutates the SKILL.md one change at a time, scores each against a held-out eval set (assertions + cold judge + efficiency), keeps wins / reverts regressions, promotes on green, then deletes the sandbox. Use when Jono names an existing skill and says 'tune this skill', 'make this skill more accurate', 'make this skill's output consistent / reliable', 'improve/iterate/optimize this skill', 'make the skill more efficient', 'eval this skill', or '/jstack-skilltune [name]'. NOT for creating a new skill or restructuring one into deterministic code — that is /jstack-skillify."
 ---
 
 # jstack-skilltune

@@ -109,8 +109,15 @@ The output file gets `-alpha.png` suffix (e.g. `sprite.png` → `sprite-alpha.pn
 
 ## Dependencies
 
-- **google-genai** SDK: `pip install google-genai`
-- **Pillow**: `pip install Pillow`
+- **google-genai** SDK + **Pillow**, importable by the interpreter `gi` runs.
+
+`gi` does NOT rely on `python3`-on-PATH having these. It resolves its own
+interpreter and re-execs into one that imports both deps. **Resolution order**
+(first that works wins): `$GI_PYTHON` (env or `~/.jstack/config.env`) →
+`~/.jstack/venvs/imgen/bin/python` → the current interpreter → one-time
+auto-bootstrap of the persistent venv (`uv` if present, else stdlib `venv`).
+If all fail, exit `7` with a self-heal one-liner. The venv is durable
+(`~/.jstack/`, not `/tmp`), so a fresh session never has to rebuild it.
 
 The ADC file at `~/.config/gcloud/application_default_credentials.json` must exist
 (type `authorized_user`). The `gcloud` binary is NOT required.
@@ -121,8 +128,13 @@ The ADC file at `~/.config/gcloud/application_default_credentials.json` must exi
 # Add to PATH
 export PATH="$HOME/jstack/vendor/gemini-image:$PATH"
 
-# One-time install
-pip install google-genai Pillow
+# The persistent venv auto-creates on first run. To build it by hand (the exact
+# command gi prints on a dep failure):
+uv venv --python 3.12 ~/.jstack/venvs/imgen \
+  && uv pip install --python ~/.jstack/venvs/imgen/bin/python google-genai Pillow
+# No uv? python3 -m venv ~/.jstack/venvs/imgen \
+#   && ~/.jstack/venvs/imgen/bin/pip install google-genai Pillow
+# Or pin any interpreter that has the deps: export GI_PYTHON=/path/to/python
 
 # Verify
 gi --version
@@ -156,8 +168,7 @@ gi --dry-run -p "test" -o /dev/null
 | `429 RESOURCE_EXHAUSTED` | Too many concurrent calls | Sleep 5–10s, retry; use `gi-batch` with `GI_BATCH_SLEEP` |
 | `UNAUTHENTICATED` / `PERMISSION_DENIED` | ADC expired or wrong project | Check `~/.config/gcloud/application_default_credentials.json` exists; verify project has billing |
 | `no image in response` | Prompt didn't produce an image | Check prompt; try more explicit instructions |
-| `ModuleNotFoundError: google` | SDK not installed | `pip install google-genai` |
-| `ModuleNotFoundError: PIL` | Pillow not installed | `pip install Pillow` |
+| `google-genai / Pillow not importable` (exit `7`) | All 4 interpreter-resolution steps failed | Run the self-heal one-liner `gi` prints (see Setup), or `export GI_PYTHON=/path/to/python` |
 
 ## Batch API (TODO — not implemented)
 

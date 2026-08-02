@@ -172,32 +172,49 @@ gi-batch --json /tmp/dragons.txt -o dragons/ | jq '.results[] | {prompt, files_o
 | `429 RESOURCE_EXHAUSTED` | `10` | Too many concurrent calls. Sleep 5–10s, retry. `gi-batch` paces with `GI_BATCH_SLEEP`. |
 | `UNAUTHENTICATED` / `PERMISSION_DENIED` | `4` | ADC expired or wrong project. Check `~/.config/gcloud/application_default_credentials.json` exists (type `authorized_user`). |
 | `no image in response` | `6` | Model didn't produce an image. Try more explicit prompt instructions. |
-| `ModuleNotFoundError: google` | `7` | `pip install google-genai` |
-| `ModuleNotFoundError: PIL` | `7` | `pip install Pillow` |
+| `google-genai / Pillow not importable` | `7` | Only if all 4 interpreter-resolution steps failed (see Setup). Run the self-heal one-liner `gi` prints, or `export GI_PYTHON=/path/to/python`. |
 | Transient 429 on a single call | `10` | Sleep 5–10s, retry once. For batch, increase `GI_BATCH_SLEEP`. |
 
 ## Setup
+
+`gi` needs `google-genai` + `Pillow` importable — but NOT on whatever `python3`
+happens to be first on your PATH. It resolves its own interpreter and re-execs
+into one that has the deps, so PATH hygiene doesn't matter. **Interpreter
+resolution order** (first that imports both deps wins):
+
+1. `$GI_PYTHON` — env var, or a `GI_PYTHON=` line in `~/.jstack/config.env`.
+2. The persistent venv at `~/.jstack/venvs/imgen/bin/python`.
+3. The current interpreter, if it already imports the deps.
+4. One-time auto-bootstrap of the persistent venv (uses `uv` if present, else
+   stdlib `venv` + `pip`). Printed to stderr; never pollutes the stdout envelope.
+
+If all four fail, `gi` exits `7` and prints the exact self-heal one-liner.
 
 ```bash
 # Add to PATH
 export PATH="$HOME/jstack/vendor/gemini-image:$PATH"
 
-# Install deps (one-time). Use uv or a venv if system pip is broken:
-#   uv pip install --python 3.12 google-genai Pillow
-#   -- or --
-#   python3 -m venv /tmp/imgen-venv && /tmp/imgen-venv/bin/pip install google-genai Pillow
-pip install google-genai Pillow
+# The persistent venv is created automatically on first run. To create it by
+# hand (the same command gi prints on a dep failure):
+uv venv --python 3.12 ~/.jstack/venvs/imgen \
+  && uv pip install --python ~/.jstack/venvs/imgen/bin/python google-genai Pillow
+# No uv? Fall back to stdlib venv:
+#   python3 -m venv ~/.jstack/venvs/imgen \
+#     && ~/.jstack/venvs/imgen/bin/pip install google-genai Pillow
+
+# Point gi at a different interpreter that has the deps (highest priority):
+#   export GI_PYTHON=/path/to/python
 
 # Verify
 gi --version
 gi --dry-run -p "test" -o /dev/null
 ```
 
+The venv lives under `~/.jstack/` (durable jstack state home) — **not `/tmp`**,
+which macOS wipes. This is why a fresh session no longer hits exit 7.
+
 The ADC file at `~/.config/gcloud/application_default_credentials.json` must
 exist — it's the same credential used by `gv`. The `gcloud` binary is NOT required.
-
-**Note:** the existing `/tmp/spritenv` venv already has both deps.
-`export PATH="/tmp/spritenv/bin:$PATH"` makes `gi` usable immediately.
 
 ## What this skill does NOT do
 

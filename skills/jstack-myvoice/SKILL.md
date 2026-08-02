@@ -82,6 +82,11 @@ inline directive, decide **which axis** the lesson belongs to (a mode file, a ch
 block, or the cold overlay), edit that target to fold the lesson in (add, sharpen, or reconcile: keep it
 deduped), then confirm the diff back to him. This is how the voice canon compounds over time.
 
+When the host cannot edit the installed skill files (including ChatGPT), do not claim the canon was
+saved. Instead, return a copy-ready `Canon update` Markdown block naming the target reference and the
+exact replacement or addition. Use that update for the rest of the current chat, and ask the user to
+paste it into their canonical copy before the next session.
+
 ## Reference files
 
 **MODE (persona / posture, pick one):**

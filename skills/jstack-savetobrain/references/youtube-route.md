@@ -19,7 +19,7 @@ python3 ~/jstack/skills/jstack-savetobrain/scripts/youtube-capture.py "<youtube_
 The script handles everything that doesn't require judgment:
 - Extracts video ID from any YouTube URL format
 - Fetches full transcript via `youtube-transcript-api`
-- Gets metadata (title, channel, date, duration) via `yt-dlp`
+- Gets title and channel via YouTube oEmbed, then enriches date and duration via a bounded `yt-dlp` lookup when available. Metadata lookup failure never prevents saving a fetched transcript.
 - Cleans artifacts: removes `[music]`, `[snorts]`, `[laughter]`, `>>` separators, filler words
 - Fixes common ASR name/product misspellings (see `NAME_FIXES` dict in script)
 - Saves as `raw/clips/YYYY-MM-DD-<slug>-readable-transcript.md` with full frontmatter
@@ -36,13 +36,13 @@ If the script fails:
 
 1. Get the scaffold (a few KB even for a 197KB clip):
    ```
-   python3 ~/.claude/skills/jstack-savetobrain/scripts/youtube-capture.py scaffold "<clip_path>"
+   python3 ~/jstack/skills/jstack-savetobrain/scripts/youtube-capture.py scaffold "<clip_path>"
    ```
    It prints JSON: `{body_chars, n_segments, segments:[{i, offset, preview, cue?}]}` — one short preview per candidate boundary. Some segments carry a `cue` flag (`"sponsor"` or `"qa"`): the script scanned the full window and found a sponsor read or Q&A transition the 12-word preview might not show. A cue tells you *where* a sponsor/Q&A block sits so you can name it correctly — it does **not** add to your section budget. Fold each cue into the count band below: when you place a section near a cue, name it for the cue (e.g. `Sponsor: AG1`), and a cue boundary *replaces* a nearby topical boundary rather than adding one. The length band is a hard ceiling — never exceed it just because there are several cues.
 2. Read ONLY the scaffold. From the previews (and any `cue` flags), pick the segment indices where a new topic clearly begins — speaker intros, subject changes, Q&A transitions, sponsor breaks. Write a short descriptive heading for each (e.g. `BPC-157: History and Discovery`, `Sponsor: Eight Sleep`, `Audience Q&A`).
 3. Write the picks to a temp JSON file as `[{"i": <segment index>, "heading": "<text>"}]`, then insert deterministically (headings inserted at byte offsets — body is never rewritten, so integrity is guaranteed):
    ```
-   python3 ~/.claude/skills/jstack-savetobrain/scripts/youtube-capture.py insert "<clip_path>" "<picks_json_path>"
+   python3 ~/jstack/skills/jstack-savetobrain/scripts/youtube-capture.py insert "<clip_path>" "<picks_json_path>"
    ```
 4. Report to user:
    ```

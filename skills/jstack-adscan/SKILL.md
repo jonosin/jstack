@@ -1,6 +1,6 @@
 ---
 name: jstack-adscan
-description: Scan the Meta Ad Library for advertisers and pull their ads (creative, flight dates, video files, store/landing links) with no API key or identity verification. Use when the user says /jstack-adscan, "scan the ad library", "find advertisers running ads for X", "pull <app/brand>'s Meta ads", "who's advertising X on Facebook/Instagram", or wants competitor/lead ad creative from the Meta Ad Library. Wraps the local adscan repo.
+description: Scan the Meta Ad Library for advertisers and pull their ads (creative, flight dates, video files, store/landing links) with no API key or identity verification. Use when the user says /jstack-adscan, "scan the ad library", "find advertisers running ads for X", "pull [app/brand]'s Meta ads", "who's advertising X on Facebook/Instagram", or wants competitor/lead ad creative from the Meta Ad Library. Wraps the local adscan repo.
 user_invocable: true
 ---
 

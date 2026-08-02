@@ -1,0 +1,4 @@
+interface:
+  display_name: "Fopus: Tileforge"
+  short_description: "Forge reusable pixel-art world tiles and objects"
+  default_prompt: "Use $jstack-fopus-tileforge to create a validated environment-asset package after I select a named world-style profile."

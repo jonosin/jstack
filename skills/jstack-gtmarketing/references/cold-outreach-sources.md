@@ -25,6 +25,11 @@ Located in `~/second-brain/raw/clips/` (raw, immutable, read for the underlying 
   email, metrics targets (open 40-60% / reply 5-15% / positive 2-5%), video selling.
 
 ## Field application
+- **Origami / Apollo comparison email (user-supplied inbox example, 2026-07-23)**: established the
+  competitive recommendation-gap sequence and its visual pacing: one thought per line, named winners,
+  explicit prospect gap, solvability, then an offer to pinpoint where competitors keep winning.
+  Its structural wording is preserved in `cold-outreach.md`; its proof, "nowhere," "complete audit,"
+  and assumed-call claims remain subject to the playbook's truth and commitment gates.
 - **second-brain-agency LinkedIn InMail burn (2026-06-29)**, first real application: 149 qualified
   owner-operators, assumption-pinned openers, single-touch InMail architecture, A/B on the offer
   bridge. Run log: `~/ventures/second-brain-agency/burn/RUN-2026-06-29.md`. Kit + ADRs:

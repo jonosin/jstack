@@ -14,8 +14,11 @@ import argparse
 import json
 import os
 import re
+import signal
 import subprocess
 import sys
+from urllib.parse import urlencode
+from urllib.request import urlopen
 from datetime import datetime
 from pathlib import Path
 
@@ -69,6 +72,34 @@ def _fetch_cmd(video_id: str) -> list:
         f"runpy.run_path({FETCH_SCRIPT!r}, run_name='__main__')\n"
     )
     return [PYTHON, "-c", bootstrap]
+
+
+def run_bounded(command: list, timeout: int) -> subprocess.CompletedProcess:
+    """Run a network subprocess with a real timeout and no orphaned child.
+
+    ``subprocess.run(..., timeout=...)`` kills only the direct child.  yt-dlp can
+    leave a network worker behind, keeping the caller's pipes open and making the
+    capture look hung.  A separate process group lets us terminate the whole
+    invocation on timeout.
+    """
+    process = subprocess.Popen(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        start_new_session=True,
+    )
+    try:
+        stdout, stderr = process.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        os.killpg(process.pid, signal.SIGTERM)
+        try:
+            stdout, stderr = process.communicate(timeout=3)
+        except subprocess.TimeoutExpired:
+            os.killpg(process.pid, signal.SIGKILL)
+            stdout, stderr = process.communicate()
+        raise subprocess.TimeoutExpired(command, timeout, output=stdout, stderr=stderr)
+    return subprocess.CompletedProcess(command, process.returncode, stdout, stderr)
 
 # --- ASR / name fixes ---
 # Map of common YouTube ASR misspellings → corrections.
@@ -124,40 +155,73 @@ def extract_video_id(url: str) -> str:
 
 def fetch_transcript(video_id: str) -> dict:
     """Fetch transcript JSON from the youtube-content helper."""
-    result = subprocess.run(
-        _fetch_cmd(video_id),
-        capture_output=True, text=True, timeout=60,
-    )
-    if result.returncode != 0:
-        # Try installing dependency into the resolved interpreter and retry once
-        subprocess.run(
-            [PYTHON, "-m", "pip", "install", "youtube-transcript-api", "-q"],
-            capture_output=True,
-        )
-        result = subprocess.run(
-            _fetch_cmd(video_id),
-            capture_output=True, text=True, timeout=60,
-        )
-        if result.returncode != 0:
-            sys.exit(f"Transcript fetch failed: {result.stderr.strip()}")
-    return json.loads(result.stdout)
+    # The transcript API is the source of truth.  Retry once for an indeterminate
+    # network/API failure, but never retry an explicit captions-unavailable result.
+    for attempt in range(2):
+        try:
+            result = run_bounded(_fetch_cmd(video_id), timeout=30)
+        except subprocess.TimeoutExpired:
+            if attempt == 0:
+                continue
+            sys.exit("Transcript fetch failed: network request timed out after one retry")
+
+        if result.returncode == 0:
+            try:
+                payload = json.loads(result.stdout)
+            except json.JSONDecodeError:
+                payload = None
+            if isinstance(payload, dict) and payload.get("full_text"):
+                return payload
+
+        # The helper reports API failures as JSON on stdout, not stderr.
+        try:
+            error = json.loads(result.stdout).get("error", "")
+        except (json.JSONDecodeError, AttributeError):
+            error = result.stderr.strip() or "unknown transcript API failure"
+        unavailable = any(term in error.lower() for term in (
+            "disabled", "no transcript", "not available", "could not retrieve a transcript",
+        ))
+        if unavailable:
+            sys.exit("No transcript available for this video.")
+        if attempt == 1:
+            sys.exit(f"Transcript fetch failed after one retry: {error}")
+
+    raise AssertionError("unreachable")
 
 
 def fetch_metadata(video_id: str) -> dict:
-    """Get title, channel, date, duration via yt-dlp."""
-    result = subprocess.run(
-        ["yt-dlp", "--force-ipv4",
+    """Get metadata without allowing yt-dlp failure to block a transcript.
+
+    oEmbed supplies a reliable title/channel fallback.  yt-dlp is still used for
+    publish date and duration when it responds, but its request is bounded: an
+    outdated extractor must not prevent saving an otherwise fetched transcript.
+    """
+    meta = {"title": video_id, "channel": "Unknown", "upload_date": None, "duration": 0}
+    try:
+        query = urlencode({"url": f"https://www.youtube.com/watch?v={video_id}", "format": "json"})
+        with urlopen(f"https://www.youtube.com/oembed?{query}", timeout=10) as response:
+            oembed = json.load(response)
+        meta["title"] = oembed.get("title") or meta["title"]
+        meta["channel"] = oembed.get("author_name") or meta["channel"]
+    except Exception:
+        pass
+
+    try:
+        result = run_bounded(
+            ["yt-dlp", "--force-ipv4", "--no-warnings", "--no-playlist", "--skip-download", "--socket-timeout", "8",
          "--print", "%(title)s", "--print", "%(channel)s",
          "--print", "%(upload_date)s", "--print", "%(duration)s",
-         f"https://youtu.be/{video_id}"],
-        capture_output=True, text=True, timeout=30,
-    )
+             f"https://youtu.be/{video_id}"],
+            timeout=12,
+        )
+    except (subprocess.TimeoutExpired, FileNotFoundError):
+        return meta
     if result.returncode != 0:
-        return {"title": video_id, "channel": "Unknown", "upload_date": None, "duration": 0}
+        return meta
     lines = result.stdout.strip().split("\n")
     return {
-        "title": lines[0] if len(lines) > 0 else video_id,
-        "channel": lines[1] if len(lines) > 1 else "Unknown",
+        "title": lines[0] if len(lines) > 0 and lines[0] else meta["title"],
+        "channel": lines[1] if len(lines) > 1 and lines[1] else meta["channel"],
         "upload_date": lines[2] if len(lines) > 2 else None,
         "duration": int(lines[3]) if len(lines) > 3 and lines[3].isdigit() else 0,
     }

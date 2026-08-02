@@ -1,0 +1,22 @@
+{
+  "independent": true,
+  "reviewer": "<reviewer-or-task-id>",
+  "counts": {
+    "Critical": 0,
+    "Important": 0,
+    "Minor": 0
+  },
+  "semantic_checks": [
+    {
+      "asset_id": "<directional-furniture-id>",
+      "kind": "contextual-orientation",
+      "accepted_calibration_map": "<path-or-id>",
+      "station_relationship": "<natural-language table/chair relationship>",
+      "user_accepted": true,
+      "isolated_after_acceptance": true,
+      "recreated_relationship": "<same relationship after forging>",
+      "verdict": "accepted"
+    }
+  ],
+  "findings": []
+}

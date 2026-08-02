@@ -1,6 +1,6 @@
 ---
 name: jstack-gtmarketing
-description: "Front-door router for ALL go-to-market and marketing work. Use whenever the user talks about GTM, go-to-market, launch, positioning, ICP, pricing, sales motion, growth system, competitor/market research, or any marketing execution: copywriting, landing pages, CRO, SEO/AI-SEO, paid ads, ad creative, email sequences, cold email, social content, content strategy, lead magnets, onboarding, churn, referrals, analytics, PR, offers, popups, paywalls, signup flows, marketing plans, or a marketing playbook. Also the home of the cold-outbound copy doctrine: drafting, reviewing, optimizing, or A/B-testing cold emails, LinkedIn InMails/DMs, connection notes, openers, subject lines, follow-up sequences, or fixing low reply rates (absorbed the retired jstack-coldmsg — routed via references/cold-outreach.md). Replaces the retired jstack-gtm router: routes strategy intents to the GTM-Strategist phase pack (~/builds/gtm-strategist-skills, Maja Voje's 12 phases) and execution intents to the marketing-skills plugin (45 playbooks, invoked via the Skill tool). Does not generate output itself — it picks the right skill and loads it."
+description: "Front-door router for ALL go-to-market and marketing work. Use whenever the user talks about GTM, go-to-market, launch, positioning, ICP, pricing, sales motion, growth system, competitor/market research, or any marketing execution: copywriting, landing pages, CRO, SEO/AI-SEO, paid ads, ad creative, email sequences, cold email, social content, content strategy, lead magnets, onboarding, churn, referrals, analytics, PR, offers, popups, paywalls, signup flows, marketing plans, or a marketing playbook. Also home of the cold-outbound copy doctrine: drafting, reviewing, optimizing, or A/B-testing cold emails, LinkedIn InMails/DMs, connection notes, openers, subject lines, follow-up sequences, or fixing low reply rates (absorbed jstack-coldmsg via references/cold-outreach.md). Routes strategy intents to the GTM-Strategist phase pack and execution intents to the canonical marketing playbooks under ~/.jstack/marketing-skills. Does not generate output itself."
 ---
 
 # jstack-gtmarketing — GTM + marketing front door
@@ -13,13 +13,14 @@ plus your machine-local data:
   .claude/skills/<phase>/SKILL.md      ← 12 GTM phase skills, loaded BY PATH (a git pull can overwrite)
   my-gtm-context.md                    ← the pack's generic context template (reference only)
 
-marketing-skills plugin               ← EXECUTION playbooks, invoked via the Skill tool
-  Skill(marketing-skills:<playbook>)   ← 45 playbooks (coreyhaines31/marketingskills)
+~/.jstack/marketing-skills/          ← canonical EXECUTION playbooks, loaded BY PATH
+  <playbook>/SKILL.md                ← marketing playbooks routed through this front door
 
 references/ (this skill)               ← COLD-OUTBOUND copy doctrine, loaded BY PATH
   cold-outreach.md                     ← operating layer (absorbed jstack-coldmsg 2026-07-06)
   cold-outreach-framework.md           ← deep playbook: psychology, levers, worked examples
   cold-outreach-sources.md             ← provenance
+  gtm-40-checks-audit.md               ← current-motion audit + 40-check rubric
 
 ~/.jstack/gtm/                         ← YOUR machine-local data (gitignored, survives re-clone)
   contexts/<venture>.md                ← per-venture GTM context the skills read
@@ -31,9 +32,7 @@ wipes anything you put there. Personal venture context never goes in `~/builds/.
 the shareable `~/jstack/` skill repo (secrets-gate forbids it). It lives in `~/.jstack/gtm/`.
 
 This skill does **not** produce output. It (1) picks STRATEGY vs EXECUTION, (2) resolves the
-venture context, (3) loads the chosen skill — GTM phases by `Read` path (they are deliberately
-not in the harness picker), marketing playbooks by `Skill(marketing-skills:<name>)` — and
-follows it, passing the resolved context.
+venture context, (3) loads the chosen skill by path, and (4) follows it with the resolved context.
 
 ## How to route
 
@@ -52,7 +51,7 @@ follows it, passing the resolved context.
      it needs concrete assets.
 3. **Load and follow.**
    - Phase → `Read ~/builds/gtm-strategist-skills/.claude/skills/<phase>/SKILL.md`, execute verbatim.
-   - Playbook → invoke `Skill(marketing-skills:<playbook>)`, follow it.
+   - Playbook → `Read ~/.jstack/marketing-skills/<playbook>/SKILL.md`, execute verbatim.
 4. **Deliverables** go to the venture's own repo when working inside one (`~/ventures/<slug>`),
    else `~/.jstack/gtm/outputs/`. Never into `~/builds/...`, `~/jstack/`, or `~/second-brain/`.
 
@@ -75,7 +74,7 @@ follows it, passing the resolved context.
 
 Phases build on each other; outputs feed forward. Default order 1→12, but jump to the phase asked for.
 
-## Execution — intent → marketing playbook (`Skill(marketing-skills:<name>)`)
+## Execution — intent → marketing playbook (`~/.jstack/marketing-skills/<playbook>/SKILL.md`)
 
 | If the user wants to… | Playbook |
 |---|---|
@@ -152,18 +151,27 @@ the proven methodology and find gaps. Procedure:
    `/jstack-premortem` on the launch plan.
 5. Output a single gap report (match / thin / fix-first, ordered by impact).
 
+## 40-check audit
+
+"Audit this GTM/campaign", "where is our outbound leaking", or a request to score the current motion
+against the GTM System Audit’s 40 checks → `Read`
+**`references/gtm-40-checks-audit.md`**, then follow it. It resolves the most current grounded GTM
+evidence first, scores every applicable check, separates unknowns from failures, and recommends one
+evidence-backed fix-first experiment. This is the canonical `jstack-gtmarketing:gtm-40-checks-audit`
+operation.
+
 ## Pack maintenance
 
 The GTM pack updates with `git pull` in `~/builds/gtm-strategist-skills` (safe — nothing personal
-lives there). The marketing-skills plugin updates through the plugin manager; if an update
-adds/renames a playbook, update the matching table row here.
+lives there). The canonical marketing playbooks are maintained under `~/.jstack/marketing-skills`; if an
+update adds or renames a playbook, update the matching table row here.
 
 ## Gotchas
 
 - The GTM phase skills are NOT in the harness skill picker — `Skill(gtm-foundations)` will fail.
   Load them by `Read` path only, through this router.
-- The marketing playbooks ARE plugin skills — invoke `Skill(marketing-skills:<name>)`; do not
-  read them from the plugin cache path (the cache moves on version updates).
+- The marketing playbooks are deliberately NOT in Claude's global skill picker. Route through
+  `jstack-gtmarketing`, then load the selected playbook from `~/.jstack/marketing-skills/<playbook>/SKILL.md`.
 - Never write venture context or deliverables into `~/builds/gtm-strategist-skills` — a `git pull`
   destroys them. `~/.jstack/gtm/` is the only safe home outside a venture repo.
 - `jstack-gtm` is retired; if old notes/handoffs reference it, this skill is its replacement.

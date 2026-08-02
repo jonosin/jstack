@@ -1,0 +1,9 @@
+{
+  "prospects": [
+    {"property":"Coastal House","region":"WA","locality":"Dunsborough","website":"https://coastal.example.au","query":"stay WA","conversation_url":"https://chatgpt.com/c/example-1","candidate_status":"absent","safe_claim":"Not cited."},
+    {"property":"Alpine Lodge","region":"TAS","locality":"Cradle Mountain","website":"https://alpine.example.au","query":"stay TAS","conversation_url":"https://chatgpt.com/c/example-2","candidate_status":"mentioned","safe_claim":"Mentioned."},
+    {"property":"Barossa Hotel","region":"SA","locality":"Tanunda","website":"https://barossa.example.au","query":"stay SA","conversation_url":"https://chatgpt.com/c/example-3","candidate_status":"absent","safe_claim":"Not cited."},
+    {"property":"Dunes Retreat","region":"WA","locality":"Margaret River","website":"https://dunes.example.au","query":"stay WA","conversation_url":"https://chatgpt.com/c/example-4","candidate_status":"mentioned","safe_claim":"Mentioned."},
+    {"property":"Eucalypt Inn","region":"NSW","locality":"Mudgee","website":"https://eucalypt.example.au","query":"stay NSW","conversation_url":"https://chatgpt.com/c/example-5","candidate_status":"absent","safe_claim":"Not cited."}
+  ]
+}

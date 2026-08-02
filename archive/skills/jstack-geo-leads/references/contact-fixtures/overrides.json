@@ -1,0 +1,12 @@
+{
+  "Coastal House": {
+    "status": "contact_ready",
+    "contact_role": "reservations",
+    "email": "reservations@coastal.example.au",
+    "email_type": "role",
+    "email_source_url": "https://coastal.example.au/contact",
+    "mail_domain_status": "confirmed",
+    "confidence": "high",
+    "search_notes": "reviewed official source"
+  }
+}
