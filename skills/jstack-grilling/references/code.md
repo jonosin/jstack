@@ -4,8 +4,9 @@ Use this branch for a codebase change, architecture decision, or domain-modeling
 
 ## Canonical artifacts
 
-- `CONTEXT.md` holds durable domain vocabulary only. Add a term when its meaning is specific to this
-  codebase and it will improve later reasoning or naming.
+- `CONTEXT.md` holds durable domain vocabulary only. If it is absent, create it with `# Context`
+  before adding the first term. Add a term when its meaning is specific to this codebase and it will
+  improve later reasoning or naming.
 - `docs/strategy/YYYY-MM-DD-<self-explanatory-decision>.md` holds local technical decisions and
   architecture/design rationale. Use `type: architecture` for a genuine architecture decision.
   Create one only when a future maintainer would otherwise ask why the code has this shape.
