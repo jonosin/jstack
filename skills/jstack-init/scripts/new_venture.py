@@ -50,9 +50,8 @@ AGENTS_TMPL = """# {name} — venture router (agents)
 
 > Built for agents. Jono does not read this repo. Terse + machine-parseable.
 > **Purpose:** a work-product *router* for this venture — not a software build repo (code builds live
-> in `~/builds`), not the knowledge base (that is the brain, §1). It carries pointers + operating rules
-> only. If you are tempted to write a fact about *what this venture is or does*, it belongs in the
-> brain, not this file.
+> in `~/builds`). Canonical work product and venture strategy live here; the brain holds only
+> cross-project knowledge, personal context, and pointers.
 
 ## 0. Persona + the one ritual
 
@@ -69,7 +68,8 @@ linked from the brain without a duplicate catalog. The brain holds only cross-pr
 personal context, and pointers:
 
 - knowledge_home: `{knowledge_home}`
-- Need a venture fact? **Read it there.** Never restate brain knowledge in this repo. Link, don't duplicate.
+- Need a venture fact? Read `docs/index.md`, then the relevant durable document. Read the brain only for
+  relevant cross-project or personal context.
 
 ## 2. Folder map
 
@@ -107,16 +107,18 @@ the body): `docs/CLAUDE.md`. The brain exposes that exact generated file at
 - **Durable docs** → `docs/strategy/`; the generated `docs/index.md` is the
   entry point + `docs/CLAUDE.md` the naming/frontmatter convention. Its brain-visible `.docs-index`
   symlink must resolve to the same file; regenerate + lint after docs/ changes (see §2), never hand-edit.
-- **Lean + shallow:** minimal top-level dirs, avoid nesting. Context belongs in the brain, not new folders.
+- **Lean + shallow:** minimal top-level dirs, avoid nesting. Cross-project context belongs in the brain,
+  not new folders.
 - **Keep this router current — gated.** When the repo's structure or operating mechanics change, update
   this file in the *same* change (add folders via `register_folder.py`; fix routing/pointers inline).
   Before adding any line ask: *is this a durable operating rule needed every session?* If it's a
-  procedure, template, research note, or cross-project decision, put it in the brain / a skill / a
-  playbook and **link it** instead. Keep venture strategy in its canonical artifact.
-- **Hard size cap (~120 lines).** If this router grows past ~120 lines, something belongs in the brain
-  or a skill — move it out. Check: `python3 ~/jstack/skills/jstack-init/scripts/lint_agents.py`.
-- **Cold start:** read `docs/index.md` first for canonical planning, research, and decision artifacts;
-  then read `BRAIN.md` → `knowledge_home` only for relevant cross-project or personal context.
+  procedure, template, research note, or cross-project decision, put it in its canonical artifact and
+  **link it** instead. Keep venture strategy in its canonical artifact.
+- **Hard size cap (~120 lines).** If this router grows past ~120 lines, move detail into its canonical
+  artifact. Check: `python3 ~/jstack/skills/jstack-init/scripts/lint_agents.py`.
+- **Read flow:** (1) read `docs/index.md` for execution-facing current state and locate durable docs;
+  (2) read `BRAIN.md` → `knowledge_home` for venture-specific context; (3) open only the documents
+  those indexes identify; (4) escalate to `raw/` or source material only when the output is work-grade.
 """
 
 BRAIN_TMPL = """# BRAIN.md — second-brain pointer

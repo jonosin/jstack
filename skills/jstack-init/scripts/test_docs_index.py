@@ -175,6 +175,8 @@ class BrainLinkTests(unittest.TestCase):
             self.assertNotIn("/jstack-savetobrain", root_router)
             self.assertNotIn("/jstack-brainwork", root_router)
             self.assertNotIn(".agents/skills", root_router)
+            self.assertIn("**Read flow:**", root_router)
+            self.assertIn("work-grade", root_router)
 
     def test_new_build_scaffold_wires_docs_layout_and_build_index_symlink(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
