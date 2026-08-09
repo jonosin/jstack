@@ -167,6 +167,14 @@ class BrainLinkTests(unittest.TestCase):
             self.assertFalse((docs / "build").exists())
             self.assertFalse((docs / "scratch").exists())
             self.assertFalse((docs / "superpowers").exists())
+            docs_router = (docs / "AGENTS.md").read_text()
+            self.assertIn("`strategy/`", docs_router)
+            self.assertNotIn("superpowers/", docs_router)
+            self.assertNotIn("scratch/", docs_router)
+            root_router = (root / "ventures" / "example-venture" / "AGENTS.md").read_text()
+            self.assertNotIn("/jstack-savetobrain", root_router)
+            self.assertNotIn("/jstack-brainwork", root_router)
+            self.assertNotIn(".agents/skills", root_router)
 
     def test_new_build_scaffold_wires_docs_layout_and_build_index_symlink(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

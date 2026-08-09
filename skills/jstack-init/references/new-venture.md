@@ -103,8 +103,7 @@ tree or opening files.
 The contract (also written into `docs/CLAUDE.md` at scaffold time):
 
 - **Canonical durable zone indexed:** `strategy/*.md`, named `YYYY-MM-DD-kebab-topic.md`, including
-  strategy, research, and architecture rationale. `build/*.md` and `superpowers/**` are legacy indexed
-  material: preserve them, do not add new artifacts there. `docs/scratch/` is also legacy and unindexed.
+  strategy, research, and architecture rationale.
 - **Frontmatter is the source of truth** (the index reads it, never the body). Required keys:
   `title`, `summary`, `status`. Optional: `type`, `created`, `updated`, `supersedes`, `superseded_by`.
 - **After ANY add/edit under `docs/`, regenerate + lint** (a stale index is a lint error):

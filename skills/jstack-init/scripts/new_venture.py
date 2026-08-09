@@ -172,10 +172,7 @@ under `docs/`, regenerate + lint (mandatory — a stale index is a lint error):
 | Zone | Path | Holds |
 |---|---|---|
 | Strategy | `strategy/` | strategy, decisions, research, plans, premortems, architecture rationale |
-| Legacy build | `build/` | historical indexed material; preserve, do not add new files |
-| Legacy | `superpowers/` | historical indexed material; preserve, do not add new files |
 | Op log | `decisions.md` | append-only operational decisions (linked, not itemized) |
-| Legacy scratch | `scratch/` | preserved working drops — **not** indexed; do not add new files |
 
 ## File naming — make the filename tell the story
 
@@ -183,9 +180,6 @@ The filename is the first thing an agent reads; make it self-describing. kebab-c
 
 - **Strategy** → `strategy/YYYY-MM-DD-kebab-topic.md` — the filename states the decision, direction,
   research, plan, or technical rationale in 3–8 words. e.g. `2026-07-21-booking-sync-architecture.md`
-- **Legacy** → preserve existing `superpowers/` filenames; do not add new files there.
-- **Legacy scratch** → preserve existing material but do not add files. New ephemeral tracker work,
-  when a local tracker is configured, belongs at repository-root `.scratch/`, outside this registry.
 
 The index adds a one-line summary + status on top of the name — the name carries the topic, the
 summary carries the verdict/state.
