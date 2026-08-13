@@ -89,4 +89,4 @@ GEMINI_VISION_MODEL=gemini-2.5-pro gv -p "..." @file.png
 
 ## See also
 
-- `jstack-vision` skill — the agent skill that documents when to use `gv`.
+- `vision` skill — the agent skill that documents when to use `gv`.

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Focus"
+  short_description: "Wait, re-pitch that. Then stay tight: shorten, plain, ASCII where it helps."
+  default_prompt: "Switch to focus mode -- re-pitch where we are, then stay short and plain."
+policy:
+  allow_implicit_invocation: false

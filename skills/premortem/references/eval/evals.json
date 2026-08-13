@@ -1,0 +1,149 @@
+{
+  "skill": "premortem",
+  "optimization_target": "failure-mode generation QUALITY (specificity to the plan, grounding, real-threat-not-generic, non-overlap) + synthesis discipline + structural artifacts (NOT HTML styling)",
+  "composite": "0.50 * assertion_pass_rate + 0.30 * judge_score + 0.20 * efficiency",
+  "split": "60% train / 40% held-out (8 evals: 5 train / 3 held-out)",
+  "judge_rubric": "Are the failure modes SPECIFIC to this exact plan, grounded in the given context, REAL threats (not generic inconveniences), and non-overlapping (each a distinct way to die)? 0=generic/templated/overlapping, 1=sharp/plan-specific/distinct/high-stakes.",
+  "evals": [
+    {
+      "id": "sf-paid-pilot-athar",
+      "category": "content_quality",
+      "split": "train",
+      "type": "normal",
+      "context_sufficient": true,
+      "min_reasons": 5,
+      "scenario": "Plan: Launch StayFrame as a paid pilot with Athar's resort (Serenity Sands) as the first proof case — deliver one short-form reel per week for 4 weeks at a fixed pilot fee. Affects: Athar (client), the StayFrame solo operator, future resort prospects who will hear about it. Success means: Athar pays, renews after the pilot, and refers at least 2 other resorts.",
+      "assertions": [
+        {"id": "frame", "check": "frame_stated"},
+        {"id": "no-preset", "check": "no_preset_categories"},
+        {"id": "min-reasons", "check": "min_failure_reasons", "value": 5},
+        {"id": "assumption-warning", "check": "each_reason_has_assumption_and_warning"},
+        {"id": "synthesis-five", "check": "synthesis_has_five"},
+        {"id": "plan-mapped", "check": "revised_plan_mapped"},
+        {"id": "chat-3-sentences", "check": "chat_summary_three_sentences"}
+      ]
+    },
+    {
+      "id": "first-sdr-before-pmf",
+      "category": "content_quality",
+      "split": "train",
+      "type": "normal",
+      "context_sufficient": true,
+      "min_reasons": 5,
+      "scenario": "Plan: Hire a first full-time SDR to run cold outbound before the product has clear product-market fit. Affects: the new SDR, the founder's runway, early prospects who get cold-contacted. Success means: the SDR books demos that convert to paying customers within one quarter, and the motion is repeatable.",
+      "assertions": [
+        {"id": "frame", "check": "frame_stated"},
+        {"id": "no-preset", "check": "no_preset_categories"},
+        {"id": "min-reasons", "check": "min_failure_reasons", "value": 5},
+        {"id": "assumption-warning", "check": "each_reason_has_assumption_and_warning"},
+        {"id": "synthesis-five", "check": "synthesis_has_five"},
+        {"id": "plan-mapped", "check": "revised_plan_mapped"},
+        {"id": "chat-3-sentences", "check": "chat_summary_three_sentences"}
+      ]
+    },
+    {
+      "id": "resort-reel-pipeline-10-clients",
+      "category": "content_quality",
+      "split": "train",
+      "type": "normal",
+      "context_sufficient": true,
+      "min_reasons": 5,
+      "scenario": "Plan: Scale the resort-reel production pipeline from 1 client to 10 paying clients next month using the current one-person operation and existing tooling. Affects: the solo operator, all 10 clients, the brand's reputation. Success means: all 10 reels delivered on time next month at the same quality bar the first client approved.",
+      "assertions": [
+        {"id": "frame", "check": "frame_stated"},
+        {"id": "no-preset", "check": "no_preset_categories"},
+        {"id": "min-reasons", "check": "min_failure_reasons", "value": 5},
+        {"id": "assumption-warning", "check": "each_reason_has_assumption_and_warning"},
+        {"id": "synthesis-five", "check": "synthesis_has_five"},
+        {"id": "plan-mapped", "check": "revised_plan_mapped"},
+        {"id": "chat-3-sentences", "check": "chat_summary_three_sentences"}
+      ]
+    },
+    {
+      "id": "migrate-prod-db-friday",
+      "category": "content_quality",
+      "split": "train",
+      "type": "normal",
+      "context_sufficient": true,
+      "min_reasons": 4,
+      "scenario": "Plan: Migrate the production database to a new schema this Friday evening inside a 2-hour maintenance window, with the whole team on call. Affects: all live users, the on-call engineers, customer trust. Success means: zero data loss, under 2 hours of downtime, and no rollback.",
+      "assertions": [
+        {"id": "frame", "check": "frame_stated"},
+        {"id": "no-preset", "check": "no_preset_categories"},
+        {"id": "min-reasons", "check": "min_failure_reasons", "value": 4},
+        {"id": "assumption-warning", "check": "each_reason_has_assumption_and_warning"},
+        {"id": "synthesis-five", "check": "synthesis_has_five"},
+        {"id": "plan-mapped", "check": "revised_plan_mapped"},
+        {"id": "chat-3-sentences", "check": "chat_summary_three_sentences"}
+      ]
+    },
+    {
+      "id": "underspecified-rebrand",
+      "category": "edge_cases",
+      "split": "train",
+      "type": "underspecified",
+      "context_sufficient": false,
+      "min_reasons": 4,
+      "scenario": "Plan: We are going to rebrand the company name and logo next quarter. (NOTE: who it affects and what success means are NOT stated — the skill's context threshold should make the agent ask the single most important missing question, then proceed.)",
+      "assertions": [
+        {"id": "asked-one", "check": "asked_one_question"},
+        {"id": "frame", "check": "frame_stated"},
+        {"id": "no-preset", "check": "no_preset_categories"},
+        {"id": "min-reasons", "check": "min_failure_reasons", "value": 4},
+        {"id": "assumption-warning", "check": "each_reason_has_assumption_and_warning"},
+        {"id": "synthesis-five", "check": "synthesis_has_five"},
+        {"id": "chat-3-sentences", "check": "chat_summary_three_sentences"}
+      ]
+    },
+    {
+      "id": "raise-seed-round",
+      "category": "content_quality",
+      "split": "heldout",
+      "type": "normal",
+      "context_sufficient": true,
+      "min_reasons": 5,
+      "scenario": "Plan: Raise a 1.5M USD seed round over the next 8 weeks to fund the first three hires. Affects: the two co-founders, the prospective hires whose offers depend on it, the cap table. Success means: closing at or above the target valuation with a committed lead investor inside 8 weeks.",
+      "assertions": [
+        {"id": "frame", "check": "frame_stated"},
+        {"id": "no-preset", "check": "no_preset_categories"},
+        {"id": "min-reasons", "check": "min_failure_reasons", "value": 5},
+        {"id": "assumption-warning", "check": "each_reason_has_assumption_and_warning"},
+        {"id": "synthesis-five", "check": "synthesis_has_five"},
+        {"id": "plan-mapped", "check": "revised_plan_mapped"},
+        {"id": "chat-3-sentences", "check": "chat_summary_three_sentences"}
+      ]
+    },
+    {
+      "id": "double-subscription-price",
+      "category": "content_quality",
+      "split": "heldout",
+      "type": "normal",
+      "context_sufficient": true,
+      "min_reasons": 5,
+      "scenario": "Plan: Double the subscription price for ALL existing customers starting next billing cycle, with 30 days notice. Affects: every current subscriber, support, revenue. Success means: net revenue rises and churn from the change stays under 10%.",
+      "assertions": [
+        {"id": "frame", "check": "frame_stated"},
+        {"id": "no-preset", "check": "no_preset_categories"},
+        {"id": "min-reasons", "check": "min_failure_reasons", "value": 5},
+        {"id": "assumption-warning", "check": "each_reason_has_assumption_and_warning"},
+        {"id": "synthesis-five", "check": "synthesis_has_five"},
+        {"id": "plan-mapped", "check": "revised_plan_mapped"},
+        {"id": "chat-3-sentences", "check": "chat_summary_three_sentences"}
+      ]
+    },
+    {
+      "id": "negative-tweet-feedback",
+      "category": "edge_cases",
+      "split": "heldout",
+      "type": "negative",
+      "context_sufficient": true,
+      "min_reasons": 0,
+      "scenario": "User asks: 'Can you give me quick feedback on the wording of this tweet?' This is a routine, low-stakes feedback request — the skill explicitly says NOT to launch a full premortem here. The agent should decline to run a premortem and just answer directly.",
+      "assertions": [
+        {"id": "declined", "check": "declined_premortem"}
+      ]
+    }
+  ],
+  "approved": true,
+  "target": 0.90
+}

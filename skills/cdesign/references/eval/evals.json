@@ -1,0 +1,148 @@
+{
+  "skill": "cdesign",
+  "frozen": true,
+  "optimization_target": "accuracy = routing correctness (pick the right use case / uc-*.md + DesignSync recipe) + authoring quality (constrain-guardrails/free-composition, verbatim docs, honest legend, hand-back). Efficiency is NOT an optimization target for a routing/authoring text-decision skill, so its weight is 0.",
+  "composite_weights": {"assertion": 0.5, "judge": 0.5, "efficiency": 0.0},
+  "caveat": "Headless run: DesignSync MCP is absent. Eval the TEXT decisions only — which use case, which uc-*.md, which DesignSync ops in order, and the authoring plan. No live round-trips.",
+  "split": {"train": 6, "heldout": 4},
+  "decision_contract": "Given the cdesign skill snapshot + a scenario, the runner outputs ONE fenced ```json block: {\"use_case\": \"new-system|build|edit|assets|defer-design-sync|ask\", \"uc_file\": \"references/uc-*.md or none\", \"edit_path\": \"direct|message|n/a\", \"ops\": [ordered DesignSync/skill ops it would call, e.g. list_projects, get_project, list_files, get_file, create_project, finalize_plan, write_files, delete_files, /imgen, /vidgen, /design-sync], \"uploads\": [the file/asset names it would write INTO the project, e.g. first-message.txt, the-spec.md, ref-hero-1.jpg, tokens.css], \"authoring_plan\": \"prose: package contents, locks vs free split, asset legend, hand-back\"}. Machine assertions check use_case/uc_file/edit_path/ops/uploads; the cold judge scores authoring quality.",
+  "assertion_check_types": {
+    "use_case": "decision.use_case == value",
+    "uc_file": "decision.uc_file basename == value",
+    "edit_path": "decision.edit_path == value",
+    "ops_present": "every op in value appears (case-insensitive) in decision.ops",
+    "ops_order": "the ops in value appear in decision.ops as a relative subsequence (tolerant of repeats like list_files)",
+    "op_absent": "NONE of value appears in decision.ops (wrong tool not invoked)",
+    "no_upload": "NONE of value appears in decision.uploads (file correctly NOT written into the project)"
+  },
+  "scenarios": [
+    {
+      "id": "T1-build-sands",
+      "split": "train",
+      "prompt": "Build my Athar package one-pager on the Sands design system I already have in Claude Design.",
+      "assertions": [
+        {"type": "use_case", "value": "build"},
+        {"type": "uc_file", "value": "uc-build-existing.md"},
+        {"type": "ops_present", "value": ["list_projects", "finalize_plan", "write_files", "list_files"]},
+        {"type": "ops_order", "value": ["finalize_plan", "write_files", "list_files"]},
+        {"type": "no_upload", "value": ["tokens.css"]}
+      ],
+      "judge_rubric": "Routes to BUILD on an existing/attached system (not new-system). Package names the Sands system in the first-message, feeds the real spec/plan VERBATIM (no re-curation), splits locked brand/honesty rules from freed composition, includes an honest asset legend, and hands back by uploading the prompt as a file + summarizing (never dumping the prompt body). Does NOT upload tokens.css (Jono attaches the published system)."
+    },
+    {
+      "id": "T2-newsystem-ledgerly",
+      "split": "train",
+      "prompt": "Create a brand-new design system for a fintech app called Ledgerly. I have the font and two brand colors picked already; have Claude Design propose the rest.",
+      "assertions": [
+        {"type": "use_case", "value": "new-system"},
+        {"type": "uc_file", "value": "uc-new-design-system.md"},
+        {"type": "ops_present", "value": ["list_projects", "create_project", "finalize_plan", "write_files"]},
+        {"type": "ops_order", "value": ["create_project", "finalize_plan", "write_files"]}
+      ],
+      "judge_rubric": "Routes to NEW-SYSTEM. The first-message is a design-system-generation directive that LOCKS only the decided font + two colors and FREES the rest (type scale, spacing, component variants, states) for CD to propose. Produces a SYSTEM, not a page/deliverable arc. list_projects to avoid a name collision before create_project."
+    },
+    {
+      "id": "T3-edit-direct-typo",
+      "split": "train",
+      "prompt": "Pull back the landing page Claude Design built and fix the typo in the footer copy.",
+      "assertions": [
+        {"type": "use_case", "value": "edit"},
+        {"type": "uc_file", "value": "uc-edit-build.md"},
+        {"type": "edit_path", "value": "direct"},
+        {"type": "ops_present", "value": ["get_file", "finalize_plan", "write_files", "list_files"]},
+        {"type": "ops_order", "value": ["get_file", "finalize_plan", "write_files", "list_files"]}
+      ],
+      "judge_rubric": "Routes to EDIT and picks the DIRECT (Claude-Code-edits) path because a footer typo is mechanical/surgical. get_file first to diff intent vs reality, edit the local mirror, push via finalize_plan -> write_files, verify with list_files. No paste message, no first-message.txt."
+    },
+    {
+      "id": "T4-assets-textures",
+      "split": "train",
+      "prompt": "Generate three decorative hero textures and feed them into the Claude Design build.",
+      "assertions": [
+        {"type": "use_case", "value": "assets"},
+        {"type": "uc_file", "value": "uc-assets.md"},
+        {"type": "ops_present", "value": ["/imgen", "finalize_plan", "write_files", "list_files"]},
+        {"type": "ops_order", "value": ["finalize_plan", "write_files", "list_files"]},
+        {"type": "op_absent", "value": ["/vidgen"]}
+      ],
+      "judge_rubric": "Routes to ASSETS. Generates via /imgen (images, not /vidgen), saves as ref-* files, applies any post-processing before upload, uploads with write_files (bytes never enter context), and writes a legend that DESCRIBES what each texture depicts, marks it decorative (honesty), and explicitly FREES placement/scale/crop/layer to CD. Never fabricates/fakes assets."
+    },
+    {
+      "id": "T5-edit-message-hero",
+      "split": "train",
+      "prompt": "Pull the design back and have Claude Design completely rethink the hero section, laying in these three new product shots beautifully.",
+      "assertions": [
+        {"type": "use_case", "value": "edit"},
+        {"type": "uc_file", "value": "uc-edit-build.md"},
+        {"type": "edit_path", "value": "message"},
+        {"type": "ops_present", "value": ["get_file", "finalize_plan", "write_files", "list_files"]},
+        {"type": "ops_order", "value": ["get_file", "finalize_plan", "write_files", "list_files"]}
+      ],
+      "judge_rubric": "Routes to EDIT and picks the MESSAGE (hand-CD-a-message) path because 'completely rethink + lay in beautifully' is generative recomposition needing CD's design judgment. get_file + diff current DOM first, author a numbered priority-ordered edit-message-NN.txt that re-asserts critical rules (never assume a prior edit applied), constrains guardrails / frees composition, uploads it into the project, and hands back by SUMMARIZING in chat (never dumping the prompt body)."
+    },
+    {
+      "id": "T6-build-facet-disambig",
+      "split": "train",
+      "prompt": "Design this onboarding flow on brand Facet — my published Facet design system in Claude Design.",
+      "assertions": [
+        {"type": "use_case", "value": "build"},
+        {"type": "uc_file", "value": "uc-build-existing.md"},
+        {"type": "ops_present", "value": ["list_projects", "finalize_plan", "write_files", "list_files"]},
+        {"type": "ops_order", "value": ["finalize_plan", "write_files", "list_files"]},
+        {"type": "no_upload", "value": ["tokens.css"]}
+      ],
+      "judge_rubric": "Correctly disambiguates to BUILD (not new-system) because the brand is settled and published — the work is the deliverable, not a token system. Names Facet in the first-message, packs the section arc + copy, does NOT upload tokens.css (Jono attaches Facet)."
+    },
+    {
+      "id": "H1-defer-storybook",
+      "split": "heldout",
+      "prompt": "Turn my Storybook component library into a Claude Design design system.",
+      "assertions": [
+        {"type": "use_case", "value": "defer-design-sync"},
+        {"type": "uc_file", "value": "none"},
+        {"type": "ops_present", "value": ["/design-sync"]},
+        {"type": "op_absent", "value": ["create_project"]}
+      ],
+      "judge_rubric": "Correctly DEFERS to /design-sync: a real component-library repo (Storybook) is the heavy converter's job, NOT this skill's new-system flow. Does not create_project or author a plain new-system package here; names /design-sync as the right route and explains why."
+    },
+    {
+      "id": "H2-assets-then-build",
+      "split": "heldout",
+      "prompt": "Make the hero images with imgen and build the landing page on my existing design system using them.",
+      "assertions": [
+        {"type": "use_case", "value": "build"},
+        {"type": "uc_file", "value": "uc-build-existing.md"},
+        {"type": "ops_present", "value": ["/imgen", "list_projects", "finalize_plan", "write_files", "list_files"]},
+        {"type": "ops_order", "value": ["/imgen", "finalize_plan", "write_files", "list_files"]},
+        {"type": "no_upload", "value": ["tokens.css"]}
+      ],
+      "judge_rubric": "Sequences correctly: runs the ASSETS sub-step (/imgen -> ref-* files) FIRST, then folds them into a BUILD on the existing system (uc-build-existing). Primary route is build; assets are a pre-step. Names the existing system, includes the asset legend, does NOT upload tokens.css, does NOT treat this as a new system."
+    },
+    {
+      "id": "H3-edit-direct-logoswap",
+      "split": "heldout",
+      "prompt": "Swap the placeholder logo in the Claude Design build for this real PNG.",
+      "assertions": [
+        {"type": "use_case", "value": "edit"},
+        {"type": "uc_file", "value": "uc-edit-build.md"},
+        {"type": "edit_path", "value": "direct"},
+        {"type": "ops_present", "value": ["get_file", "finalize_plan", "write_files", "list_files"]},
+        {"type": "ops_order", "value": ["get_file", "finalize_plan", "write_files", "list_files"]}
+      ],
+      "judge_rubric": "Routes to EDIT, DIRECT path: an asset swap is mechanical, so Claude Code edits/pushes directly (get_file -> swap in local mirror -> finalize_plan -> write_files -> list_files) rather than authoring a generative paste message. get_file first."
+    },
+    {
+      "id": "H4-newsystem-no-tokens",
+      "split": "heldout",
+      "prompt": "Set up a fresh design system in Claude Design for my coffee brand. No tokens decided yet — let Claude Design propose everything.",
+      "assertions": [
+        {"type": "use_case", "value": "new-system"},
+        {"type": "uc_file", "value": "uc-new-design-system.md"},
+        {"type": "ops_present", "value": ["list_projects", "create_project", "finalize_plan", "write_files"]},
+        {"type": "ops_order", "value": ["create_project", "finalize_plan", "write_files"]},
+        {"type": "no_upload", "value": ["tokens.css"]}
+      ],
+      "judge_rubric": "Routes to NEW-SYSTEM with NO seed tokens: the first-message is a generation directive that lets CD propose the entire system; explicitly does NOT upload a tokens.css (none decided). Produces a system, not a page. No component repo, so no /design-sync defer."
+    }
+  ]
+}
