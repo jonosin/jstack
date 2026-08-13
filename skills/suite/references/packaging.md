@@ -77,9 +77,12 @@ bash skills/suite/scripts/build-plugin.sh --bump patch
 
 What it does, in order, with no per-run judgment:
 
-1. Reads the manifest at `<repo>/.claude-plugin/plugin.json` (the single source of truth for plugin
-   `name` + `version`). `--bump patch|minor|major` or `--version X.Y.Z` writes the new version back to
-   the manifest so a Cowork reinstall registers as an update; omit them to build the current version.
+1. The portable Agent Plugins package is the repository root: `<repo>/plugin.json` plus immediate
+   `skills/<name>/SKILL.md` directories. Keep `skills/`: it is the standard discovery location.
+   `.claude-plugin/plugin.json` and the `.plugin` archive are only Claude/Cowork compatibility
+   artifacts. The build reads both manifests and requires matching plugin `name` + `version`.
+   `--bump patch|minor|major` or `--version X.Y.Z` writes the new version to both manifests so a
+   Cowork reinstall registers as an update; omit them to build the current version.
 2. **Auto-discovers** every `skills/<name>/` containing a `SKILL.md`. New and updated skills are
    picked up automatically — there is no skill list to maintain. Directories without a `SKILL.md`
    (e.g. an absorbed husk like `coldmsg`) are skipped and reported.

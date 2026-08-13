@@ -12,12 +12,14 @@
 # It auto-discovers every skills/<name>/ that has a SKILL.md (so new and updated
 # skills are picked up with no edits here), validates each skill's frontmatter
 # against the Cowork .plugin rules, scrubs non-shippable junk, and zips a plugin
-# with stable file ordering. Manifest is read from <repo>/.claude-plugin/plugin.json.
+# with stable file ordering. The portable manifest is <repo>/plugin.json; the
+# Claude manifest is <repo>/.claude-plugin/plugin.json. Their name and version stay in sync.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"   # scripts -> jstack -> skills -> repo
 MANIFEST="$REPO_ROOT/.claude-plugin/plugin.json"
+PORTABLE_MANIFEST="$REPO_ROOT/plugin.json"
 SKILLS_SRC="$REPO_ROOT/skills"
 
 OUT=""; BUMP=""; SETVER=""; PRINT_ONLY=0
@@ -33,15 +35,26 @@ while [ $# -gt 0 ]; do
 done
 
 [ -f "$MANIFEST" ] || { echo "ERROR: manifest not found at $MANIFEST" >&2; exit 1; }
+[ -f "$PORTABLE_MANIFEST" ] || { echo "ERROR: Agent Plugins manifest not found at $PORTABLE_MANIFEST" >&2; exit 1; }
 command -v python3 >/dev/null || { echo "ERROR: python3 required" >&2; exit 1; }
 command -v zip     >/dev/null || { echo "ERROR: zip required" >&2; exit 1; }
 
 # --- resolve name + version (optionally bump, writing manifest back) ---------
-read -r PNAME PVER < <(python3 - "$MANIFEST" "$BUMP" "$SETVER" <<'PY'
+RESOLVED_MANIFEST="$(python3 - "$PORTABLE_MANIFEST" "$MANIFEST" "$BUMP" "$SETVER" <<'PY'
 import json, re, sys
-mp, bump, setver = sys.argv[1], sys.argv[2], sys.argv[3]
-m = json.load(open(mp))
-name = m["name"]; ver = m.get("version", "0.1.0")
+portable_path, claude_path, bump, setver = sys.argv[1:]
+portable = json.load(open(portable_path))
+claude = json.load(open(claude_path))
+allowed = {"$schema", "name", "version", "description", "author", "homepage", "repository", "license", "keywords", "extensions"}
+extra = set(portable) - allowed
+if extra: sys.exit(f"portable manifest has unsupported fields: {', '.join(sorted(extra))}")
+if portable.get("$schema") != "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json":
+    sys.exit("portable manifest has an unsupported $schema")
+name = portable.get("name", ""); ver = portable.get("version", "")
+if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", name): sys.exit("portable manifest has an invalid name")
+if not re.fullmatch(r"\d+\.\d+\.\d+", ver): sys.exit("portable manifest has an invalid version")
+if claude.get("name") != name or claude.get("version") != ver:
+    sys.exit("portable and Claude manifests must have the same name and version")
 if setver:
     if not re.fullmatch(r"\d+\.\d+\.\d+", setver): sys.exit("bad --version (want X.Y.Z)")
     ver = setver
@@ -53,12 +66,14 @@ elif bump:
     else: sys.exit("bad --bump (want patch|minor|major)")
     ver = f"{a}.{b}.{c}"
 if setver or bump:
-    m["version"] = ver
-    with open(mp, "w") as f:
-        json.dump(m, f, indent=2); f.write("\n")
+    for path, manifest in ((portable_path, portable), (claude_path, claude)):
+        manifest["version"] = ver
+        with open(path, "w") as f:
+            json.dump(manifest, f, indent=2); f.write("\n")
 print(name, ver)
 PY
-)
+)"
+read -r PNAME PVER <<< "$RESOLVED_MANIFEST"
 
 echo "jstack build-plugin"
 echo "----------------------------------------"
@@ -68,11 +83,12 @@ echo "plugin:    $PNAME v$PVER"
 # --- stage ------------------------------------------------------------------
 STAGE="$(mktemp -d)"; trap 'rm -rf "$STAGE"' EXIT
 mkdir -p "$STAGE/.claude-plugin" "$STAGE/skills"
-# write the (possibly bumped) manifest fresh so the zip matches the repo
-python3 - "$MANIFEST" "$STAGE/.claude-plugin/plugin.json" <<'PY'
+# Write the portable and Claude manifests fresh so the zip matches the repo.
+python3 - "$PORTABLE_MANIFEST" "$STAGE/plugin.json" "$MANIFEST" "$STAGE/.claude-plugin/plugin.json" <<'PY'
 import json, sys
-json.dump(json.load(open(sys.argv[1])), open(sys.argv[2], "w"), indent=2)
-open(sys.argv[2], "a").write("\n")
+for source, target in ((sys.argv[1], sys.argv[2]), (sys.argv[3], sys.argv[4])):
+    json.dump(json.load(open(source)), open(target, "w"), indent=2)
+    open(target, "a").write("\n")
 PY
 
 bundled=0; skipped=""

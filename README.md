@@ -19,7 +19,7 @@ cd ~/jstack
 bash skills/suite/scripts/setup.sh
 ```
 
-The `jstack` skill's setup routine copies the skills into your harness skill dir (auto-detects
+The `suite` skill's setup routine copies the skills into your harness skill dir (auto-detects
 `~/.claude/skills`, `~/.agents/skills`, or `~/.hermes/skills`), writes `~/.jstack/config.env`, and
 probes optional tooling. Then reload your agent so it sees the suite skills.
 
@@ -32,7 +32,7 @@ then `cp .env.example ~/.jstack/config.env` and edit it.
 
 | Skill | What it does | Extra setup |
 |-------|--------------|-------------|
-| `jstack` | Suite front door: packaging convention + scaffolder (`/jstack`), and setup/install that writes config (`skills/suite/scripts/setup.sh`). | — |
+| `suite` | Suite front door: packaging convention + scaffolder, and setup/install that writes config (`skills/suite/scripts/setup.sh`). | — |
 | `premortem` | Assumes a plan already failed and works backward to expose failure modes. | — |
 | `jstack-voice` | Warm, direct, concise communication voice. Toggle on/off. | — |
 | `focus` | Compresses the previous response (~40%). | — |
@@ -83,12 +83,27 @@ per-call with an env var. See [`.env.example`](.env.example) for the full list. 
 
 ```
 jstack/
+  plugin.json           # Agent Plugins v1 portable package manifest
   README.md
   .env.example          # all config keys
-  skills/               # the suite skills (copy/symlink into your harness)
+  skills/               # Agent Plugins v1 required skill discovery path
+  .claude-plugin/       # optional Claude/Cowork compatibility manifest
+  dist/*.plugin          # optional Claude/Cowork compatibility bundle
   vendor/gemini-vision/ # the `gv` Gemini wrapper used by vision
   tools/secrets-gate.sh # pre-push scan for identity/keys (run before every push)
 ```
+
+## Agent Plugins package
+
+This repository root is an [Agent Plugins v1](https://agent-plugins.org/plugin-authors) package.
+The portable package boundary is `plugin.json` plus the immediate `skills/<name>/SKILL.md`
+directories. The `skills/` directory stays because the standard requires it for skill discovery;
+it is not a legacy install folder. Agent Plugins defines directory packages, so use this Git
+repository directly as the portable package.
+
+`.claude-plugin/plugin.json` and `dist/jstack-skills.plugin` remain for Claude/Cowork compatibility.
+The build script includes the portable root manifest in that bundle and checks that both manifests
+use the same name and version.
 
 ## Authoring & contributing
 

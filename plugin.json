@@ -1,0 +1,18 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "jstack-skills",
+  "version": "0.1.4",
+  "description": "Composable agent-workflow skills for planning, communication, knowledge work, and media analysis.",
+  "author": {
+    "name": "jonosin"
+  },
+  "homepage": "https://github.com/jonosin/jstack",
+  "repository": "https://github.com/jonosin/jstack",
+  "keywords": [
+    "agent-skills",
+    "agent-plugins",
+    "workflow",
+    "codex",
+    "claude-code"
+  ]
+}

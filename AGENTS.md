@@ -1,6 +1,6 @@
 # jstack — Agent Contract (the jstack skill suite)
 
-This repo is the **canonical home of the Jstack Skills plugin** — the composable
+This repo is the **canonical home of the Jstack Skills Agent Plugin** — the composable
 agent skills that shape how an agent talks, hands off sessions, captures knowledge, drafts
 messages, scaffolds/tunes other skills, and analyzes media. Each `skills/<name>/` dir is the
 single source of truth; every harness (`.agents`, `.claude`, `.codex`, `.hermes/skills/suite`)
@@ -63,9 +63,10 @@ that reaches "generate a video/clip" routes through `/vidgen`, never a backend d
 jstack/
   AGENTS.md             # this contract        CLAUDE.md → @AGENTS.md
   README.md             # human-facing skill catalog + setup
+  plugin.json           # portable Agent Plugins v1 manifest
   .env.example          # all config keys (copy → ~/.jstack/config.env)
-  skills/               # the canonical suite skills (symlinked into every harness)
-    jstack/             #   suite front door: packaging convention + scaffolder (new-jstack-skill.sh) + setup/install (scripts/setup.sh, references/setup.md)
+  skills/               # required Agent Plugins skill discovery path; canonical suite skills
+    suite/              #   suite front door: packaging convention + scaffolder (new-jstack-skill.sh) + setup/install (scripts/setup.sh, references/setup.md)
     …                   #   one dir per skill — the single source of truth
   vendor/               # bundled helpers (e.g. gemini-vision `gv` wrapper for vision)
   tools/secrets-gate.sh # pre-push scan for identity/paths/keys — RUN BEFORE EVERY PUSH
@@ -91,6 +92,9 @@ shippable product belongs in one of the repos above.
 
 - **Skills follow the AgentSkills format** — a `SKILL.md` with YAML frontmatter (`name`, `description`),
   so they load in any harness. Author/restructure with `skill-creator`.
+- **The portable package manifest is `plugin.json`.** Keep its `name` and `version` equal to
+  `.claude-plugin/plugin.json`; the build script checks this. Do not add client-specific fields to
+  `plugin.json`; use a separate companion manifest when a client needs one.
 - **Config resolution is always** env var → `~/.jstack/config.env` → built-in default. Never hardcode a
   personal value into a committed skill.
 - **`## Next skills` table is required** on every skill (see §2).

@@ -13,7 +13,7 @@ its reference:
 |-----|------|-----------|
 | **Set up / install** | "set up jstack", "install jstack", "configure jstack", "/jstack-setup", or the repo was just cloned and needs wiring into a harness | `references/setup.md` |
 | **Author / package** | "make a jstack skill", "new jstack skill", "scaffold a skill", naming/frontmatter/plugin-convention questions | `references/packaging.md` |
-| **Build the `.plugin`** | "build the plugin", "repackage jstack", "rebuild the .plugin", "package for Cowork", or a skill changed and the Cowork bundle needs regenerating | run `scripts/build-plugin.sh` (see below + `references/packaging.md` → "Build the .plugin") |
+| **Package the plugin** | "package the plugin", "repackage jstack", "Agent Plugins package", "rebuild the .plugin", "package for Cowork", or a skill changed | The repo root (`plugin.json` + `skills/`) is the portable Agent Plugins package. Run `scripts/build-plugin.sh` only to regenerate the Claude/Cowork compatibility bundle. |
 
 Do not load more than one reference at once — route first, then read the one you need.
 
@@ -26,9 +26,10 @@ updated skills are picked up with no edits to the build:
 bash skills/suite/scripts/build-plugin.sh --bump patch
 ```
 
-It reads the manifest at `.claude-plugin/plugin.json`, discovers every `skills/<name>/` that has a
+The portable manifest is at `plugin.json`; it discovers every `skills/<name>/` that has a
 `SKILL.md` (skipping husk dirs), validates each skill's frontmatter against the Cowork `.plugin` rules
-(fails fast on any violation), scrubs non-shippable junk (`.git`, `.venv`, `node_modules`,
+(fails fast on any violation), checks that the Claude companion manifest has the same name and version,
+scrubs non-shippable junk (`.git`, `.venv`, `node_modules`,
 `__pycache__`, `*.pyc/.orig/.bak/.DS_Store`, dangling symlinks), and zips with stable file ordering to
 `dist/<plugin-name>.plugin`. Flags: `--bump patch|minor|major` or `--version X.Y.Z` (bump so Cowork
 treats the reinstall as an update), `--out PATH`, `--print-only` (discover + validate, write nothing).
@@ -66,7 +67,8 @@ For a suite-global skill only, never hand-create its directories or symlinks. Sc
 skills/suite/scripts/new-jstack-skill.sh <skill-name> --desc "one-line description"
 ```
 
-Then fill in the canonical `SKILL.md` body in the repo. The naming convention, the Cowork `.plugin`
+Then fill in the canonical `SKILL.md` body in the repo. The naming convention, the Agent Plugins
+package contract, the Cowork `.plugin`
 frontmatter rules, the required `## Next skills` table, the pre-push secrets gate, the Discord
 `external_dirs` fix, and how to adapt external skills are all in `references/packaging.md`.
 
