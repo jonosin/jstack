@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "jstack-skills",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Composable agent-workflow skills for planning, communication, knowledge work, and media analysis.",
   "author": {
     "name": "jonosin"
