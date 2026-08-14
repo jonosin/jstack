@@ -4,7 +4,7 @@
 # Usage:
 #   setup.sh [--skills-dir DIR] [--link] [--non-interactive] [--print-only]
 #
-#   --skills-dir DIR   Install target (default: auto-detect, fallback ~/.claude/skills)
+#   --skills-dir DIR   Install target (default: auto-detect, fallback ~/.codex/skills)
 #   --link             Symlink skills instead of copying (edits track the repo)
 #   --non-interactive  Never prompt; write config from defaults (also auto when no TTY)
 #   --print-only       Detect + report what it would do, make no changes
@@ -43,7 +43,7 @@ hr()  { printf -- '----------------------------------------\n'; }
 
 # --- 1. choose install target ----------------------------------------------
 if [ -z "$SKILLS_DIR" ]; then
-  CANDIDATES=("$HOME/.claude/skills" "$HOME/.agents/skills" "$HOME/.hermes/skills")
+  CANDIDATES=("$HOME/.codex/skills" "$HOME/.claude/skills" "$HOME/.agents/skills" "$HOME/.hermes/skills")
   FOUND=()
   for d in "${CANDIDATES[@]}"; do [ -d "$d" ] && FOUND+=("$d"); done
   if [ "${#FOUND[@]}" -eq 1 ]; then
@@ -54,7 +54,7 @@ if [ -z "$SKILLS_DIR" ]; then
     printf "Install into which? [1] "; read -r choice || choice=1
     SKILLS_DIR="${FOUND[$(( ${choice:-1} - 1 ))]}"
   else
-    SKILLS_DIR="${FOUND[0]:-$HOME/.claude/skills}"
+    SKILLS_DIR="${FOUND[0]:-$HOME/.codex/skills}"
   fi
 fi
 

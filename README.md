@@ -20,7 +20,7 @@ bash skills/suite/scripts/setup.sh
 ```
 
 The `suite` skill's setup routine copies the skills into your harness skill dir (auto-detects
-`~/.claude/skills`, `~/.agents/skills`, or `~/.hermes/skills`), writes `~/.jstack/config.env`, and
+`~/.codex/skills`, `~/.claude/skills`, `~/.agents/skills`, or `~/.hermes/skills`), writes `~/.jstack/config.env`, and
 probes optional tooling. Then reload your agent so it sees the suite skills.
 
 Prefer symlinks (so edits track the repo)? `bash skills/suite/scripts/setup.sh --link`.

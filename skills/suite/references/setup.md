@@ -13,7 +13,7 @@ bash skills/suite/scripts/setup.sh
 ```
 
 Useful flags:
-- `--skills-dir DIR` — install target (default: auto-detect `~/.claude/skills`, `~/.agents/skills`, or `~/.hermes/skills`).
+- `--skills-dir DIR` — install target (default: auto-detect `~/.codex/skills`, `~/.claude/skills`, `~/.agents/skills`, or `~/.hermes/skills`).
 - `--link` — symlink skills instead of copying (so edits track the repo).
 - `--non-interactive` — never prompt; write config from defaults (this is automatic when run by an agent, since there's no TTY).
 - `--print-only` — report what it would do, change nothing.
