@@ -15,10 +15,11 @@ brief. Pick the smallest view that makes the key point clear.
 - Show component interaction, control flow, or data flow with Mermaid.
 - Show the whole relevant block when most of it is new, when omitted context hides ownership or order,
   or when the user needs a copyable target shape.
-- For a visual UI, layout, state comparison, or concept too dense for Mermaid, write one focused HTML
-  file: a diagram, infographic, or short slide deck. Match the product's colors, type, spacing, and
-  components. Use real labels and data. Support desktop and mobile. Then open it for the user with
-  `open path/to/show-me-[description].html`.
+- For an in-conversation visual UI, layout, state comparison, interactive explainer, or concept too
+  dense for Mermaid, read `references/inline-visuals.md`. It is the small wrapper for the relevant
+  `visualize` behavior.
+- For a website, app, component, or other project-file change, use the normal project workflow. It is
+  not an in-conversation visualization.
 
 Place each visual next to the short text it supports. Keep only the calls, files, props, states, and
 boundaries needed to answer the current question. Use one or more views as needed, but do not
