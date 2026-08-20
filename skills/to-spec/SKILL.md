@@ -32,10 +32,17 @@ Write this structure:
 
 ### Sources
 
+### Closeout review
+
+## Milestones
+
+- [ ] <short name> — <observable ideal state>
+
 ## Progress
 
 Status: <not started | active | blocked | done>
 Updated: <YYYY-MM-DD>
+Current milestone: <short name>
 
 ### Completed
 
@@ -53,8 +60,23 @@ stable during execution. After material work, update Progress with compact state
 durable decision changes the contract, record its reason and authority under Contract changes, then
 revise the affected Contract text.
 
+Write the smallest useful milestone set. Each milestone describes the observable ideal state at a
+meaningful transition and leaves the method to the executor. Use milestones for orientation and
+Progress tracking; use Acceptance to decide completion.
+
+Every spec requires a closeout review after the work and acceptance checks. Dispatch a fresh,
+read-only independent reviewer with the Contract, changed artifacts, and verification evidence. The
+reviewer checks the delivered work against every relevant Contract clause: Outcome, Acceptance,
+Scope, Constraints, Stop / escalation, and Settled decisions when applicable. The reviewer maps
+every Acceptance clause to evidence, runs safe required tests, and returns `ship`, `fix-first`, or
+`rethink`. For `fix-first`, dispatch a bounded quick-fix subagent with the exact gap, owned files,
+and done condition; rerun the affected checks, then request a fresh review. For
+`rethink`, or when a fix changes the Contract or needs new authority, stop at the escalation boundary.
+The main session owns final acceptance.
+
 The spec is ready when its outcome, acceptance evidence, scope, constraints, stop / escalation
-boundary, and settled decisions are clear, and Progress states the exact next action or blocker.
+boundary, settled decisions, milestones, and closeout review are clear, and Progress names the
+current milestone and exact next action or blocker.
 
 ## Next skills
 

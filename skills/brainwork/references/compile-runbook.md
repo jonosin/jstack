@@ -6,7 +6,10 @@ does not create a routing card for every source. Raw evidence stays immutable.
 
 ## Required sequence
 
-1. **Snapshot the work.** Run:
+1. **Snapshot the work.** The snapshot first promotes an eligible new flat
+   Obsidian Clipper X file (schema-less frontmatter, X status URL, and the
+   `clippings` tag) into raw v2 and registers it. Other invalid raw evidence
+   remains a stop condition. Run:
 
    ```bash
    python3 tools/sb.py compile snapshot --out <snapshot-path> --json
@@ -18,12 +21,16 @@ does not create a routing card for every source. Raw evidence stays immutable.
    bounded view; never print the full manifest.
    Done when: the snapshot artifact is written and the selected raw IDs have stable order and hashes.
 
-2. **Take one extraction read.** For each selected record, load the raw artifact
-   once. Use a sequential Luna/max worker for semantic extraction, with a
-   60,000-token input cap and one oversized artifact per chunk. The extraction
-   must contain Graphify nodes, edges, hyperedges, source locations, a bounded
-   `source_digest`, key claims, raw provenance, and canonical-impact proposals.
-   Done when: one extraction artifact exists for each assigned raw ID and no worker needs to reopen a successful source.
+2. **Extract token-sized groups.** Group related selected records when they fit
+   within a 60,000-token estimated input cap. Give an oversized artifact its own
+   group. Dispatch one fresh Luna/max extraction subagent for each group. Run the
+   subagents sequentially: join and end one before starting the next. Each
+   subagent reads every assigned raw artifact once and writes one extraction
+   artifact per raw ID. Each extraction contains Graphify nodes, edges,
+   hyperedges, source locations, a bounded `source_digest`, key claims, raw
+   provenance, and canonical-impact proposals. A completed group does not enter
+   a later subagent's context.
+   Done when: every selected raw ID has one validated extraction artifact and every group stayed within the token bound or contained one oversized artifact.
 
 3. **Validate and persist extraction.** Run the public wrapper for each artifact:
 
@@ -36,16 +43,19 @@ does not create a routing card for every source. Raw evidence stays immutable.
    reasoning, an unbounded digest, or an inferred file-node join.
    Done when: every accepted extraction reaches `extracted` and its body and contract hashes match the manifest.
 
-4. **Plan canonical impact.** Group accepted proposals by canonical page. Use:
+4. **Plan canonical impact.** Group accepted proposals by canonical page or one
+   declared conflict group. For each group, dispatch one fresh Luna/max
+   integration subagent to write one merged proposal or patch artifact. Run
+   these subagents sequentially. They can propose changes but cannot apply them
+   or decide new-page creation. Use:
 
    ```bash
    python3 tools/sb.py compile integration-plan --canonical-id <id> --out <proposal-path> --json
    ```
 
-   The main compile session decides `update`, `create`, `no-change`, or
-   `conflict`. New canonical pages are not created by workers. Keep raw
-   provenance on every proposed claim.
-   Done when: every extracted record has one canonical action and each write unit has a named proposal or an explicit conflict.
+   The main compile session reviews each group and decides `update`, `create`,
+   `no-change`, or `conflict`. Keep raw provenance on every proposed claim.
+   Done when: every extracted record has one canonical action, each page group has one merged artifact, and the main session has recorded every decision.
 
 5. **Apply safe deltas.** Apply only non-conflicting proposals:
 

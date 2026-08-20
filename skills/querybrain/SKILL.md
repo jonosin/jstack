@@ -17,6 +17,11 @@ truth. The retrieval overlay owns discovery and retrieval planning. A
 verification. Keep `canonical_summary`, `node_summary`, and `source_digest`
 separate in every decision.
 
+Invoke it from any workspace when second-brain context can improve the current
+task. It queries the second brain only. A web article must already be captured
+there to be returned, and workspace-native satellite documents remain on their
+workspace route rather than in the overlay.
+
 ## Boundary
 
 Run only the bounded repository interface:
@@ -28,11 +33,12 @@ python3 tools/sb.py explain <node> --budget <tokens> --json
 python3 tools/sb.py node get <node-or-path> --budget <tokens> --json
 ```
 
-Run these commands from the second-brain repository. Resolve the repository
-from `SECOND_BRAIN_PATH` in `~/.jstack/config.env`, with `~/second-brain` as the
-default. Use a positive, bounded output budget. Use the command's JSON result,
-pagination, omitted count, cursor, status, and next-command fields. Never open
-the full graph, manifest, or an unbounded corpus to answer a query.
+The agent can start anywhere. Resolve the second-brain repository from
+`SECOND_BRAIN_PATH` in `~/.jstack/config.env`, with `~/second-brain` as the
+default, and run the commands from that repository. Use a positive, bounded
+output budget. Use the command's JSON result, pagination, omitted count, cursor,
+status, and next-command fields. Never open the full graph, manifest, or an
+unbounded corpus to answer a query.
 
 Normal retrieval does not load or run the generic Graphify installation,
 upgrade, build, or diagnosis skill. The generic Graphify skill is for engine
@@ -40,14 +46,25 @@ administration and integration maintenance only.
 
 ## Retrieval workflow
 
-1. **Set the retrieval boundary.** Read the repository `AGENTS.md` and classify
+1. **Make a bounded query plan.** Read the repository `AGENTS.md` and classify
    the request as a fact, decision, context, path, explanation, draft,
    implementation, analysis, exact quote, disputed claim, stale claim, or
    high-stakes task. Follow `superseded_by` and current-versus-superseded
-   status. Keep the query text short enough for the command budget.
+   status.
 
-   Done when: the request has one bounded query text, one repository root, and
-   no request to mutate capture, compile, migration, or canonical data.
+   Make one query family for each distinct information need. Use likely
+   canonical nouns: the person, venture, decision, concept, title, or stable
+   phrase. Split compound questions instead of sending a keyword list. Use no
+   more than three query families unless the user asks for deeper retrieval.
+
+   If a query returns `no_support_found`, retry it once with an alternate
+   canonical phrase and once with a narrower exact phrase. Use `node get`
+   instead when an exact title, path, or stable ID is known. Keep each result
+   separate so one weak query does not dilute another.
+
+   Done when: the request has one bounded repository root, one to three focused
+   query families, each capped at three query texts, and no request to mutate
+   capture, compile, migration, or canonical data.
 
 2. **Select the depth.** Select exactly `answer` when fresh canonical coverage
    is strong and the user needs current synthesis. Select `evidence` for
@@ -111,8 +128,11 @@ administration and integration maintenance only.
    exact required-open command, then open the selected current canonical page
    at its reported source location. For `answer`, stop after the canonical
    page supports the answer. Follow a supersession pointer to its current
-   replacement before using a page. Do not answer from `node_summary`,
-   `source_digest`, a graph edge, or a stale page.
+   replacement before using a page. When the opened page names a directly
+   relevant current concept or source in `See Also` or a wikilink, resolve that
+   exact target with `node get` or `path`. Follow only links that answer the
+   bounded information need. Do not answer from `node_summary`, `source_digest`,
+   a graph edge, or a stale page.
 
    Done when: every answer claim has support in an opened current canonical
    page, and the response names the page path and relevant source location.
@@ -125,7 +145,9 @@ administration and integration maintenance only.
    and line or section range. Raw candidates remain a separate evidence lane;
    they do not replace canonical synthesis. If the canonical page is weak,
    state the weakness and the raw support instead of silently promoting raw to
-   canonical knowledge.
+   canonical knowledge. If a raw ID returns `not_found`, use an exact source-card
+   link from the opened canonical page when one exists and report the broken
+   pointer. Do not replace it with a broad raw search.
 
    Done when: each work-grade claim has both the required canonical context and
    the exact raw section when evidence was required, with no whole-corpus read.
@@ -135,11 +157,14 @@ administration and integration maintenance only.
    surface. If any component is absent, stale, or malformed, the command returns
    `OVERLAY_NOT_READY`. Run exactly `sb overlay update --json`, then retry the
    original query. Do not read the retired second-brain index and do not start another retrieval
-   lane. A valid complete-overlay zero match reports `no_support_found`.
+   lane. A valid complete-overlay zero match starts the bounded reformulation
+   in step 1. Report `no_support_found` after those reformulations also return
+   zero matches.
 
    Done when: retrieval used one complete overlay, or stopped with
-   `OVERLAY_NOT_READY` and the exact repair command; a zero match is reported as
-   `no_support_found` and is not treated as proof that evidence does not exist.
+   `OVERLAY_NOT_READY` and the exact repair command; a zero match after bounded
+   reformulation is reported as `no_support_found` and is not treated as proof
+   that evidence does not exist.
 
 8. **Report the bounded result.** State the selected depth, answer or path,
    authority lane, current status, opened canonical and raw sources, summary
@@ -166,6 +191,14 @@ administration and integration maintenance only.
 - Keep raw bodies immutable. This skill has no write operation.
 - Treat `node_summary` as a locator and `source_digest` as navigation material;
   neither can satisfy an answer or evidence requirement.
-- Never infer absence from a zero match in a bounded query.
+- After a zero match, use the bounded reformulation rule in step 1. Never infer
+  absence from the final `no_support_found` result.
 - Never run Graphify installation, build, extraction, semantic workers, MCP
   mutation, capture, compile, migration, or canonical writes from this skill.
+
+## Next skills
+
+| Next | When |
+|---|---|
+| `brainwork` | The request needs capture, compilation, migration, or maintenance. |
+| `to-spec` | The retrieved context needs an execution contract. |

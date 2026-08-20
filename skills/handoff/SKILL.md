@@ -23,6 +23,18 @@ needed).
 
 Include a `## Suggested skills` section in the document.
 
+Every recap or directive handoff document must include this receiver instruction near the top,
+before the task-specific instructions:
+
+```text
+Read <full-handoff-path> and restate your understanding before proceeding.
+```
+
+Replace `<full-handoff-path>` with the absolute path of the handoff file that was actually saved.
+Expand `~`; do not leave the placeholder or a relative path in the generated document. The
+receiving session must restate its understanding before it performs investigation, writes, or
+external actions.
+
 Reference content already captured in specs, plans, ADRs, issues, commits, or diffs by path or URL.
 Redact sensitive information, such as API keys, passwords, and personally identifiable information.
 
@@ -33,3 +45,10 @@ Treat the directive or bare argument as the next session's focus and tailor the 
 Use goal only when an execution spec already exists. If it does not, direct the user to
 `/to-spec`. Goal returns the prompt described in its reference; the spec remains the source
 of truth.
+
+## Next skills
+
+| Next | When |
+|---|---|
+| `to-spec` | The receiving work needs an execution contract. |
+| `querybrain` | The receiving work needs second-brain context. |

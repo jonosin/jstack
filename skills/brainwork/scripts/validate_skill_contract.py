@@ -50,12 +50,26 @@ def validate() -> None:
         failures = numbered_steps_without_done_when(text)
         assert not failures, f"steps without adjacent Done when in {path}: {failures}"
     skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
+    compile_runbook = (ROOT / "references/compile-runbook.md").read_text(encoding="utf-8")
     assert "name: brainwork" in skill
     assert "description:" in skill
+    frontmatter = skill.split("---", 2)[1].lower()
+    assert "savetobrain" not in frontmatter
+    assert "querybrain" not in frontmatter
     assert "wrapper-contract.md" in skill
     assert "compile-runbook.md" in skill
     assert "migration-runbook.md" in skill
     assert "maintenance-runbook.md" in skill
+    normalized_compile = " ".join(compile_runbook.split())
+    for required in (
+        "Group related selected records",
+        "60,000-token estimated input cap",
+        "one fresh Luna/max extraction subagent for each group",
+        "join and end one before starting the next",
+        "one fresh Luna/max integration subagent",
+        "main compile session reviews each group",
+    ):
+        assert required in normalized_compile, f"missing compile worker contract: {required}"
     print("brainwork skill contract passed")
 
 

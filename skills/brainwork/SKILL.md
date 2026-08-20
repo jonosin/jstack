@@ -1,11 +1,10 @@
 ---
 name: brainwork
 description: >
-  Compile pending second-brain raw evidence, run a bounded migration, or maintain
-  the second brain. Use when the user asks for brainwork, compile, migration,
-  schema or link checks, overlay freshness, generated views, verification, or a
-  dry run. Capture stays in savetobrain and retrieval stays in
-  querybrain.
+  Compile pending raw evidence into canonical second-brain knowledge, run a
+  bounded migration, or maintain the brain. Use when the user asks for
+  brainwork, compile, migration, schema or link checks, overlay freshness,
+  generated views, verification, or a dry run.
 ---
 
 # brainwork
@@ -50,10 +49,10 @@ create one page for every raw artifact.
    | Dry run or no-op | [references/final-report.md](references/final-report.md) |
 
 4. **Run the selected procedure.** Use the public `tools/sb.py` command surface
-   in the runbook. Keep semantic extraction sequential and bounded. Keep raw
-   bodies immutable. Keep canonical changes focused and reviewable. Treat a
-   conflict, failed gate, stale overlay, or protected dirty path as a reportable
-   stop state.
+   in the runbook. Keep runtime semantic workers sequential and bounded by
+   token-sized groups. Keep raw bodies immutable. Keep canonical changes focused
+   and reviewable. Treat a conflict, failed gate, stale overlay, or protected
+   dirty path as a reportable stop state.
 
    Done when: every command returned structured output, every selected state transition is recorded, and no unsafe write is pending.
 
@@ -84,3 +83,10 @@ create one page for every raw artifact.
 - Keep output bounded. Do not print complete manifests, graphs, or corpus listings.
 - Preserve unrelated dirty worktree paths. If an owned path is protected, save a
   blocked proposal and continue only with disjoint work.
+
+## Next skills
+
+| Next | When |
+|---|---|
+| `querybrain` | The compiled result needs retrieval or evidence checks. |
+| `to-spec` | The result needs an execution contract. |

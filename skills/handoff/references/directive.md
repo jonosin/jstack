@@ -8,6 +8,9 @@ Write:
 ```markdown
 # <action-oriented title>
 
+## First action
+Read <full-handoff-path> and restate your understanding before proceeding.
+
 ## Instruction
 <the user's requested result>
 
@@ -23,4 +26,5 @@ Write:
 
 Preserve the user's instruction. Point to an existing spec when it owns the work; otherwise state
 that the receiving session should create one before execution when planning is needed. Do not invent
-a detailed plan or duplicate a referenced artifact. List only skills that will help the next agent.
+a detailed plan or duplicate a referenced artifact. Replace `<full-handoff-path>` with the absolute
+path of the saved handoff file. List only skills that will help the next agent.
