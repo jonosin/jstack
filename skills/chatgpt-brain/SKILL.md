@@ -1,46 +1,42 @@
 ---
 name: chatgpt-brain
-description: "Operate a second-brain vault remotely from ChatGPT using GitHub as storage. Use when searching, saving, compiling, or maintaining a second brain without a local agent runtime."
+description: "Operate a second brain remotely from ChatGPT. Use when ChatGPT needs to search a GitHub-backed second brain, save conversations as raw evidence, compile raw material into canonical wiki knowledge, or maintain generated brain views."
 ---
 
 # chatgpt-brain
 
-This skill adapts second-brain workflows for ChatGPT.
+Use this skill as the remote adapter between ChatGPT and a second-brain vault.
 
-## Core model
+## Model
 
-GitHub is the vault. The assistant is the reasoning layer. Raw evidence remains immutable. Canonical wiki pages contain distilled knowledge. Generated views are navigation data.
+Treat these as separate layers:
 
-## Reading the brain
+- raw/: immutable evidence
+- wiki/: canonical knowledge
+- generated views: navigation data
 
-When answering from the brain:
+## Search
 
-1. Read the generated index first when available.
-2. Use it only for navigation.
-3. Open canonical wiki pages before making claims.
-4. Open raw sources for evidence, disputed facts, or detailed context.
+1. Read the generated index when available.
+2. Use it to find relevant canonical pages.
+3. Open wiki pages before making knowledge claims.
+4. Open raw sources when evidence or detail is required.
 
-## Saving to the brain
-
-When the user asks to save:
+## Save
 
 1. Create a raw markdown artifact.
-2. Preserve the original meaning and context.
-3. Commit the new file to the second-brain repository.
-4. Do not directly rewrite canonical wiki pages unless explicitly compiling.
+2. Preserve source context and provenance.
+3. Commit the file to GitHub.
+4. Leave canonical pages unchanged until compilation.
 
-## Compiling
+## Compile
 
-When the user asks to compile:
-
-1. Review pending raw material.
+1. Read pending raw material.
 2. Extract facts, concepts, and relationships.
-3. Decide whether existing wiki pages need updates or new pages.
-4. Update canonical markdown.
-5. Run verification and refresh generated views when execution tools are available.
+3. Decide canonical updates.
+4. Update wiki markdown.
+5. Refresh generated views and verify integrity.
 
-## Remote limitations
+## Remote execution
 
-ChatGPT may edit GitHub files directly. Command execution such as sb.py should run through a remote execution layer such as GitHub Actions.
-
-Do not treat Graphify output as authoritative. It is generated navigation data.
+Use GitHub file operations for reading and writing. Use GitHub Actions when shell commands such as sb.py are required.
