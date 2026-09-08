@@ -127,5 +127,10 @@ if ! fresh_output=$(cd "$brain_path" && python3 tools/sb.py overlay freshness --
 fi
 printf '%s\n' "$fresh_output"
 
+proof_path=state/overlay/rebuild-proof.json
+changed_paths=$(git -C "$brain_path" diff --name-only)
+if [ "$changed_paths" = "$proof_path" ]; then
+  git -C "$brain_path" show "HEAD:$proof_path" > "$brain_path/$proof_path" || block "could not restore the generated overlay proof"
+fi
 [ -z "$(git -C "$brain_path" status --porcelain=v1)" ] || block "overlay update left tracked local changes"
 info "retrieval overlay repaired and current"

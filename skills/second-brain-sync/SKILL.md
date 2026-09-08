@@ -34,7 +34,7 @@ For exit `0`, report the two commit IDs and the overlay status. For any other ex
 
 - A dry run still fetches. It changes only local remote-tracking references.
 - Configure both expected remote URLs. Missing URLs are a block, not a prompt to trust the current remote.
-- If `overlay update` leaves tracked changes, the command blocks. Do not discard those changes automatically.
+- The command removes only its own `state/overlay/rebuild-proof.json` change after a successful update. Any other tracked change blocks the command.
 
 ## Next skills
 
