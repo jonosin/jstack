@@ -45,6 +45,7 @@ then `cp .env.example ~/.jstack/config.env` and edit it.
 | `git-guardrails` | Installs a PreToolUse hook that mechanically blocks destructive git commands (force push, reset --hard, clean -f, branch -D, checkout .) before they execute. | one-time setup |
 | `vision` | Multimodal analysis (image/audio/video/PDF) via Gemini on Vertex AI. | GCP project + `gemini` CLI |
 | `brainwork` | Processes/ingests/lints a second-brain (llm-wiki) vault. | a second-brain vault |
+| `second-brain-sync` | Safely fast-forwards a local second brain and Jstack checkout, then checks the retrieval overlay. | set `SECOND_BRAIN_REMOTE` and `JSTACK_REMOTE` |
 | `savetobrain` | Captures conversation, YouTube, X/Twitter, or GitHub repository sources as raw vault material. | a second-brain vault; `gh auth login` for GitHub repositories |
 | `savetobrain-from-cc` | Saves a Claude session transcript into the vault. | a second-brain vault |
 | `adscan` | Pulls Meta Ad Library creative for advertisers. | separate `adscan` repo, `ffmpeg` |
@@ -61,6 +62,9 @@ per-call with an env var. See [`.env.example`](.env.example) for the full list. 
 |-----|---------|---------|
 | `JSTACK_PERSONA_NAME` | myvoice, voice | `the user` |
 | `SECOND_BRAIN_PATH` | brainwork, savetobrain* | `~/second-brain` |
+| `SECOND_BRAIN_REMOTE` | second-brain-sync | *(required)* |
+| `JSTACK_PATH` | second-brain-sync | `~/jstack` |
+| `JSTACK_REMOTE` | second-brain-sync | *(required)* |
 | `GOOGLE_CLOUD_PROJECT` | vision | *(required for vision)* |
 | `CLAUDE_PROJECTS_DIR` | claude-find, *-from-claude | `~/.claude/projects` |
 | `ADSCAN_DIR` | adscan | `~/builds/adscan` |

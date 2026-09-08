@@ -1,0 +1,131 @@
+#!/bin/sh
+# Synchronize local retrieval state. This command never compiles or changes brain knowledge.
+set -eu
+
+sync_home=${HOME:?HOME is required}
+config_path="$sync_home/.jstack/config.env"
+dry_run=false
+
+case "${1:-}" in
+  "") ;;
+  --dry-run) dry_run=true ;;
+  *) printf '%s\n' "Usage: second-brain-sync [--dry-run]" >&2; exit 2 ;;
+esac
+
+config_value() {
+  config_key=$1
+  [ -f "$config_path" ] || return 0
+  sed -n "s/^${config_key}=//p" "$config_path" | tail -n 1
+}
+
+expand_home() {
+  case "$1" in
+    '~') printf '%s\n' "$sync_home" ;;
+    '~/'*) printf '%s/%s\n' "$sync_home" "${1#~/}" ;;
+    *) printf '%s\n' "$1" ;;
+  esac
+}
+
+info() {
+  printf '%s\n' "SYNC: $*"
+}
+
+block() {
+  printf '%s\n' "BLOCKED: $*" >&2
+  exit 4
+}
+
+brain_path=${SECOND_BRAIN_PATH:-}
+jstack_path=${JSTACK_PATH:-}
+brain_remote=${SECOND_BRAIN_REMOTE:-}
+jstack_remote=${JSTACK_REMOTE:-}
+
+[ -n "$brain_path" ] || brain_path=$(config_value SECOND_BRAIN_PATH)
+[ -n "$jstack_path" ] || jstack_path=$(config_value JSTACK_PATH)
+[ -n "$brain_remote" ] || brain_remote=$(config_value SECOND_BRAIN_REMOTE)
+[ -n "$jstack_remote" ] || jstack_remote=$(config_value JSTACK_REMOTE)
+
+[ -n "$brain_path" ] || brain_path="$sync_home/second-brain"
+[ -n "$jstack_path" ] || jstack_path="$sync_home/jstack"
+brain_path=$(expand_home "$brain_path")
+jstack_path=$(expand_home "$jstack_path")
+[ -n "$brain_remote" ] || block "SECOND_BRAIN_REMOTE is required"
+[ -n "$jstack_remote" ] || block "JSTACK_REMOTE is required"
+
+require_repo() {
+  repo_path=$1
+  expected_remote=$2
+  repo_name=$3
+
+  [ -d "$repo_path" ] || block "$repo_name is missing: $repo_path"
+  git -C "$repo_path" rev-parse --is-inside-work-tree >/dev/null 2>&1 || block "$repo_name is not a Git repository: $repo_path"
+  [ "$(git -C "$repo_path" remote get-url origin 2>/dev/null)" = "$expected_remote" ] || block "$repo_name origin does not match its configured remote"
+  [ "$(git -C "$repo_path" symbolic-ref --quiet --short HEAD 2>/dev/null)" = main ] || block "$repo_name is not on main"
+  [ -z "$(git -C "$repo_path" status --porcelain=v1)" ] || block "$repo_name has uncommitted work"
+}
+
+sync_repo() {
+  repo_path=$1
+  repo_name=$2
+
+  git -C "$repo_path" fetch origin || block "$repo_name fetch failed"
+  local_sha=$(git -C "$repo_path" rev-parse HEAD) || block "$repo_name has no local HEAD"
+  remote_sha=$(git -C "$repo_path" rev-parse origin/main) || block "$repo_name has no origin/main"
+
+  if [ "$local_sha" = "$remote_sha" ]; then
+    info "$repo_name is current at $local_sha"
+    return
+  fi
+
+  base_sha=$(git -C "$repo_path" merge-base HEAD origin/main) || block "$repo_name has no common history with origin/main"
+  if [ "$base_sha" != "$local_sha" ]; then
+    if [ "$base_sha" = "$remote_sha" ]; then
+      block "$repo_name has local commits not on origin/main"
+    fi
+    block "$repo_name history diverged from origin/main"
+  fi
+
+  if [ "$dry_run" = true ]; then
+    info "$repo_name would fast-forward $local_sha to $remote_sha"
+    return
+  fi
+
+  git -C "$repo_path" pull --ff-only origin main || block "$repo_name fast-forward failed"
+  info "$repo_name fast-forwarded to $remote_sha"
+}
+
+require_repo "$brain_path" "$brain_remote" second-brain
+require_repo "$jstack_path" "$jstack_remote" jstack
+sync_repo "$brain_path" second-brain
+sync_repo "$jstack_path" jstack
+
+if overlay_output=$(cd "$brain_path" && python3 tools/sb.py overlay freshness --json); then
+  printf '%s\n' "$overlay_output"
+  info "retrieval overlay is current"
+  exit 0
+else
+  overlay_exit=$?
+fi
+
+printf '%s\n' "$overlay_output" >&2
+[ "$overlay_exit" -eq 3 ] || block "overlay freshness failed"
+
+if [ "$dry_run" = true ]; then
+  info "retrieval overlay is stale. A normal run would execute: python3 tools/sb.py overlay update --json"
+  exit 0
+fi
+
+if ! update_output=$(cd "$brain_path" && python3 tools/sb.py overlay update --json); then
+  printf '%s\n' "$update_output" >&2
+  block "overlay update failed"
+fi
+printf '%s\n' "$update_output"
+
+if ! fresh_output=$(cd "$brain_path" && python3 tools/sb.py overlay freshness --json); then
+  printf '%s\n' "$fresh_output" >&2
+  block "overlay remains stale after update"
+fi
+printf '%s\n' "$fresh_output"
+
+[ -z "$(git -C "$brain_path" status --porcelain=v1)" ] || block "overlay update left tracked local changes"
+info "retrieval overlay repaired and current"
