@@ -23,10 +23,12 @@ update my voice / harmonize my voice" (match on intent, not exact words).
      `mode-warm-founder.md` (warm, deferential) or `mode-confident-sales.md` (confident, peer-footing).
    - **A CHANNEL file** if the lesson is about *formatting / rhythm / register* (mode-agnostic mechanics):
      `channel-text.md` (typed: email/DM/reply) or `channel-spoken.md` (spoken: Loom/VO/call cadence).
+   - **A LANGUAGE overlay** if the lesson is specific to one language or code-switching style rather
+     than all typed messages. Thai / Thai-English texting lessons go in `language-thai-text.md`.
    - **The Universal block in `SKILL.md`** if the rule holds in *every* mode and channel (e.g. a new
      always-banned phrase, a punctuation rule).
    - **`cold-message-voice.md`** if it's about the cold first-touch *voice* specifically.
-   - Ask: is this *who he's being* (mode), *how it's delivered* (channel), or *always true* (universal)?
+   - Ask: is this *who he's being* (mode), *how it's delivered* (channel), *language-specific*, or *always true* (universal)?
    If the lesson is about cold *strategy* (a lever, a metric, an opener shape) rather than *voice*, note
    that it belongs in `gtmarketing` (references/cold-outreach.md), not here, and say so instead of forcing it into a voice file.
 
