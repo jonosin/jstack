@@ -3,8 +3,8 @@ name: myvoice
 description: >-
   Draft outbound in the user's own voice AND keep that voice canon current. DRAFT mode (default): use
   before writing, rewriting, polishing, or replying to emails, DMs, LinkedIn messages, follow-ups,
-  intros, product updates, scheduling notes, warm asks, paid-pilot framing, cold messages, OR any spoken
-  script the user will say out loud (Looms, VSLs, video VO, call openers) where they want it to sound
+  intros, product updates, scheduling notes, warm asks, paid-pilot framing, cold messages, Thai or
+  Thai-English business/chat messages, OR any spoken script the user will say out loud (Looms, VSLs, video VO, call openers) where they want it to sound
   like a real person, not an assistant. The voice composes on two axes: a MODE (warm founder vs confident
   sales) and a CHANNEL (typed vs spoken). Triggers: draft in my voice, write this email/DM/cold message,
   script this Loom/VSL, and "in my confident/sales voice" or "in my warm voice" to force a mode.
@@ -35,6 +35,13 @@ confident×spoken. This skill has two function classes; read the invocation inte
 |---|---|
 | Anything **typed**: email, reply, DM, LinkedIn message, follow-up, intro, product update, scheduling note, warm ask, paid-pilot/pricing framing | `references/channel-text.md` |
 | Anything he will **say out loud**: Loom/VSL/video VO, call opener, spoken demo or explainer | `references/channel-spoken.md` |
+
+### Step 1b: apply a LANGUAGE overlay when needed
+
+If the typed output is primarily Thai or naturally mixed Thai-English, also load
+`references/language-thai-text.md`. This overlay owns Thai address terms, self-reference, politeness
+particles, Thai-English code-switching, LINE-message rhythm, and Thai-specific examples. It composes
+with `channel-text.md` and whichever MODE is selected. Do not use it for English-only drafts.
 
 ### Step 2: pick the MODE (which persona)
 | Signal in the request | Load |
@@ -91,6 +98,9 @@ deduped), then confirm the diff back to him. This is how the voice canon compoun
 **CHANNEL (mechanics, pick one, mode-agnostic):**
 - `references/channel-text.md`: written-message mechanics (email/DM/reply: register, length, style rules).
 - `references/channel-spoken.md`: spoken-delivery mechanics (Loom/VO/call: pronouns, cadence, read-aloud).
+
+**Language overlay (load when applicable):**
+- `references/language-thai-text.md`: Jon's Thai / Thai-English typed-message voice.
 
 **Overlay + procedure:**
 - `references/cold-message-voice.md`: cold first-touch overlay (cold STRATEGY lives in `gtmarketing` → `references/cold-outreach.md`).
