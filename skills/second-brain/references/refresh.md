@@ -85,3 +85,9 @@ and a proper fetch in a fresh checkout. JSON commit metadata can lose raw Git
 header/signature details; do not fabricate a commit object from it and claim its
 SHA matches. The connector snapshot route proves current bytes/tree, not new
 remote history. No new laptop export is required for subsequent changed blobs.
+
+The initial parent-dot acceptance used six changed blobs from the real private
+repository and reproduced the exact remote target tree in a separate checkout.
+Overlay rebuild and a bounded query then found the captured article, without
+shell Git credentials or another laptop export. Treat this as recorded test
+evidence, not proof that a new environment has those capabilities.

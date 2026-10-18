@@ -64,16 +64,33 @@ of eligible seeded file nodes and avoid this ordering problem.
 
 ## Already verified extraction
 
-The current public compile interface cannot re-record an extraction from state
-`verified`; remote compile requires `captured`. `compile resume` on a terminal
-record does not re-extract it. A fresh overlay rebuild cannot invent missing
-edges. Report graph enrichment as blocked rather than recapturing the source,
-rewriting raw, resetting manifest state or silently overwriting an old receipt.
+Check the actual command interface before selecting this branch. The original
+public compile interface cannot re-record from `verified`; remote compile
+requires `captured`, and terminal `compile resume` does not re-extract. A fresh
+overlay rebuild cannot invent missing edges. Keep raw evidence and terminal
+state intact.
 
-A future repository patch needs a bounded public enrichment operation: expected
-raw/body/extraction/manifest hashes, an explicitly reviewed replacement fragment,
-preserved old extraction and receipts, unchanged raw/canonical meaning, atomic
-manifest reference update, endpoint/provenance validation, rebuilt overlay and
-scoped plus whole-repo verification. This describes needed functionality; it is
-not an existing command. Keep that code change separate from unrelated knowledge
-maintenance and existing Actions.
+A tested target-repository patch adds the public `compile enrich-graph` command.
+Use it only after the approved code/schema files are materialised in dot's
+isolated checkout and `python3 tools/sb.py compile enrich-graph --help` confirms
+availability. Read that repository's `docs/graph-enrichment.md` and
+`schemas/graph-enrichment-v1.json` before authoring the bounded proposal.
+
+The proposal pins manifest/raw/original-extraction/current-fragment/canonical
+hashes, supplies additions with exact evidence locations and reviewed rationale,
+and declares expected explain/path checks. Run the public command with
+`--check --json` first; review its candidate before the apply form without
+`--check`. Apply writes a new content-addressed graph fragment and immutable
+journal, then switches only `graph_fragment`. It preserves the original
+extraction, compile receipts, raw/canonical bytes and verified/passed state.
+
+Require a single-writer checkout. On a hash conflict preserve the concurrent
+edit and prepare a new reviewed proposal. On interruption inspect the lock and
+journal before retrying the identical proposal. After apply run overlay update,
+freshness, actual explain/path checks and final `sb verify --json`; enrichment
+alone cannot claim indexed or whole-repository verified completion.
+
+If that command is absent, report graph enrichment blocked by missing code
+capability. Do not recapture the source, reset a verified record or overwrite
+old receipts to imitate it. Installing a draft patch is distinct from merging
+it or publishing a knowledge change; preserve those user boundaries.
