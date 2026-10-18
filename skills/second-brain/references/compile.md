@@ -5,6 +5,8 @@ Read the selected raw evidence, relevant current canonical pages and supersessio
 links. Preserve attribution and source locations. Distinguish an external author's
 claim from a user-accepted decision. Link related ideas only where the evidence
 supports the connection; inferred connections must remain labelled as synthesis.
+When actual graph connectivity is requested, read graph-connections before
+authoring the extraction. Wikilinks and `raw:` metadata alone do not create edges.
 
 Prefer a small update to an existing page. Create a canonical page only when it
 adds durable knowledge; allow an explicit no-change decision. Keep categories
@@ -38,7 +40,10 @@ The request has exactly `schema`, `raw_ids`, `extractions`, `operations`:
   `create` or `no-change`. A raw ID cannot mix no-change with canonical writes.
 - For update, include the current **Git blob SHA**, not SHA256, preserve its
   canonical ID and supply complete validated content. For create, set before
-  SHA to null and use `id: AUTO` so the processor assigns a canonical ID.
+  SHA to null and normally use `id: AUTO` so the processor assigns a canonical ID.
+  For a new page named by explicit graph edges, the processor also accepts a
+  preallocated schema-valid canonical UUID; see graph-connections for endpoint
+  identity and the required explain/path checks.
 - Use flat Markdown paths under `wiki/personal`, `wiki/concepts` or
   `wiki/system`, matching the page's role. Include every supporting request raw
   ID in canonical `raw:` provenance. Follow all required canonical-v2 fields.

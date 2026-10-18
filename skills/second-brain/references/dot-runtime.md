@@ -5,6 +5,7 @@
 - Prerequisites and credentials
 - Commands and publication
 - Replay and transfer
+- Graph acceptance and incremental refresh
 - Verification limits
 
 ## Prerequisites and credentials
@@ -115,6 +116,18 @@ Transfer this complete skill folder via a GitHub tree/ref or the validated
 files into **its own** filesystem; a child executor path is not a dot path.
 Fetch private brain files only through authorised private transfer. A partial
 snapshot can run a synthetic smoke test but cannot prove whole-brain verification.
+
+## Graph acceptance and incremental refresh
+
+When connecting knowledge is part of the request, follow the graph-connections
+reference and pass `--graph-check PATH` to compile. Explicit extraction edges
+and a real `sb explain`/`sb path` result are required; wikilinks alone do not
+prove graph connectivity. Keep the final verification gate separate.
+
+After the first authorised bootstrap, use the refresh reference for connector
+delta reads and `dot_refresh.py`. It verifies the full target tree in a fresh
+dot checkout without Git credentials or another laptop export. Preserve the
+cursor's remote commit, local checkpoint and tree identities separately.
 
 ## Verification limits
 

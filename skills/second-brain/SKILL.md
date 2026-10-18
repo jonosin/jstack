@@ -30,6 +30,8 @@ request authorises that capture, not unrelated collection or external sharing.
 | Current fact, decision, context, proof, quote, exact page or evidence | [Query](references/query.md); local owner: [querybrain](../querybrain/SKILL.md) |
 | Capture a URL, X article, document, session or existing source | [Capture](references/capture.md); local owner: [savetobrain](../savetobrain/SKILL.md) |
 | Compile admitted evidence into canonical pages | [Compile](references/compile.md); local owner: [brainwork](../brainwork/SKILL.md) |
+| Connect compiled knowledge in the graph; diagnose zero connections | [Graph connections](references/graph-connections.md) |
+| Refresh dot's checkout incrementally from GitHub | [Incremental refresh](references/refresh.md) |
 | Organise, correct, migrate, inspect or repair | [Maintenance](references/maintenance.md); local owner: [brainwork](../brainwork/SKILL.md) |
 | Query, path, explain, or browse an existing `graphify-out/graph.json` map | `~/.agents/skills/graphify/references/query.md` |
 | Generate a wiki or HTML view from an existing map | `~/.agents/skills/graphify/references/exports.md` |

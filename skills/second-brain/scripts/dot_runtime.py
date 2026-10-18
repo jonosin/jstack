@@ -109,6 +109,18 @@ def execute(args) -> tuple[dict, int]:
     if not re.fullmatch(r'[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}', args.id):
         raise ValueError('Use a stable operation ID with letters, digits, dot, underscore or hyphen')
     value = json.loads(Path(args.request).read_text())
+    graph_check = None
+    if args.operation == 'compile' and args.graph_check:
+        graph_check = json.loads(Path(args.graph_check).read_text())
+        if (not isinstance(graph_check, dict) or set(graph_check) != {'explain', 'paths'}
+                or not isinstance(graph_check['explain'], list)
+                or not all(isinstance(ref, str) and ref for ref in graph_check['explain'])
+                or not isinstance(graph_check['paths'], list)
+                or not all(isinstance(pair, dict) and set(pair) == {'source', 'target'}
+                           and all(isinstance(ref, str) and ref for ref in pair.values())
+                           and pair['source'] != pair['target'] for pair in graph_check['paths'])
+                or not (graph_check['explain'] or graph_check['paths'])):
+            raise ValueError('Graph check requires non-empty explain refs and/or distinct source/target pairs')
     payload_hash = digest(json.dumps(value, sort_keys=True, ensure_ascii=False).encode())
     receipt = state / (args.id + '.json')
     # One lock per checkout in this state directory. Reuse --state for all operations.
@@ -186,6 +198,24 @@ def execute(args) -> tuple[dict, int]:
                 if command[1:3] == ['overlay', 'freshness']:
                     report['indexed'] = True
                 write_json(receipt, report)
+            if graph_check:
+                report['graph_connected'] = True
+                checks = [(['tools/sb.py', 'explain', ref, '--budget', '1200', '--json'], 'explain')
+                          for ref in graph_check['explain']]
+                checks += [(['tools/sb.py', 'path', pair['source'], pair['target'],
+                             '--budget', '1200', '--json'], 'path') for pair in graph_check['paths']]
+                for command, kind in checks:
+                    result = run(repo, command)
+                    report['steps'].append({'command': command, **result})
+                    detail = result['output'].get('result') or {}
+                    passed = (result['exit_code'] == 0 and detail.get('status') == 'found'
+                              and bool(detail.get('connections') if kind == 'explain' else detail.get('path')))
+                    if not passed:
+                        report['graph_connected'], report['phase'] = False, 'blocked'
+                        report['error'] = 'GRAPH_EXPECTATION_FAILED: inspect persisted extraction edges and endpoint IDs'
+                        write_json(receipt, report)
+                        return report, 3
+                write_json(receipt, report)
         result = run(repo, ['tools/sb.py', 'verify', '--json'])
         report['steps'].append({'command': 'sb verify --json', **result})
         report['verified'] = result['exit_code'] == 0 and result['output'].get('ok') is True
@@ -205,6 +235,8 @@ def main() -> int:
         command = sub.add_parser(name)
         command.add_argument('--id', required=True)
         command.add_argument('--request', required=True)
+        if name == 'compile':
+            command.add_argument('--graph-check', help='Optional expected explain refs and source/target paths JSON')
     args = parser.parse_args()
     try:
         report, code = execute(args)

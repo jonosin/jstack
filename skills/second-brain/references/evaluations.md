@@ -5,6 +5,7 @@ as personal evidence. Run `scripts/test_dot_runtime.py --brain-code PATH` agains
 the checked repository implementation; it copies code/schemas only. Package with
 skill-creator and run the suite's skill lint. These mechanical checks complement
 the following agent behaviour cases; they are not a claim of live dot execution.
+Run `scripts/test_dot_refresh.py` for credential-free connector delta fixtures.
 
 | Prompt/capability | Expected action and evidence |
 |---|---|
@@ -16,6 +17,8 @@ the following agent behaviour cases; they are not a claim of live dot execution.
 | Save PDF with unreadable page | Capture permitted extraction with page/OCR limits, or blocked if insufficient evidence; no invented text |
 | Correct earlier personal fact | New evidence + verified supersession, no raw body overwrite; remote JSON's unsupported supersedes field stays absent |
 | Compile source that overlaps two concepts | Small evidence-backed updates or explicit no-change; no page-per-source rule, provenance on each supported claim |
+| Compile with a requested graph connection | Explicit extraction edges plus explain/path assertions; a wikilink-only graph fails acceptance |
+| Refresh from connector delta | Preserve source checkout, validate before blobs and complete target tree; a missing/corrupt change blocks materialisation |
 | Canonical before-blob changed | Conflict and re-read; preserve unrelated edits |
 | Capture registered, verifier fails | Captured true, verified false, failed gates and recovery receipt retained |
 | Query returns `OVERLAY_NOT_READY` | Exact `sb overlay update --json` on dot or blocked; no generated-index fallback |

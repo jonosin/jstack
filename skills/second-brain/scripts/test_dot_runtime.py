@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import uuid
 
 BRAIN_CODE = None
 DRIVER = Path(__file__).with_name('dot_runtime.py')
@@ -51,12 +52,16 @@ class RuntimeTests(unittest.TestCase):
         self.git('add', '-A')
         self.git('commit', '-qm', 'Synthetic fixture checkpoint')
 
-    def invoke(self, operation, value=None, operation_id='capture-001'):
+    def invoke(self, operation, value=None, operation_id='capture-001', graph_check=None):
         command = [sys.executable, str(DRIVER), '--repo', str(self.repo), '--state', str(self.state), operation]
         if operation != 'doctor':
             request = self.root / ('input-' + operation_id + '.json')
             request.write_text(json.dumps(value or self.request))
             command.extend(['--id', operation_id, '--request', str(request)])
+            if graph_check:
+                check_path = self.root / ('graph-' + operation_id + '.json')
+                check_path.write_text(json.dumps(graph_check))
+                command.extend(['--graph-check', str(check_path)])
         result = subprocess.run(command, capture_output=True, text=True)
         self.assertTrue(result.stdout, result.stderr)
         return result.returncode, json.loads(result.stdout)
@@ -198,6 +203,53 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual(search.returncode, 0, search.stderr + search.stdout)
         self.assertTrue(json.loads(search.stdout)['ok'])
         self.assertIn('wiki/concepts/synthetic-notebooks.md', search.stdout)
+
+    def graph_request(self, edges):
+        self.invoke('capture')
+        request = self.compile_request()
+        raw_id = request['raw_ids'][0]
+        new_id, old_id = 'canon-' + str(uuid.uuid4()), 'canon-' + str(uuid.uuid4())
+        old_path, new_path = 'wiki/concepts/numbered-pages.md', 'wiki/concepts/synthetic-notebooks.md'
+        def canonical(page_id, title, body):
+            return ('---\nschema: sb.canonical/v2\nid: ' + page_id + '\nrole: concepts\n'
+                    'title: ' + title + '\nsummary: Synthetic notebook page numbering.\n'
+                    'status: active\ncreated: "2026-01-01"\nupdated: "2026-01-01"\nraw:\n  - '
+                    + raw_id + '\n---\n\n# ' + title + '\n\n' + body + '\n')
+        (self.repo / old_path).write_text(canonical(old_id, 'Numbered pages', 'Numbered pages identify notebook entries.'))
+        content = canonical(new_id, 'Synthetic notebooks', 'The fictional notebook uses [[concepts/numbered-pages]].')
+        request['operations'] = [{'action': 'create', 'raw_ids': [raw_id], 'path': new_path,
+                                  'before_blob_sha': None, 'content': content}]
+        node = lambda artifact: 'file-' + hashlib.sha256(artifact.encode()).hexdigest()[:24]
+        if edges:
+            lines = (self.repo / self.request['target']).read_text().splitlines()
+            request['extractions'][0]['edges'] = [
+                {'source': node(raw_id), 'target': node(new_id), 'type': 'supports',
+                 'source_locations': [{'path': self.request['target'], 'start_line': lines.index('## Source') + 1,
+                                       'end_line': len(lines), 'heading': 'Source'}]},
+                {'source': node(new_id), 'target': node(old_id), 'type': 'uses_numbering'}]
+        self.checkpoint()
+        check = {'explain': [new_path], 'paths': [{'source': new_path, 'target': old_path}]}
+        return request, check
+
+    def test_explicit_provenance_and_semantic_edges_pass_explain_and_path(self):
+        request, check = self.graph_request(edges=True)
+        original = (self.repo / self.request['target']).read_bytes()
+        code, report = self.invoke('compile', request, 'compile-connected', check)
+        self.assertEqual(code, 3, report)  # Global historical gates remain separate.
+        self.assertTrue(report['graph_connected'], report)
+        explanation = next(step['output']['result'] for step in report['steps']
+                           if isinstance(step['command'], list) and step['command'][1:2] == ['explain'])
+        self.assertEqual(len(explanation['connections']), 2)
+        self.assertEqual((self.repo / self.request['target']).read_bytes(), original)
+
+    def test_wikilink_alone_does_not_satisfy_graph_acceptance(self):
+        request, check = self.graph_request(edges=False)
+        code, report = self.invoke('compile', request, 'compile-unconnected', check)
+        self.assertEqual(code, 3, report)
+        self.assertTrue(report['compiled'])
+        self.assertTrue(report['indexed'])
+        self.assertFalse(report['graph_connected'])
+        self.assertIn('GRAPH_EXPECTATION_FAILED', report['error'])
 
 
 if __name__ == '__main__':
